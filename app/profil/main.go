@@ -1,3 +1,3 @@
-package profil
+package main
 
 // data collect & process & into db

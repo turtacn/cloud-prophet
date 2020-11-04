@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/SOUP-CE-KMITL/Thoth"
-	"github.com/SOUP-CE-KMITL/Thoth/profil"
 	"github.com/goml/gobrain"
 	"github.com/influxdata/influxdb/client/v2"
+	"github.com/turtacn/cloud-prophet"
+	"github.com/turtacn/cloud-prophet/profil"
 	"github.com/white-pony/go-fann"
 	"io"
 	"log"

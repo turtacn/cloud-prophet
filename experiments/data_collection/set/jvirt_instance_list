@@ -1,0 +1,4 @@
+jvirt instance-list  -a --host-ip $1 > tmp/host-$1-vm.list
+jvirt container-list -a --host-ip $1 > tmp/host-$1-docker.list
+jvirt-jks pod-list   -a --host-ip $1 > tmp/host-$1-pod.list
+jvirt-jks nc-list    -a --host-ip $1 > tmp/host-$1-nc.list

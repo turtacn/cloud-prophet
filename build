@@ -1,0 +1,31 @@
+#!/bin/sh
+/usr/bin/rm  -rf   _output 
+export GO111MODULE=on
+export COMMIT=`git rev-parse HEAD 2>/dev/null`
+#export GOPROXY=http://192.168.142.101:31501
+export GOPROXY="https://goproxy.io"
+#export GOPROXY=""
+export GOPRIVATE=git.jd.com
+current_branch() {
+	local folder="$(pwd)"
+	[ -n "$1" ] && folder="$1"
+	git rev-parse --abbrev-ref HEAD | grep -v HEAD || \
+	git describe --exact-match HEAD || \
+	git rev-parse HEAD
+}
+
+BRANCH=`current_branch`
+
+printf "build ... \ncommitid:"$COMMIT"\nbranch:"$BRANCH"\n"
+mkdir -p ./_output/$BRANCH/$COMMIT
+COMMIT=_output/$BRANCH/$COMMIT
+
+#git pull
+go mod init github.com/turtacn/cloud-prophet
+go mod vendor 
+#go mod tidy
+#go mod verify
+#go build -v -o ./${COMMIT}/cpu  app/ctl/mainCPU.go
+#go build -v -o ./${COMMIT}/nnet app/ctl/mainNeural.go  
+go build -v -o ./${COMMIT}/ql   app/ctl/mainQl.go  
+#go build -v -o ./${COMMIT}/     app/ctl/neural.go

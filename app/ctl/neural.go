@@ -10,14 +10,8 @@ import (
 	"os"
 
 	"log"
-	"strconv"
 	//	"strings"
 )
-
-func parse(str string) float64 {
-	f, _ := strconv.ParseFloat(str, 64)
-	return f
-}
 
 func main() {
 	// Open the file.

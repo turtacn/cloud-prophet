@@ -1,25 +1,17 @@
 package main
 
 import (
-	//"encoding/csv"
 	"fmt"
-	"github.com/influxdata/influxdb/client/v2"
-	"github.com/turtacn/cloud-prophet"
+	"github.com/influxdata/influxdb1-client/v2"
 	"github.com/turtacn/cloud-prophet/learn"
+	"github.com/turtacn/cloud-prophet/model"
 	"github.com/turtacn/cloud-prophet/profil"
-	//	"io"
 	"log"
 	"math"
-	//	"math/rand"
 	"os"
 	"os/signal"
-	//	"strconv"
-	//	"strings"
 	"time"
 )
-
-var username string = "thoth"
-var password string = "thoth"
 
 func main() {
 	ann := learn.Neural{}
@@ -36,9 +28,9 @@ func main() {
 	}()
 	// Connect InfluxDB
 	influxDB, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     thoth.InfluxdbApi,
-		Username: username,
-		Password: password,
+		Addr:     model.InfluxdbApi,
+		Username: model.UserName,
+		Password: model.PassWord,
 	})
 
 	if err != nil {
@@ -53,42 +45,37 @@ func main() {
 	fmt.Println("STDDEV ", ann.StdDev)
 
 	for {
-		// Get all user RCLen
-		RC := profil.GetUserRC()
-		RCLen := len(RC)
-
-		// Getting App Metric
-		for i := 0; i < RCLen; i++ {
+		// Get all hosts
+		// Get all instances
+		// Getting hosts/instances Metric
+		var HostLen int = 0
+		for i := 0; i < HostLen; i++ {
 			round++
 			action := 0.0
 
-			replicas, err := profil.GetReplicas(RC[i].Namespace, RC[i].Name)
-
-			if err != nil {
-				panic(err)
-			}
+			replicas := profil.GetInstanceCount("cn-north-1", "127.0.0.1")
 			fmt.Println("Replicas:", replicas)
 
 			// Check Resposne time & Label & Save WPI
 			var responseDay, response10Min float64
-			if responseDay, err = profil.GetProfilAvg(influxDB, RC[i].Namespace, RC[i].Name, "rtime", "1d"); err != nil {
+			if responseDay, err = profil.GetProfilAvg(influxDB, "cn-north-1", "i-xxxxxxxxxx", "rtime", "1d"); err != nil {
 				panic(err)
 				log.Println(err)
 			}
 			fmt.Println("resDays : ", responseDay)
 
-			if response10Min, err = profil.GetProfilAvg(influxDB, RC[i].Namespace, RC[i].Name, "rtime", "5m"); err != nil {
+			if response10Min, err = profil.GetProfilAvg(influxDB, "cn-north-1", "i-xxxxxxxxxx", "rtime", "5m"); err != nil {
 				fmt.Println("res10min : ", response10Min)
 				panic(err)
 				log.Println(err)
 			}
+			metrics := profil.GetAppMetrics()
 			// Floor
 			responseDay = math.Floor(responseDay)
 			response10Min = math.Floor(response10Min)
 			fmt.Println("D", responseDay, " 10M", response10Min)
-			metrics := profil.GetAppResource(RC[i].Namespace, RC[i].Name)
 			var cpu10Min float64
-			if cpu10Min, err = profil.GetProfilAvg(influxDB, RC[i].Namespace, RC[i].Name, "cpu", "5m"); err != nil {
+			if cpu10Min, err = profil.GetProfilAvg(influxDB, "cn-north-1", "i-xxxxxxxxxx", "cpu", "5m"); err != nil {
 				panic(err)
 				log.Println(err)
 			}
@@ -98,7 +85,7 @@ func main() {
 				//	if response10Min > responseDay { // TODO:Need to check WPI too
 				// Save WPI
 				fmt.Println("Scale+1")
-				if err := profil.WriteRPI(influxDB, RC[i].Namespace, RC[i].Name, metrics.Request, replicas); err != nil {
+				if err := profil.WriteRPI(influxDB, "cn-north-1", "i-xxxxxxxxxx", metrics.Request, replicas); err != nil {
 					panic(err)
 					log.Println(err)
 				}
@@ -107,7 +94,7 @@ func main() {
 
 				if replicas < 10 {
 					action = 1
-					//	if _, err := thoth.ScaleOutViaCli(replicas+1, RC[i].Namespace, RC[i].Name); err != nil {
+					//	if _, err := thoth.ScaleOutViaCli(replicas+1, "cn-north-1", "i-xxxxxxxxxx"); err != nil {
 					//		panic(err)
 					//	}
 				}
@@ -116,7 +103,7 @@ func main() {
 			} else if replicas > 1 {
 				// = rpi/replicas
 				var rpiMax float64
-				if rpiMax, err = profil.GetAvgRPI(influxDB, RC[i].Namespace, RC[i].Name); err != nil {
+				if rpiMax, err = profil.GetAvgRPI(influxDB, "cn-north-1", "i-xxxxxxxxxxx"); err != nil {
 					rpiMax = -1
 					// TODO:Handler
 					//panic(err)
@@ -129,7 +116,7 @@ func main() {
 						// Scale -1
 						fmt.Println("Scale-1")
 						action = -1
-						//if _, err := thoth.ScaleOutViaCli(replicas-1, RC[i].Namespace, RC[i].Name); err != nil {
+						//if _, err := thoth.ScaleOutViaCli(replicas-1, "cn-north-1", "i-xxxxxxxxxx"); err != nil {
 						//	panic(err)
 						//}
 					}
@@ -137,7 +124,7 @@ func main() {
 			}
 
 			// Normalize
-			resUsage10min := profil.GetProfilLast(influxDB, RC[i].Namespace, RC[i].Name, "10min")
+			resUsage10min := profil.GetProfilLast(influxDB, "cn-north-1", "i-xxxxxxxxxx", "10min")
 			fmt.Println("============================ FANN ============================")
 			// Training
 			ann.Train(resUsage10min, action)
@@ -145,13 +132,9 @@ func main() {
 			predict := ann.Run(resUsage10min)
 			if predict != 0 {
 				if predict == 1 {
-					if _, err := thoth.ScaleOutViaCli(replicas+1, RC[i].Namespace, RC[i].Name); err != nil {
-						fmt.Println(err)
-					}
+					// 扩容，超卖，迁移
 				} else if predict == -1 && replicas > 1 {
-					if _, err := thoth.ScaleOutViaCli(replicas-1, RC[i].Namespace, RC[i].Name); err != nil {
-						fmt.Println(err)
-					}
+					// 缩容，缩卖，迁移
 				}
 			}
 			if predict == int(action) {

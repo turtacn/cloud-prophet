@@ -2,17 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/influxdata/influxdb/client/v2"
-	"github.com/turtacn/cloud-prophet"
+	"github.com/influxdata/influxdb1-client/v2"
 	"github.com/turtacn/cloud-prophet/learn"
+	"github.com/turtacn/cloud-prophet/model"
 	"github.com/turtacn/cloud-prophet/profil"
 	"os"
 	"os/signal"
 	"time"
 )
-
-var username string = "thoth"
-var password string = "thoth"
 
 func main() {
 	agent := learn.QLearn{Gamma: 0.3}
@@ -35,9 +32,9 @@ func main() {
 
 	// Connect InfluxDB
 	influxDB, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     thoth.InfluxdbApi,
-		Username: username,
-		Password: password,
+		Addr:     model.InfluxdbApi,
+		Username: model.UserName,
+		Password: model.PassWord,
 	})
 
 	if err != nil {
@@ -49,20 +46,16 @@ func main() {
 	lastAction := 0
 	var action int
 	for {
-		// Get all user RC
-		RC := profil.GetUserRC()
-		RCLen := len(RC)
-
+		// Get all host
+		// Getinstances by hostIp
 		// Getting App Metric
-		for i := 0; i < RCLen; i++ {
+		var instanceId string = ""
+		for i := 0; i < 10; i++ {
 			// TODO : Use model only with Eight-puzzle
-			if RC[i].Namespace == "thoth" && RC[i].Name == "eight-puzzle" {
-				replicas, err := profil.GetReplicas(RC[i].Namespace, RC[i].Name)
-				if err != nil {
-					panic(err)
-				}
+			if instanceId == "eight-puzzle" {
+				replicas := profil.GetInstanceCount(instanceId, "cpu")
 
-				res := profil.GetProfilLast(influxDB, RC[i].Namespace, RC[i].Name, "5m")
+				res := profil.GetProfilLast(influxDB, instanceId, "cpu", "5m")
 				fmt.Println(res)
 
 				if !firstRun {
@@ -76,9 +69,7 @@ func main() {
 				firstRun = false
 
 				if action+replicas > 0 {
-					if _, err := thoth.ScaleOutViaCli(replicas+action, RC[i].Namespace, RC[i].Name); err != nil {
-						fmt.Println(err)
-					}
+					// 开始操作
 				}
 				lastAction = action
 				fmt.Println(agent)

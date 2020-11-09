@@ -28,6 +28,8 @@ func main() {
 			log.Fatal(err)
 		}
 
+		fmt.Println(len(rec))
+
 		record := [][]float64{
 			{util.ParserString2Float(rec[5]), util.ParserString2Float(rec[6]), util.ParserString2Float(rec[7]), util.ParserString2Float(rec[8]), util.ParserString2Float(rec[9])}, {util.ParserString2Float(rec[10])},
 		}

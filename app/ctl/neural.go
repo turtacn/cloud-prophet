@@ -12,10 +12,12 @@ import (
 	"log"
 	//	"strings"
 	"github.com/turtacn/cloud-prophet/util"
+	"runtime"
 )
 
 func main() {
 	// Open the file.
+	runtime.GOMAXPROCS(8)
 	f, _ := os.Open("file.csv")
 	r := csv.NewReader(f)
 	r.Comma = ' '
@@ -57,7 +59,7 @@ func main() {
 	// the training will run for 1000 epochs
 	// the learning rate is set to 0.6 and the momentum factor to 0.4
 	// use true in the last parameter to receive reports about the learning error
-	ff.Train(trainSet, 1000, 0.6, 0.4, true)
+	ff.Train(trainSet, 100000, 0.6, 0.4, true)
 
 	//Test
 

@@ -28,10 +28,18 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Println(len(rec))
+		fmt.Println(fmt.Sprintf("len:%d;content:%+v", len(rec), rec))
+		continue
 
 		record := [][]float64{
-			{util.ParserString2Float(rec[5]), util.ParserString2Float(rec[6]), util.ParserString2Float(rec[7]), util.ParserString2Float(rec[8]), util.ParserString2Float(rec[9])}, {util.ParserString2Float(rec[10])},
+			{
+				util.ParserString2Float(rec[5]), util.ParserString2Float(rec[6]),
+				util.ParserString2Float(rec[7]), util.ParserString2Float(rec[8]),
+				util.ParserString2Float(rec[9]),
+			},
+			{
+				util.ParserString2Float(rec[10]),
+			},
 		}
 		trainSet = append(trainSet, record)
 	}

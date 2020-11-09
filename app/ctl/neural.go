@@ -28,7 +28,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Println(fmt.Sprintf("len:%d;content:%+v", len(rec), rec))
+		fmt.Println(fmt.Sprintf("len:%d;content:%+v", len(rec), util.ParserString2Float(rec[0])))
 		continue
 
 		record := [][]float64{

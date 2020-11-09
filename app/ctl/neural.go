@@ -21,6 +21,7 @@ func main() {
 	trainSet := [][][]float64{}
 	for {
 		rec, err := r.Read()
+		r.Comma = ' '
 		if err == io.EOF {
 			break
 		}

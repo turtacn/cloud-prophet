@@ -29,9 +29,6 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Println(rec)
-		continue
-
 		record := [][]float64{
 			{
 				util.ParserString2Float(rec[0]), util.ParserString2Float(rec[1]),

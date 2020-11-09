@@ -18,10 +18,10 @@ func main() {
 	// Open the file.
 	f, _ := os.Open("file.csv")
 	r := csv.NewReader(f)
+	r.Comma = ' '
 	trainSet := [][][]float64{}
 	for {
 		rec, err := r.Read()
-		r.Comma = ' '
 		if err == io.EOF {
 			break
 		}
@@ -34,12 +34,12 @@ func main() {
 
 		record := [][]float64{
 			{
-				util.ParserString2Float(rec[5]), util.ParserString2Float(rec[6]),
-				util.ParserString2Float(rec[7]), util.ParserString2Float(rec[8]),
-				util.ParserString2Float(rec[9]),
+				util.ParserString2Float(rec[0]), util.ParserString2Float(rec[1]),
+				util.ParserString2Float(rec[2]), util.ParserString2Float(rec[3]),
+				util.ParserString2Float(rec[4]),
 			},
 			{
-				util.ParserString2Float(rec[10]),
+				util.ParserString2Float(rec[5]),
 			},
 		}
 		trainSet = append(trainSet, record)

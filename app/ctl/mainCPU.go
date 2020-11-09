@@ -7,6 +7,7 @@ import (
 	"github.com/influxdata/influxdb1-client/v2"
 	"github.com/turtacn/cloud-prophet/model"
 	"github.com/turtacn/cloud-prophet/profil"
+	"github.com/turtacn/cloud-prophet/util"
 	"github.com/white-pony/go-fann"
 	"io"
 	"log"
@@ -163,7 +164,7 @@ func annGoBrain() {
 		}
 
 		record := [][]float64{
-			{parse(rec[5]), parse(rec[6]), parse(rec[7]), parse(rec[8]), parse(rec[9])}, {parse(rec[10])},
+			{util.ParserString2Float(rec[5]), util.ParserString2Float(rec[6]), util.ParserString2Float(rec[7]), util.ParserString2Float(rec[8]), util.ParserString2Float(rec[9])}, {util.ParserString2Float(rec[10])},
 		}
 		fmt.Println(strings.Join(rec[5:], " "))
 		fmt.Println(record)
@@ -185,9 +186,4 @@ func annGoBrain() {
 	//Test
 
 	//	ff.Test([][][]float64{{{40, 70, 2, 1965, 13}, {1}}})
-}
-
-func parse(str string) float64 {
-	f, _ := strconv.ParseFloat(str, 64)
-	return f
 }

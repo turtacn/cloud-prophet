@@ -11,6 +11,7 @@ import (
 
 	"log"
 	//	"strings"
+	"github.com/turtacn/cloud-prophet/util"
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 		}
 
 		record := [][]float64{
-			{parse(rec[5]), parse(rec[6]), parse(rec[7]), parse(rec[8]), parse(rec[9])}, {parse(rec[10])},
+			{util.ParserString2Float(rec[5]), util.ParserString2Float(rec[6]), util.ParserString2Float(rec[7]), util.ParserString2Float(rec[8]), util.ParserString2Float(rec[9])}, {util.ParserString2Float(rec[10])},
 		}
 		trainSet = append(trainSet, record)
 	}

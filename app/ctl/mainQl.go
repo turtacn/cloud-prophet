@@ -38,7 +38,7 @@ func main() {
 	})
 
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 
 	firstRun := true

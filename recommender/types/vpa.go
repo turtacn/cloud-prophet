@@ -61,12 +61,13 @@ type RecommendedContainerResources struct {
 }
 
 type PodResourcePolicy struct {
-	ContainerPolices []ContainerResourcePolicy `json:"container_polices"`
+	ContainerPolicies []ContainerResourcePolicy `json:"container_polices"`
 }
 type ContainerResourcePolicy struct {
-	ContinaerName string              `json:"continaer_name"`
-	MinAllowed    corev1.ResourceList `json:"min_allowed"`
-	MaxAllowed    corev1.ResourceList `json:"max_allowed"`
+	ContainerName string                `json:"continaer_name"`
+	Mode          *ContainerScalingMode `json:"mode"`
+	MinAllowed    corev1.ResourceList   `json:"min_allowed"`
+	MaxAllowed    corev1.ResourceList   `json:"max_allowed"`
 }
 
 type PodUpdatePolicy struct {
@@ -75,8 +76,13 @@ type PodUpdatePolicy struct {
 type UpdateMode string
 
 const (
-	UpdateModeOff      UpdateMode = "Off"
-	UpdateModeInitial  UpdateMode = "Initial"
-	UpdateModeRecreate UpdateMode = "Recreate"
-	UpdateModeAuto     UpdateMode = "Auto"
+	UpdateModeOff  UpdateMode = "Off"
+	UpdateModeAuto UpdateMode = "Auto"
+)
+
+type ContainerScalingMode string
+
+const (
+	ContainerScalingModeAuto ContainerScalingMode = "Auto"
+	ContainerScalingModeOff  ContainerScalingMode = "Off"
 )

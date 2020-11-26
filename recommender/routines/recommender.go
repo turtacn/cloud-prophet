@@ -1,19 +1,3 @@
-/*
-Copyright 2017 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package routines
 
 import (
@@ -25,14 +9,21 @@ import (
 	"github.com/turtacn/cloud-prophet/recommender/input"
 	"github.com/turtacn/cloud-prophet/recommender/logic"
 	"github.com/turtacn/cloud-prophet/recommender/model"
-	vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
-	vpa_clientset "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/client/clientset/versioned"
-	vpa_api "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling.k8s.io/v1"
-	metrics_recommender "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/utils/metrics/recommender"
-	vpa_utils "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/utils/vpa"
+	//vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
+	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
+	//vpa_api "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling.k8s.io/v1"
+	vpa_api "github.com/turtacn/cloud-prophet/recommender/types"
+
+	//vpa_utils "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/utils/vpa"
+	vpa_utils "github.com/turtacn/cloud-prophet/recommender/util"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 )
+
+//TODO
+
+var vpa_clientset_vpa_getter vpa_types.VerticalPodAutoscalersGetter = nil
+var vap_clientset_vpa_checkpointsgetter vpa_types.VerticalPodAutoscalerCheckpointsGetter = nil
 
 // AggregateContainerStateGCInterval defines how often expired AggregateContainerStates are garbage collected.
 const AggregateContainerStateGCInterval = 1 * time.Hour
@@ -83,9 +74,6 @@ func (r *recommender) GetClusterStateFeeder() input.ClusterStateFeeder {
 
 // Updates VPA CRD objects' statuses.
 func (r *recommender) UpdateVPAs() {
-	cnt := metrics_recommender.NewObjectCounter()
-	defer cnt.Observe()
-
 	for _, observedVpa := range r.clusterState.ObservedVpas {
 		key := model.VpaID{
 			Namespace: observedVpa.Namespace,
@@ -100,7 +88,7 @@ func (r *recommender) UpdateVPAs() {
 		had := vpa.HasRecommendation()
 		vpa.UpdateRecommendation(getCappedRecommendation(vpa.ID, resources, observedVpa.Spec.ResourcePolicy))
 		if vpa.HasRecommendation() && !had {
-			metrics_recommender.ObserveRecommendationLatency(vpa.Created)
+			//
 		}
 		hasMatchingPods := vpa.PodCount > 0
 		vpa.UpdateConditions(hasMatchingPods)
@@ -116,10 +104,9 @@ func (r *recommender) UpdateVPAs() {
 				klog.Errorf("ClusterState pod count and matching pods disagree for vpa %v/%v", vpa.ID.Namespace, vpa.ID.VpaName)
 			}
 		}
-		cnt.Add(vpa)
 
 		_, err := vpa_utils.UpdateVpaStatusIfNeeded(
-			r.vpaClient.VerticalPodAutoscalers(vpa.ID.Namespace), vpa.ID.VpaName, vpa.AsStatus(), &observedVpa.Status)
+			nil, vpa.ID.VpaName, vpa.AsStatus(), &observedVpa.Status)
 		if err != nil {
 			klog.Errorf(
 				"Cannot update VPA %v object. Reason: %+v", vpa.ID.VpaName, err)
@@ -174,8 +161,6 @@ func (r *recommender) GarbageCollect() {
 }
 
 func (r *recommender) RunOnce() {
-	timer := metrics_recommender.NewExecutionTimer()
-	defer timer.ObserveTotal()
 
 	ctx := context.Background()
 	ctx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(*checkpointsWriteTimeout))
@@ -184,23 +169,17 @@ func (r *recommender) RunOnce() {
 	klog.V(3).Infof("Recommender Run")
 
 	r.clusterStateFeeder.LoadVPAs()
-	timer.ObserveStep("LoadVPAs")
 
 	r.clusterStateFeeder.LoadPods()
-	timer.ObserveStep("LoadPods")
 
 	r.clusterStateFeeder.LoadRealTimeMetrics()
-	timer.ObserveStep("LoadMetrics")
 	klog.V(3).Infof("ClusterState is tracking %v PodStates and %v VPAs", len(r.clusterState.Pods), len(r.clusterState.Vpas))
 
 	r.UpdateVPAs()
-	timer.ObserveStep("UpdateVPAs")
 
 	r.MaintainCheckpoints(ctx, *minCheckpointsPerRun)
-	timer.ObserveStep("MaintainCheckpoints")
 
 	r.GarbageCollect()
-	timer.ObserveStep("GarbageCollect")
 	klog.V(3).Infof("ClusterState is tracking %d aggregated container states", r.clusterState.StateMapSize())
 }
 
@@ -243,8 +222,8 @@ func NewRecommender(config *rest.Config, checkpointsGCInterval time.Duration, us
 	return RecommenderFactory{
 		ClusterState:           clusterState,
 		ClusterStateFeeder:     input.NewClusterStateFeeder(config, clusterState, *memorySaver, namespace),
-		CheckpointWriter:       checkpoint.NewCheckpointWriter(clusterState, vpa_clientset.NewForConfigOrDie(config).AutoscalingV1()),
-		VpaClient:              vpa_clientset.NewForConfigOrDie(config).AutoscalingV1(),
+		CheckpointWriter:       checkpoint.NewCheckpointWriter(clusterState, vap_clientset_vpa_checkpointsgetter),
+		VpaClient:              vpa_clientset_vpa_getter,
 		PodResourceRecommender: logic.CreatePodResourceRecommender(),
 		CheckpointsGCInterval:  checkpointsGCInterval,
 		UseCheckpoints:         useCheckpoints,

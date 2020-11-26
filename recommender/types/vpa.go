@@ -40,7 +40,14 @@ type VerticalPodAutoscalerStatus struct {
 	Conditions     []VerticalPodAutoscalerCondition `json:"conditions"`
 }
 
-type VerticalPodAutoscalarCheckpoint struct {
+type VerticalPodAutoscalerCheckpoint struct {
+	Spec   VerticalPodAutoscalerCheckpointSpec   `json:"spec"`
+	Status VerticalPodAutoscalerCheckpointStatus `json:"status"`
+}
+
+type VerticalPodAutoscalerCheckpointSpec struct {
+	VPAObjectName string `json:"vpa_object_name"`
+	ContainerName string `json:"container_name"`
 }
 
 type VerticalPodAutoscalerCheckpointStatus struct {
@@ -58,12 +65,24 @@ type HistogramCheckpoint struct {
 	TotalWeight        float64        `json:"total_weight"`
 }
 
+type VerticalPodAutoscalersGetter interface {
+	VerticalPodAutoscalers() VerticalPodAutoscalerInterface
+}
+type VerticalPodAutoscalerInterface interface {
+	Create()
+	Update()
+	Delete()
+	DeleteCollection()
+	Get()
+	List()
+}
+
 type VerticalPodAutoscalarCheckpointList struct {
-	Items []VerticalPodAutoscalarCheckpoint `json:"items"`
+	Items []VerticalPodAutoscalerCheckpoint `json:"items"`
 }
 
 type VerticalPodAutoscalerCheckpointsGetter interface {
-	VerticalPodAutoscalarCheckpoints() VerticalPodAutoscalarCheckpointInterface
+	VerticalPodAutoscalarCheckpoints(namespace string) VerticalPodAutoscalarCheckpointInterface
 }
 
 // 创建、更新、删除、列表删除、查询、列表

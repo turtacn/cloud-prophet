@@ -2,18 +2,17 @@ package checkpoint
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"time"
 
 	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	// "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
 	vpa_api "github.com/turtacn/cloud-prophet/recommender/types"
 	// "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling.k8s.io/v1"
 	"github.com/turtacn/cloud-prophet/recommender/model"
-	api_util "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/utils/vpa"
+	api_util "github.com/turtacn/cloud-prophet/recommender/util"
 	"k8s.io/klog"
 )
 
@@ -83,16 +82,15 @@ func (writer *checkpointWriter) StoreCheckpoints(ctx context.Context, now time.T
 				klog.Errorf("Cannot serialize checkpoint for vpa %v container %v. Reason: %+v", vpa.ID.VpaName, container, err)
 				continue
 			}
-			checkpointName := fmt.Sprintf("%s-%s", vpa.ID.VpaName, container)
+			//checkpointName := fmt.Sprintf("%s-%s", vpa.ID.VpaName, container)
 			vpaCheckpoint := vpa_types.VerticalPodAutoscalerCheckpoint{
-				ObjectMeta: metav1.ObjectMeta{Name: checkpointName},
 				Spec: vpa_types.VerticalPodAutoscalerCheckpointSpec{
 					ContainerName: container,
 					VPAObjectName: vpa.ID.VpaName,
 				},
 				Status: *containerCheckpoint,
 			}
-			err = api_util.CreateOrUpdateVpaCheckpoint(writer.vpaCheckpointClient.VerticalPodAutoscalerCheckpoints(vpa.ID.Namespace), &vpaCheckpoint)
+			err = api_util.CreateOrUpdateVpaCheckpoint(writer.vpaCheckpointClient.VerticalPodAutoscalarCheckpoints(vpa.ID.Namespace), &vpaCheckpoint)
 			if err != nil {
 				klog.Errorf("Cannot save VPA %s/%s checkpoint for %s. Reason: %+v",
 					vpa.ID.Namespace, vpaCheckpoint.Spec.VPAObjectName, vpaCheckpoint.Spec.ContainerName, err)

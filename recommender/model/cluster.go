@@ -1,29 +1,15 @@
-/*
-Copyright 2017 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package model
 
 import (
 	"fmt"
 	"time"
 
+	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
 	apiv1 "k8s.io/api/core/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
-	vpa_utils "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/utils/vpa"
+	//vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
+	//vpa_utils "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/utils/vpa"
+	vpa_utils "github.com/turtacn/cloud-prophet/recommender/util"
 	"k8s.io/klog"
 )
 
@@ -240,7 +226,6 @@ func (cluster *ClusterState) RecordOOM(containerID ContainerID, timestamp time.T
 // all aggregations it matches.
 func (cluster *ClusterState) AddOrUpdateVpa(apiObject *vpa_types.VerticalPodAutoscaler, selector labels.Selector) error {
 	vpaID := VpaID{Namespace: apiObject.Namespace, VpaName: apiObject.Name}
-	annotationsMap := apiObject.Annotations
 	conditionsMap := make(vpaConditionsMap)
 	for _, condition := range apiObject.Status.Conditions {
 		conditionsMap[condition.Type] = condition
@@ -260,15 +245,13 @@ func (cluster *ClusterState) AddOrUpdateVpa(apiObject *vpa_types.VerticalPodAuto
 		vpaExists = false
 	}
 	if !vpaExists {
-		vpa = NewVpa(vpaID, selector, apiObject.CreationTimestamp.Time)
+		vpa = NewVpa(vpaID, selector, time.Now())
 		cluster.Vpas[vpaID] = vpa
 		for aggregationKey, aggregation := range cluster.aggregateStateMap {
 			vpa.UseAggregationIfMatching(aggregationKey, aggregation)
 		}
 		vpa.PodCount = len(cluster.GetMatchingPods(vpa))
 	}
-	vpa.TargetRef = apiObject.Spec.TargetRef
-	vpa.Annotations = annotationsMap
 	vpa.Conditions = conditionsMap
 	vpa.Recommendation = currentRecommendation
 	vpa.SetUpdateMode(apiObject.Spec.UpdatePolicy)

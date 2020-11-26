@@ -25,7 +25,8 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
+	//vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
+	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
 )
 
 var (
@@ -145,8 +146,6 @@ func TestAggregateContainerStateSaveToCheckpoint(t *testing.T) {
 	assert.Equal(t, t2, checkpoint.LastSampleStart.Time)
 	assert.Equal(t, 10, checkpoint.TotalSamplesCount)
 
-	assert.Equal(t, SupportedCheckpointVersion, checkpoint.Version)
-
 	// Basic check that serialization of histograms happened.
 	// Full tests are part of the Histogram.
 	assert.Len(t, checkpoint.CPUHistogram.BucketWeights, 1)
@@ -154,9 +153,7 @@ func TestAggregateContainerStateSaveToCheckpoint(t *testing.T) {
 }
 
 func TestAggregateContainerStateLoadFromCheckpointFailsForVersionMismatch(t *testing.T) {
-	checkpoint := vpa_types.VerticalPodAutoscalerCheckpointStatus{
-		Version: "foo",
-	}
+	checkpoint := vpa_types.VerticalPodAutoscalerCheckpointStatus{}
 	cs := NewAggregateContainerState()
 	err := cs.LoadFromCheckpoint(&checkpoint)
 	assert.Error(t, err)
@@ -167,7 +164,6 @@ func TestAggregateContainerStateLoadFromCheckpoint(t *testing.T) {
 	t1, t2 := time.Date(2018, time.January, 1, 2, 3, 4, 0, location), time.Date(2018, time.February, 1, 2, 3, 4, 0, location)
 
 	checkpoint := vpa_types.VerticalPodAutoscalerCheckpointStatus{
-		Version:           SupportedCheckpointVersion,
 		FirstSampleStart:  metav1.NewTime(t1),
 		LastSampleStart:   metav1.NewTime(t2),
 		TotalSamplesCount: 20,

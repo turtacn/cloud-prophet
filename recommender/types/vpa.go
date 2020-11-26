@@ -3,8 +3,21 @@ package types
 import (
 	apiv1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+type VerticalPodAutoscaler struct {
+	Namespace string                      `json:"namespace"`
+	Name      string                      `json:"name"`
+	Spec      VerticalPodAutoscalerSpec   `json:"spec"`
+	Status    VerticalPodAutoscalerStatus `json:"status"`
+}
+
+type VerticalPodAutoscalerSpec struct {
+	UpdatePolicy   *PodUpdatePolicy   `json:"update_policy"`
+	ResourcePolicy *PodResourcePolicy `json:"resource_policy"`
+}
 
 type VerticalPodAutoscalerConditionType string
 
@@ -28,6 +41,21 @@ type VerticalPodAutoscalerStatus struct {
 }
 
 type VerticalPodAutoscalarCheckpoint struct {
+}
+
+type VerticalPodAutoscalerCheckpointStatus struct {
+	LastUpdateTime    metav1.Time         `json:"last_update_time"`
+	CPUHistogram      HistogramCheckpoint `json:"cpu_histogram"`
+	MemoryHistogram   HistogramCheckpoint `json:"memory_histogram"`
+	FirstSampleStart  metav1.Time         `json:"first_sample_start"`
+	LastSampleStart   metav1.Time         `json:"last_sample_start"`
+	TotalSamplesCount int                 `json:"total_samples_count"`
+}
+
+type HistogramCheckpoint struct {
+	ReferenceTimestamp metav1.Time    `json:"reference_timestamp"`
+	BucketWeights      map[int]uint32 `json:"bucket_weights"`
+	TotalWeight        float64        `json:"total_weight"`
 }
 
 type VerticalPodAutoscalarCheckpointList struct {
@@ -64,10 +92,11 @@ type PodResourcePolicy struct {
 	ContainerPolicies []ContainerResourcePolicy `json:"container_polices"`
 }
 type ContainerResourcePolicy struct {
-	ContainerName string                `json:"continaer_name"`
-	Mode          *ContainerScalingMode `json:"mode"`
-	MinAllowed    corev1.ResourceList   `json:"min_allowed"`
-	MaxAllowed    corev1.ResourceList   `json:"max_allowed"`
+	ContainerName       string                `json:"continaer_name"`
+	Mode                *ContainerScalingMode `json:"mode"`
+	MinAllowed          corev1.ResourceList   `json:"min_allowed"`
+	MaxAllowed          corev1.ResourceList   `json:"max_allowed"`
+	ControlledResources *[]v1.ResourceName    `json:"controlled_resources"`
 }
 
 type PodUpdatePolicy struct {

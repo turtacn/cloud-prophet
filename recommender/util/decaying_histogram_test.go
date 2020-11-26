@@ -21,8 +21,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
+	// /vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
 )
 
 var (

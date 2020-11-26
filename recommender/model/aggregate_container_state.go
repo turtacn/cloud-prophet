@@ -16,14 +16,6 @@ import (
 // that aggregates state of containers with that name.
 type ContainerNameToAggregateStateMap map[string]*AggregateContainerState
 
-const (
-	// SupportedCheckpointVersion is the tag of the supported version of serialized checkpoints.
-	// Version id should be incremented on every non incompatible change, i.e. if the new
-	// version of the recommender binary can't initialize from the old checkpoint format or the
-	// previous version of the recommender binary can't initialize from the new checkpoint format.
-	SupportedCheckpointVersion = "v3"
-)
-
 var (
 	// DefaultControlledResources is a default value of Spec.ResourcePolicy.ContainerPolicies[].ControlledResources.
 	DefaultControlledResources = []ResourceName{ResourceCPU, ResourceMemory}
@@ -204,16 +196,12 @@ func (a *AggregateContainerState) SaveToCheckpoint() (*vpa_types.VerticalPodAuto
 		TotalSamplesCount: a.TotalSamplesCount,
 		MemoryHistogram:   *memory,
 		CPUHistogram:      *cpu,
-		Version:           SupportedCheckpointVersion,
 	}, nil
 }
 
 // LoadFromCheckpoint deserializes data from VerticalPodAutoscalerCheckpointStatus
 // into the AggregateContainerState.
 func (a *AggregateContainerState) LoadFromCheckpoint(checkpoint *vpa_types.VerticalPodAutoscalerCheckpointStatus) error {
-	if checkpoint.Version != SupportedCheckpointVersion {
-		return fmt.Errorf("unsuported checkpoint version %s", checkpoint.Version)
-	}
 	a.TotalSamplesCount = checkpoint.TotalSamplesCount
 	a.FirstSampleStart = checkpoint.FirstSampleStart.Time
 	a.LastSampleStart = checkpoint.LastSampleStart.Time

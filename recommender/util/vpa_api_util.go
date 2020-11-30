@@ -3,7 +3,6 @@ package util
 import (
 	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/klog"
 )
 
 func GetContainerResourcePolicy(containerName string, policy *vpa_types.PodResourcePolicy) *vpa_types.ContainerResourcePolicy {

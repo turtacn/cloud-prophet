@@ -1,15 +1,11 @@
 package metrics
 
 import (
-	"context"
 	"time"
 
 	"github.com/turtacn/cloud-prophet/recommender/model"
 	k8sapiv1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/klog"
 	"k8s.io/metrics/pkg/apis/metrics/v1beta1"
-	resourceclient "k8s.io/metrics/pkg/client/clientset/versioned/typed/metrics/v1beta1"
 )
 
 // ContainerMetricsSnapshot contains information about usage of certain container within defined time window.
@@ -32,59 +28,33 @@ type MetricsClient interface {
 }
 
 type metricsClient struct {
-	metricsGetter resourceclient.PodMetricsesGetter
-	namespace     string
+	namespace string
 }
 
 // NewMetricsClient creates new instance of MetricsClient, which is used by recommender.
 // It requires an instance of PodMetricsesGetter, which is used for underlying communication with metrics server.
 // namespace limits queries to particular namespace, use k8sapiv1.NamespaceAll to select all namespaces.
-func NewMetricsClient(metricsGetter resourceclient.PodMetricsesGetter, namespace string) MetricsClient {
+func NewMetricsClient(namespace string) MetricsClient {
 	return &metricsClient{
-		metricsGetter: metricsGetter,
-		namespace:     namespace,
+		namespace: namespace,
 	}
 }
 
 func (c *metricsClient) GetContainersMetrics() ([]*ContainerMetricsSnapshot, error) {
 	var metricsSnapshots []*ContainerMetricsSnapshot
 
-	podMetricsInterface := c.metricsGetter.PodMetricses(c.namespace)
-	podMetricsList, err := podMetricsInterface.List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	klog.V(3).Infof("%v podMetrics retrieved for all namespaces", len(podMetricsList.Items))
-	for _, podMetrics := range podMetricsList.Items {
-		metricsSnapshotsForPod := createContainerMetricsSnapshots(podMetrics)
-		metricsSnapshots = append(metricsSnapshots, metricsSnapshotsForPod...)
-	}
-
 	return metricsSnapshots, nil
 }
 
 func createContainerMetricsSnapshots(podMetrics v1beta1.PodMetrics) []*ContainerMetricsSnapshot {
 	snapshots := make([]*ContainerMetricsSnapshot, len(podMetrics.Containers))
-	for i, containerMetrics := range podMetrics.Containers {
-		snapshots[i] = newContainerMetricsSnapshot(containerMetrics, podMetrics)
-	}
 	return snapshots
 }
 
-func newContainerMetricsSnapshot(containerMetrics v1beta1.ContainerMetrics, podMetrics v1beta1.PodMetrics) *ContainerMetricsSnapshot {
-	usage := calculateUsage(containerMetrics.Usage)
+func newContainerMetricsSnapshot() *ContainerMetricsSnapshot {
 
 	return &ContainerMetricsSnapshot{
-		ID: model.ContainerID{
-			ContainerName: containerMetrics.Name,
-			PodID: model.PodID{
-				Namespace: podMetrics.Namespace,
-				PodName:   podMetrics.Name,
-			},
-		},
-		Usage:          usage,
-		SnapshotTime:   podMetrics.Timestamp.Time,
-		SnapshotWindow: podMetrics.Window.Duration,
+		ID: model.ContainerID{},
 	}
 }
 

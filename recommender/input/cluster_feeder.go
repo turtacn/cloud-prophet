@@ -18,12 +18,13 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	//vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
 	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
-	vpa_clientset "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/client/clientset/versioned"
+	//vpa_clientset "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/client/clientset/versioned"
 	//vpa_api "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling.k8s.io/v1"
 	vpa_api "github.com/turtacn/cloud-prophet/recommender/types"
 	//vpa_lister "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/client/listers/autoscaling.k8s.io/v1"
+	target "github.com/turtacn/cloud-prophet/recommender/types"
 	vpa_lister "github.com/turtacn/cloud-prophet/recommender/types"
-	"k8s.io/autoscaler/vertical-pod-autoscaler/pkg/target"
+	//"k8s.io/autoscaler/vertical-pod-autoscaler/pkg/target"
 	//vpa_api_util "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/utils/vpa"
 	vpa_api_util "github.com/turtacn/cloud-prophet/recommender/util"
 	"k8s.io/client-go/informers"
@@ -33,7 +34,11 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog"
-	resourceclient "k8s.io/metrics/pkg/client/clientset/versioned/typed/metrics/v1beta1"
+	//resourceclient "k8s.io/metrics/pkg/client/clientset/versioned/typed/metrics/v1beta1"
+)
+
+var (
+	VpaCheckpointClient vpa_api.VerticalPodAutoscalerCheckpointsGetter = nil
 )
 
 const defaultResyncPeriod time.Duration = 10 * time.Minute
@@ -101,8 +106,8 @@ func NewClusterStateFeeder(config *rest.Config, clusterState *model.ClusterState
 		OOMObserver:         oomObserver,
 		KubeClient:          kubeClient,
 		MetricsClient:       newMetricsClient(config, namespace),
-		VpaCheckpointClient: vpa_clientset.NewForConfigOrDie(config).AutoscalingV1(),
-		VpaLister:           vpa_api_util.NewVpasLister(vpa_clientset.NewForConfigOrDie(config), make(chan struct{}), namespace),
+		VpaCheckpointClient: VpaCheckpointClient,
+		VpaLister:           vpa_api_util.NewVpasLister(VpaCheckpointClient, make(chan struct{}), namespace),
 		ClusterState:        clusterState,
 		SelectorFetcher:     target.NewVpaTargetSelectorFetcher(config, kubeClient, factory),
 		MemorySaveMode:      memorySave,
@@ -111,8 +116,7 @@ func NewClusterStateFeeder(config *rest.Config, clusterState *model.ClusterState
 }
 
 func newMetricsClient(config *rest.Config, namespace string) metrics.MetricsClient {
-	metricsGetter := resourceclient.NewForConfigOrDie(config)
-	return metrics.NewMetricsClient(metricsGetter, namespace)
+	return metrics.NewMetricsClient(namespace)
 }
 
 // WatchEvictionEventsWithRetries watches new Events with reason=Evicted and passes them to the observer.
@@ -243,13 +247,12 @@ func (feeder *clusterStateFeeder) InitFromCheckpoints() {
 
 	for namespace := range namespaces {
 		klog.V(3).Infof("Fetching checkpoints from namespace %s", namespace)
-		checkpointList, err := feeder.vpaCheckpointClient.VerticalPodAutoscalerCheckpoints(namespace).List(context.TODO(), metav1.ListOptions{})
+		checkpointList, err := feeder.vpaCheckpointClient.VerticalPodAutoscalerCheckpoints(namespace).List()
 		if err != nil {
 			klog.Errorf("Cannot list VPA checkpoints from namespace %v. Reason: %+v", namespace, err)
 		}
 		for _, checkpoint := range checkpointList.Items {
 
-			klog.V(3).Infof("Loading VPA %s/%s checkpoint for %s", checkpoint.ObjectMeta.Namespace, checkpoint.Spec.VPAObjectName, checkpoint.Spec.ContainerName)
 			err = feeder.setVpaCheckpoint(&checkpoint)
 			if err != nil {
 				klog.Errorf("Error while loading checkpoint. Reason: %+v", err)
@@ -433,17 +436,12 @@ type condition struct {
 }
 
 func (feeder *clusterStateFeeder) validateTargetRef(vpa *vpa_types.VerticalPodAutoscaler) (bool, condition) {
-	//
-	if vpa.Spec.TargetRef == nil {
-		return false, condition{}
-	}
+
 	k := controllerfetcher.ControllerKeyWithAPIVersion{
 		ControllerKey: controllerfetcher.ControllerKey{
 			Namespace: vpa.Namespace,
-			Kind:      vpa.Spec.TargetRef.Kind,
-			Name:      vpa.Spec.TargetRef.Name,
 		},
-		ApiVersion: vpa.Spec.TargetRef.APIVersion,
+		ApiVersion: "",
 	}
 	top, err := feeder.controllerFetcher.FindTopMostWellKnownOrScalable(&k)
 	if err != nil {

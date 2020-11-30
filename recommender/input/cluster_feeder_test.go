@@ -29,9 +29,10 @@ import (
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
-	target_mock "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/target/mock"
-	"k8s.io/autoscaler/vertical-pod-autoscaler/pkg/utils/test"
+	//vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
+	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
+	//target_mock "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/target/mock"
+	//"k8s.io/autoscaler/vertical-pod-autoscaler/pkg/utils/test"
 )
 
 type fakeControllerFetcher struct {
@@ -200,31 +201,20 @@ func TestLoadPods(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			vpa := test.VerticalPodAutoscaler().WithName("testVpa").WithContainer("container").WithNamespace("testNamespace").WithTargetRef(tc.targetRef).Get()
-			vpaLister := &test.VerticalPodAutoscalerListerMock{}
-			vpaLister.On("List").Return([]*vpa_types.VerticalPodAutoscaler{vpa}, nil)
-
-			targetSelectorFetcher := target_mock.NewMockVpaTargetSelectorFetcher(ctrl)
-
 			clusterState := model.NewClusterState()
 
 			clusterStateFeeder := clusterStateFeeder{
-				vpaLister:       vpaLister,
+				vpaLister:       nil, // mock object
 				clusterState:    clusterState,
-				selectorFetcher: targetSelectorFetcher,
+				selectorFetcher: nil, // mock object
 				controllerFetcher: &fakeControllerFetcher{
 					key: tc.topMostWellKnownOrScalableKey,
 					err: tc.findTopMostWellKnownOrScalableError,
 				},
 			}
-
-			targetSelectorFetcher.EXPECT().Fetch(vpa).Return(tc.selector, tc.fetchSelectorError)
 			clusterStateFeeder.LoadVPAs()
 
-			vpaID := model.VpaID{
-				Namespace: vpa.Namespace,
-				VpaName:   vpa.Name,
-			}
+			vpaID := model.VpaID{}
 
 			assert.Contains(t, clusterState.Vpas, vpaID)
 			storedVpa := clusterState.Vpas[vpaID]

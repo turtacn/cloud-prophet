@@ -3,6 +3,7 @@ package util
 import (
 	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/klog"
 )
 
 func GetContainerResourcePolicy(containerName string, policy *vpa_types.PodResourcePolicy) *vpa_types.ContainerResourcePolicy {
@@ -39,7 +40,11 @@ func UpdateVpaStatusIfNeeded(autoscaler vpa_types.VerticalPodAutoscalerInterface
 	return nil, nil
 }
 
-func CreateOrUpdateVpaCheckpoint(checkpointInterface vpa_types.VerticalPodAutoscalarCheckpointInterface,
+func CreateOrUpdateVpaCheckpoint(checkpointInterface vpa_types.VerticalPodAutoscalerCheckpointInterface,
 	checkpoint *vpa_types.VerticalPodAutoscalerCheckpoint) error {
+	return nil
+}
+
+func NewVpasLister(vpaClient vpa_types.VerticalPodAutoscalerCheckpointsGetter, stopChannel <-chan struct{}, namespace string) vpa_types.VerticalPodAutoscalerLister {
 	return nil
 }

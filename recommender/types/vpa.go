@@ -1,11 +1,15 @@
 package types
 
 import (
+	"context"
 	apiv1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/informers"
+	kube_client "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 // interface expansion
@@ -29,6 +33,8 @@ var (
 	RecommendationProvided VerticalPodAutoscalerConditionType = "RecommendationProvided"
 	NoPodsMatched          VerticalPodAutoscalerConditionType = "NoPodsMatched"
 	FetchingHistory        VerticalPodAutoscalerConditionType = "FetchingHistory"
+	ConfigDeprecated       VerticalPodAutoscalerConditionType = "ConfigDeprecated"
+	ConfigUnsupported      VerticalPodAutoscalerConditionType = "ConfigUnsupport"
 )
 
 type VerticalPodAutoscalerCondition struct {
@@ -48,6 +54,7 @@ type VerticalPodAutoscalerCheckpoint struct {
 	Spec      VerticalPodAutoscalerCheckpointSpec   `json:"spec"`
 	Status    VerticalPodAutoscalerCheckpointStatus `json:"status"`
 	Namespace string                                `json:"namespace"`
+	Name      string                                `json:"name"`
 }
 
 type VerticalPodAutoscalerCheckpointSpec struct {
@@ -87,17 +94,17 @@ type VerticalPodAutoscalarCheckpointList struct {
 }
 
 type VerticalPodAutoscalerCheckpointsGetter interface {
-	VerticalPodAutoscalarCheckpoints(namespace string) VerticalPodAutoscalarCheckpointInterface
+	VerticalPodAutoscalerCheckpoints(namespace string) VerticalPodAutoscalerCheckpointInterface
 }
 
 // 创建、更新、删除、列表删除、查询、列表
-type VerticalPodAutoscalarCheckpointInterface interface {
+type VerticalPodAutoscalerCheckpointInterface interface {
 	Create()
 	Update()
-	Delete()
+	Delete(ctx context.Context, name string, options metav1.DeleteOptions) error
 	DeleteCollection()
 	Get()
-	List()
+	List() (*VerticalPodAutoscalarCheckpointList, error)
 }
 
 type RecommendedPodResources struct {
@@ -144,4 +151,25 @@ type VerticalPodAutoscalerLister interface {
 	List(selector labels.Selector) (ret []*VerticalPodAutoscaler, err error)
 	//VerticalPodAutoscalers() VerticalPodAutoscalerNamespaceLister
 	VerticalPodAutoscalerListerExpansion
+}
+type verticalPodAutoscalerLister struct {
+}
+
+func (v *verticalPodAutoscalerLister) List(selector labels.Selector) (ret []*VerticalPodAutoscaler, err error) {
+	return nil, nil
+}
+
+type VpaTargetSelectorFetcher interface {
+	Fetch(vpa *VerticalPodAutoscaler) (labels.Selector, error)
+}
+
+func NewVpaTargetSelectorFetcher(config *rest.Config, kubeClient kube_client.Interface, factory informers.SharedInformerFactory) VpaTargetSelectorFetcher {
+	return &vpaTargetSelectorFetcher{}
+}
+
+type vpaTargetSelectorFetcher struct {
+}
+
+func (f *vpaTargetSelectorFetcher) Fetch(vpa *VerticalPodAutoscaler) (labels.Selector, error) {
+	return nil, nil
 }

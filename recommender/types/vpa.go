@@ -5,7 +5,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
+
+// interface expansion
+type VerticalPodAutoscalerListerExpansion interface{}
 
 type VerticalPodAutoscaler struct {
 	Namespace string                      `json:"namespace"`
@@ -41,8 +45,9 @@ type VerticalPodAutoscalerStatus struct {
 }
 
 type VerticalPodAutoscalerCheckpoint struct {
-	Spec   VerticalPodAutoscalerCheckpointSpec   `json:"spec"`
-	Status VerticalPodAutoscalerCheckpointStatus `json:"status"`
+	Spec      VerticalPodAutoscalerCheckpointSpec   `json:"spec"`
+	Status    VerticalPodAutoscalerCheckpointStatus `json:"status"`
+	Namespace string                                `json:"namespace"`
 }
 
 type VerticalPodAutoscalerCheckpointSpec struct {
@@ -134,3 +139,9 @@ const (
 	ContainerScalingModeAuto ContainerScalingMode = "Auto"
 	ContainerScalingModeOff  ContainerScalingMode = "Off"
 )
+
+type VerticalPodAutoscalerLister interface {
+	List(selector labels.Selector) (ret []*VerticalPodAutoscaler, err error)
+	//VerticalPodAutoscalers() VerticalPodAutoscalerNamespaceLister
+	VerticalPodAutoscalerListerExpansion
+}

@@ -104,7 +104,7 @@ type VerticalPodAutoscalerCheckpointInterface interface {
 	Delete(ctx context.Context, name string, options metav1.DeleteOptions) error
 	DeleteCollection()
 	Get()
-	List() (*VerticalPodAutoscalarCheckpointList, error)
+	List(ctx context.Context, options metav1.ListOptions) (*VerticalPodAutoscalarCheckpointList, error)
 }
 
 type RecommendedPodResources struct {

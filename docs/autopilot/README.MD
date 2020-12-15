@@ -86,3 +86,8 @@ pod list
 ### routines
 
 ## Updater
+
+
+<!--
+https://medium.com/@ymb002/vertical-pod-autoscaling-right-sizing-your-pods-18af3a0d5184
+-->

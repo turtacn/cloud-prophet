@@ -79,7 +79,10 @@ func main() {
 
 			for _, recon := range recommendation.ContainerRecommendations {
 
-				recommendString := fmt.Sprintf("%s recommendation resource, target: %+v; upper: %+v, lower: %+v", recon.ContainerName, recon.Target, recon.UpperBound, recon.LowerBound, recon.UncappedTarget)
+				recommendString := fmt.Sprintf("%s recommendation resource, target: %s; upper: %s, lower: %s, uncappedtarget: %s", recon.ContainerName,
+					recon.Target.Cpu().String(),
+					recon.UpperBound.Cpu().String(),
+					recon.LowerBound.Cpu().String(), recon.UncappedTarget.Cpu().String())
 				klog.Info(recommendString)
 			}
 		}

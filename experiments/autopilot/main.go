@@ -9,27 +9,30 @@ import (
 	"time"
 )
 
+const (
+	DefaultHostIp     = "127.0.0.1"
+	DefaultVmId       = "i-xxxxxxxxxx"
+	DefaultNcId       = "c-xxxxxxxxxx"
+	DefaultPodId      = "pod-xxxxxxxxxx"
+	DefaultRegionId   = "cn-north-1"
+	GuangzhouRegionId = "cn-south-1"
+	ShanghaiRegionId  = "cn-east-2"
+	SuqianRegionId    = "cn-east-1"
+)
+
+var (
+	hostIp = flag.String("host-ip", DefaultHostIp, `the host ip of host identification.`)
+	vmId   = flag.String("vm-id", DefaultVmId, `the identified string of vm instance.`)
+	ncId   = flag.String("nc-id", DefaultNcId, `the identified string of nc instance.`)
+	podId  = flag.String("pod-id", DefaultPodId, `the identified string of pod instance.`)
+	region = flag.String("region-id", DefaultRegionId, `region identification what instnaces were belonged to.`)
+)
+
 func main() {
 	klog.InitFlags(nil)
-	const (
-		DefaultHostIp     = "127.0.0.1"
-		DefaultVmId       = "i-xxxxxxxxxx"
-		DefaultNcId       = "c-xxxxxxxxxx"
-		DefaultPodId      = "pod-xxxxxxxxxx"
-		DefaultRegionId   = "cn-north-1"
-		GuangzhouRegionId = "cn-south-1"
-		ShanghaiRegionId  = "cn-east-2"
-		SuqianRegionId    = "cn-east-1"
-	)
 
-	var (
-		anyTime = time.Unix(0, 0)
-		hostIp  = flag.String("host-ip", DefaultHostIp, `the host ip of host identification.`)
-		vmId    = flag.String("vm-id", DefaultVmId, `the identified string of vm instance.`)
-		ncId    = flag.String("nc-id", DefaultNcId, `the identified string of nc instance.`)
-		podId   = flag.String("pod-id", DefaultPodId, `the identified string of pod instance.`)
-		region  = flag.String("region-id", DefaultRegionId, `region identification what instnaces were belonged to.`)
-	)
+	var anyTime = time.Unix(0, 0)
+
 	entityAggregateStateMap := make(model.ContainerNameToAggregateStateMap)
 
 	if *hostIp != "" {

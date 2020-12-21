@@ -21,11 +21,11 @@ const (
 )
 
 var (
-	hostIp = flag.String("host-ip", DefaultHostIp, `the host ip of host identification.`)
-	vmId   = flag.String("vm-id", DefaultVmId, `the identified string of vm instance.`)
-	ncId   = flag.String("nc-id", DefaultNcId, `the identified string of nc instance.`)
-	podId  = flag.String("pod-id", DefaultPodId, `the identified string of pod instance.`)
-	region = flag.String("region-id", DefaultRegionId, `region identification what instnaces were belonged to.`)
+	hostIp   = flag.String("host-ip", DefaultHostIp, `the host ip of host identification.`)
+	vmId     = flag.String("vm-id", DefaultVmId, `the identified string of vm instance.`)
+	ncId     = flag.String("nc-id", DefaultNcId, `the identified string of nc instance.`)
+	podId    = flag.String("pod-id", DefaultPodId, `the identified string of pod instance.`)
+	regionId = flag.String("region-id", DefaultRegionId, `region identification what instnaces were belonged to.`)
 )
 
 func main() {
@@ -48,8 +48,8 @@ func main() {
 		entityAggregateStateMap[*vmId] = model.NewAggregateContainerState()
 	}
 
-	if *region != DefaultRegionId || *region != GuangzhouRegionId || *region != ShanghaiRegionId || *region != SuqianRegionId {
-		klog.Fatalf("region not support")
+	if *regionId != DefaultRegionId || *regionId != GuangzhouRegionId || *regionId != ShanghaiRegionId || *regionId != SuqianRegionId {
+		klog.Fatalf("region(%s) not support", *regionId)
 		return
 	}
 

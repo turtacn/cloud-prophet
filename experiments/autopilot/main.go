@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-
+	klog.InitFlags(nil)
 	const (
 		DefaultHostIp     = "127.0.0.1"
 		DefaultVmId       = "i-xxxxxxxxxx"
@@ -30,8 +30,6 @@ func main() {
 		podId   = flag.String("pod-id", DefaultPodId, `the identified string of pod instance.`)
 		region  = flag.String("region-id", DefaultRegionId, `region identification what instnaces were belonged to.`)
 	)
-	klog.InitFlags(nil)
-
 	entityAggregateStateMap := make(model.ContainerNameToAggregateStateMap)
 
 	if *hostIp != "" {
@@ -48,6 +46,7 @@ func main() {
 	}
 
 	if *region != DefaultRegionId || *region != GuangzhouRegionId || *region != ShanghaiRegionId || *region != SuqianRegionId {
+		klog.Fatalf("region not support")
 		return
 	}
 
@@ -79,5 +78,5 @@ func main() {
 	for _, recon := range recommendation.ContainerRecommendations {
 		klog.Info("%s recommendation resource, target: %+v; upper: %+v, lower: %+v", recon.ContainerName, recon.Target, recon.UpperBound, recon.LowerBound, recon.UncappedTarget)
 	}
-
+	klog.Flush()
 }

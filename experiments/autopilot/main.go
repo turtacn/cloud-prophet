@@ -61,8 +61,13 @@ func main() {
 		for _, d := range data {
 			s.AddSample(&model.ContainerUsageSample{
 				timestamp, model.CPUAmountFromCores(d), model.CPUAmountFromCores(100), model.ResourceCPU})
+
 			timestamp = timestamp.Add(time.Minute * 1)
 
+			if !s.NeedsRecommendation() {
+				klog.Info("no need recommendation")
+				continue
+			}
 			resources := setResourceRecommender.GetRecommendedPodResources(entityAggregateStateMap)
 
 			containerResources := make([]vpa_types.RecommendedContainerResources, 0, len(resources))

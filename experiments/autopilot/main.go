@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/turtacn/cloud-prophet/recommender/logic"
 	"github.com/turtacn/cloud-prophet/recommender/model"
 	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
@@ -73,7 +74,9 @@ func main() {
 	recommendation := &vpa_types.RecommendedPodResources{containerResources}
 
 	for _, recon := range recommendation.ContainerRecommendations {
-		klog.Info("%s recommendation resource, target: %+v; upper: %+v, lower: %+v", recon.ContainerName, recon.Target, recon.UpperBound, recon.LowerBound, recon.UncappedTarget)
+
+		recommendString := fmt.Sprintf("%s recommendation resource, target: %+v; upper: %+v, lower: %+v", recon.ContainerName, recon.Target, recon.UpperBound, recon.LowerBound, recon.UncappedTarget)
+		klog.Info(recommendString)
 	}
 	klog.Flush()
 }

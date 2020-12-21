@@ -60,7 +60,7 @@ func main() {
 		timestamp := anyTime
 		for _, d := range data {
 			s.AddSample(&model.ContainerUsageSample{
-				timestamp, model.CPUAmountFromCores(d), model.CPUAmountFromCores(100), model.ResourceCPU})
+				timestamp, model.CPUAmountFromCores(d / 100), model.CPUAmountFromCores(1), model.ResourceCPU})
 
 			timestamp = timestamp.Add(time.Minute * 1)
 

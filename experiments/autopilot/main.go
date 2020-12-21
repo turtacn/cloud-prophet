@@ -65,12 +65,6 @@ func main() {
 			timestamp = timestamp.Add(time.Minute * 1)
 
 			resources := setResourceRecommender.GetRecommendedPodResources(entityAggregateStateMap)
-
-			if !s.NeedsRecommendation() {
-				klog.Info("no need recommendation")
-				continue
-			}
-
 			containerResources := make([]vpa_types.RecommendedContainerResources, 0, len(resources))
 			for containerName, res := range resources {
 				containerResources = append(containerResources, vpa_types.RecommendedContainerResources{

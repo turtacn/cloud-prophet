@@ -47,12 +47,6 @@ func main() {
 	if *vmId != "" {
 		entityAggregateStateMap[*vmId] = model.NewAggregateContainerState()
 	}
-
-	if *regionId != DefaultRegionId || *regionId != GuangzhouRegionId || *regionId != ShanghaiRegionId || *regionId != SuqianRegionId {
-		klog.Fatalf("region(%s) not support", *regionId)
-		return
-	}
-
 	for _, s := range entityAggregateStateMap {
 		timestamp := anyTime
 		for i := 1; i <= 9; i++ {

@@ -79,7 +79,7 @@ func main() {
 
 			for _, recon := range recommendation.ContainerRecommendations {
 
-				recommendString := fmt.Sprintf("%s,%s,%s,%d",
+				recommendString := fmt.Sprintf("%s,%s,%s,%f",
 					recon.Target.Cpu().String(),
 					recon.UpperBound.Cpu().String(),
 					recon.LowerBound.Cpu().String(), d)

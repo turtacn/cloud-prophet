@@ -115,7 +115,7 @@ func ReadFromCsv(filePath string) ([][]float64, error) {
 	return values, nil
 }
 
-func (r *recommender) RunOnce(element, csv string) {
+func (r *recommender) RunOnce(element, csvfile string) {
 
 	ctx := context.Background()
 	ctx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(*runOnceTimeout))
@@ -128,12 +128,12 @@ func (r *recommender) RunOnce(element, csv string) {
 	entityAggregateStateMap := make(model.ContainerNameToAggregateStateMap)
 	entityAggregateStateMap[element] = model.NewAggregateContainerState()
 
-	data, err := ReadFromCsv(csv)
+	data, err := ReadFromCsv(csvfile)
 	if err != nil {
 		klog.Errorf("load data failed")
 	}
 
-	for _, s := range entityAggregateStateMap {
+	for elem, s := range entityAggregateStateMap {
 		timestamp := anyTime
 		for i := 0; i < len(data); i++ {
 			d := data[i][1] / 100
@@ -155,11 +155,19 @@ func (r *recommender) RunOnce(element, csv string) {
 			}
 			recommendation := &vpa_types.RecommendedPodResources{containerResources}
 
+			file, err := os.Create(fmt.Sprintf("%s-predict.csv", elem))
+			checkError("Cannot create file", err)
+			defer file.Close()
+			writer := csv.NewWriter(file)
+			defer writer.Flush()
+
 			for _, recon := range recommendation.ContainerRecommendations {
 
 				recommendString := fmt.Sprintf("%s,%f",
 					recon.Target.Cpu().AsDec().String(), d)
 				klog.Info(recommendString)
+				err := writer.Write([]string{recon.Target.Cpu().AsDec().String(), fmt.Sprintf("%f", d)})
+				checkError("Cannot write to file", err)
 			}
 		}
 	}
@@ -168,6 +176,12 @@ func (r *recommender) RunOnce(element, csv string) {
 	// gc
 	// maintain checkpoint
 
+}
+
+func checkError(message string, err error) {
+	if err != nil {
+		klog.Fatalf("message:%s, error=%+v", message, err)
+	}
 }
 
 // RecommenderFactory makes instances of Recommender.

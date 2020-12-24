@@ -19,7 +19,7 @@ var (
 
 func main() {
 	klog.InitFlags(nil)
-
+	flag.Parse()
 	model.InitializeAggregationsConfig(model.NewAggregationsConfig(*memoryAggregationInterval, *memoryAggregationIntervalCount, *memoryHistogramDecayHalfLife, *cpuHistogramDecayHalfLife))
 	recommender := auto.NewRecommender()
 	klog.Info("begin")

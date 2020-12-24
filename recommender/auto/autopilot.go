@@ -167,7 +167,7 @@ func (r *recommender) RunOnce(element, csvfile string) {
 				recommendString := fmt.Sprintf("%s,%f",
 					recon.Target.Cpu().AsDec().String(), d)
 				klog.Info(recommendString)
-				err := writer.Write([]string{recommendString})
+				err := writer.Write([]string{recon.Target.Cpu().AsDec().String(), fmt.Sprintf("%f", d)})
 				checkError("Cannot write to file", err)
 			}
 		}

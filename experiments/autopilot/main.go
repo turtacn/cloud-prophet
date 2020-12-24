@@ -62,7 +62,7 @@ func main() {
 			s.AddSample(&model.ContainerUsageSample{
 				timestamp, model.CPUAmountFromCores(d / 100), model.CPUAmountFromCores(1), model.ResourceCPU})
 
-			timestamp = timestamp.Add(time.Minute * 1)
+			timestamp = timestamp.Add(time.Second * 1)
 
 			resources := setResourceRecommender.GetRecommendedPodResources(entityAggregateStateMap)
 			containerResources := make([]vpa_types.RecommendedContainerResources, 0, len(resources))

@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	runOnceTimeout       = flag.Duration("runonce-timeout", time.Minute, `run once time out`)
+	runOnceTimeout       = flag.Duration("runonce-timeout", time.Hour, `run once time out`)
 	sampleSecondInterval = flag.Int("sample-second-interval", 60, `sample interval seconds`)
 )
 
@@ -63,7 +63,7 @@ func (r *recommender) RunOnce(element, csv string) {
 	ctx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(*runOnceTimeout))
 	defer cancelFunc()
 
-	klog.V(3).Infof("Recommender Run")
+	klog.V(0).Infof("Recommender Run")
 	// load
 
 	var anyTime = time.Unix(0, 0)

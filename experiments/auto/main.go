@@ -22,5 +22,7 @@ func main() {
 
 	model.InitializeAggregationsConfig(model.NewAggregationsConfig(*memoryAggregationInterval, *memoryAggregationIntervalCount, *memoryHistogramDecayHalfLife, *cpuHistogramDecayHalfLife))
 	recommender := auto.NewRecommender()
+	klog.Info("begin")
 	recommender.RunOnce(*elementId, *csvFile)
+	klog.Info("over")
 }

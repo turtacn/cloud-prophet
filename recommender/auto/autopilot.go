@@ -135,7 +135,7 @@ func (r *recommender) RunOnce(element, csv string) {
 
 	for _, s := range entityAggregateStateMap {
 		timestamp := anyTime
-		for _, d := range data[1] {
+		for _, d := range data[0] {
 			s.AddSample(&model.ContainerUsageSample{
 				timestamp, model.CPUAmountFromCores(d / 100), model.CPUAmountFromCores(1), model.ResourceCPU})
 

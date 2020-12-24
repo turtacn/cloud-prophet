@@ -134,6 +134,13 @@ func (r *recommender) RunOnce(element, csvfile string) {
 	}
 
 	for elem, s := range entityAggregateStateMap {
+
+		file, err := os.Create(fmt.Sprintf("%s-predict.csv", elem))
+		checkError("Cannot create file", err)
+		defer file.Close()
+		writer := csv.NewWriter(file)
+		defer writer.Flush()
+
 		timestamp := anyTime
 		for i := 0; i < len(data); i++ {
 			d := data[i][1] / 100
@@ -155,18 +162,12 @@ func (r *recommender) RunOnce(element, csvfile string) {
 			}
 			recommendation := &vpa_types.RecommendedPodResources{containerResources}
 
-			file, err := os.Create(fmt.Sprintf("%s-predict.csv", elem))
-			checkError("Cannot create file", err)
-			defer file.Close()
-			writer := csv.NewWriter(file)
-			defer writer.Flush()
-
 			for _, recon := range recommendation.ContainerRecommendations {
 
 				recommendString := fmt.Sprintf("%s,%f",
 					recon.Target.Cpu().AsDec().String(), d)
 				klog.Info(recommendString)
-				err := writer.Write([]string{recon.Target.Cpu().AsDec().String(), fmt.Sprintf("%f", d)})
+				err := writer.Write([]string{recommendString})
 				checkError("Cannot write to file", err)
 			}
 		}

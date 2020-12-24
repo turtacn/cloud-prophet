@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/turtacn/cloud-prophet/recommender/auto"
-	"github.com/turtacn/cloud-prophet/recommender/input/history"
 	"github.com/turtacn/cloud-prophet/recommender/model"
 	kube_flag "k8s.io/component-base/cli/flag"
 	"k8s.io/klog"
@@ -32,22 +31,6 @@ func main() {
 	kube_flag.InitFlags()
 
 	model.InitializeAggregationsConfig(model.NewAggregationsConfig(*memoryAggregationInterval, *memoryAggregationIntervalCount, *memoryHistogramDecayHalfLife, *cpuHistogramDecayHalfLife))
-
-	useCheckpoints := *storage != "prometheus"
-	recommender := auto.NewRecommender(nil, *checkpointsGCInterval, useCheckpoints, "")
-
-	if useCheckpoints {
-		recommender.GetClusterStateFeeder().InitFromCheckpoints()
-	} else {
-		config := history.PrometheusHistoryProviderConfig{
-			HistoryLength:     *historyLength,
-			HistoryResolution: *historyResolution,
-		}
-		provider, err := history.NewPrometheusHistoryProvider(config)
-		if err != nil {
-			klog.Fatalf("Could not initialize history provider: %v", err)
-		}
-		recommender.GetClusterStateFeeder().InitFromHistoryProvider(provider)
-	}
-	recommender.RunOnce()
+	recommender := auto.NewRecommender()
+	recommender.RunOnce("xxx")
 }

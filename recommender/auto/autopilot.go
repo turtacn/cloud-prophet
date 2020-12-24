@@ -3,22 +3,12 @@ package auto
 import (
 	"context"
 	"flag"
-	"time"
-
-	"github.com/turtacn/cloud-prophet/recommender/checkpoint"
-	"github.com/turtacn/cloud-prophet/recommender/input"
 	"github.com/turtacn/cloud-prophet/recommender/logic"
 	"github.com/turtacn/cloud-prophet/recommender/model"
-	//vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
 	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
-	//vpa_api "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/client/clientset/versioned/typed/autoscaling.k8s.io/v1"
-	vpa_api "github.com/turtacn/cloud-prophet/recommender/types"
-
-	//vpa_utils "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/utils/vpa"
-	"github.com/turtacn/cloud-prophet/recommender/routines"
 	vpa_utils "github.com/turtacn/cloud-prophet/recommender/util"
-	"k8s.io/client-go/rest"
 	"k8s.io/klog"
+	"time"
 )
 
 // AggregateContainerStateGCInterval defines how often expired AggregateContainerStates are garbage collected.
@@ -33,81 +23,11 @@ var (
 // Recommender recommend resources for certain containers, based on utilization periodically got from metrics api.
 type Recommender interface {
 	// RunOnce performs one iteration of recommender duties followed by update of recommendations in VPA objects.
-	RunOnce()
-	// GetClusterState returns ClusterState used by Recommender
-	GetClusterState() *model.ClusterState
-	// GetClusterStateFeeder returns ClusterStateFeeder used by Recommender
-	GetClusterStateFeeder() input.ClusterStateFeeder
-	// UpdateVPAs computes recommendations and sends VPAs status updates to API Server
-	UpdateVPAs()
-	// MaintainCheckpoints stores current checkpoints in API Server and garbage collect old ones
-	// MaintainCheckpoints writes at least minCheckpoints if there are more checkpoints to write.
-	// Checkpoints are written until ctx permits or all checkpoints are written.
-	MaintainCheckpoints(ctx context.Context, minCheckpoints int)
-	// GarbageCollect removes old AggregateCollectionStates
-	GarbageCollect()
+	RunOnce(string)
 }
 
 type recommender struct {
-	clusterState                  *model.ClusterState
-	clusterStateFeeder            input.ClusterStateFeeder
-	checkpointWriter              checkpoint.CheckpointWriter
-	checkpointsGCInterval         time.Duration
-	lastCheckpointGC              time.Time
-	vpaClient                     vpa_api.VerticalPodAutoscalersGetter
-	podResourceRecommender        logic.PodResourceRecommender
-	useCheckpoints                bool
-	lastAggregateContainerStateGC time.Time
-}
-
-func (r *recommender) GetClusterState() *model.ClusterState {
-	return r.clusterState
-}
-
-func (r *recommender) GetClusterStateFeeder() input.ClusterStateFeeder {
-	return r.clusterStateFeeder
-}
-
-// Updates VPA CRD objects' statuses.
-func (r *recommender) UpdateVPAs() {
-	for _, observedVpa := range r.clusterState.ObservedVpas {
-		key := model.VpaID{
-			Namespace: observedVpa.Namespace,
-			VpaName:   observedVpa.Name,
-		}
-
-		vpa, found := r.clusterState.Vpas[key]
-		if !found {
-			continue
-		}
-		resources := r.podResourceRecommender.GetRecommendedPodResources(routines.GetContainerNameToAggregateStateMap(vpa))
-		had := vpa.HasRecommendation()
-		vpa.UpdateRecommendation(getCappedRecommendation(vpa.ID, resources, observedVpa.Spec.ResourcePolicy))
-		if vpa.HasRecommendation() && !had {
-			//
-		}
-		hasMatchingPods := vpa.PodCount > 0
-		vpa.UpdateConditions(hasMatchingPods)
-		if err := r.clusterState.RecordRecommendation(vpa, time.Now()); err != nil {
-			klog.Warningf("%v", err)
-			klog.V(4).Infof("VPA dump")
-			klog.V(4).Infof("%+v", vpa)
-			klog.V(4).Infof("HasMatchingPods: %v", hasMatchingPods)
-			klog.V(4).Infof("PodCount: %v", vpa.PodCount)
-			pods := r.clusterState.GetMatchingPods(vpa)
-			klog.V(4).Infof("MatchingPods: %+v", pods)
-			if len(pods) != vpa.PodCount {
-				klog.Errorf("ClusterState pod count and matching pods disagree for vpa %v/%v", vpa.ID.Namespace, vpa.ID.VpaName)
-			}
-		}
-
-		_, err := vpa_utils.UpdateVpaStatusIfNeeded(
-			nil, vpa.ID.VpaName, vpa.AsStatus(), &observedVpa.Status)
-		if err != nil {
-			klog.Errorf(
-				"Cannot update VPA %v object. Reason: %+v", vpa.ID.VpaName, err)
-		}
-	}
+	podResourceRecommender logic.PodResourceRecommender
 }
 
 // getCappedRecommendation creates a recommendation based on recommended pod
@@ -135,28 +55,7 @@ func getCappedRecommendation(vpaID model.VpaID, resources logic.RecommendedPodRe
 	return cappedRecommendation
 }
 
-func (r *recommender) MaintainCheckpoints(ctx context.Context, minCheckpointsPerRun int) {
-	now := time.Now()
-	if r.useCheckpoints {
-		if err := r.checkpointWriter.StoreCheckpoints(ctx, now, minCheckpointsPerRun); err != nil {
-			klog.Warningf("Failed to store checkpoints. Reason: %+v", err)
-		}
-		if time.Now().Sub(r.lastCheckpointGC) > r.checkpointsGCInterval {
-			r.lastCheckpointGC = now
-			r.clusterStateFeeder.GarbageCollectCheckpoints()
-		}
-	}
-}
-
-func (r *recommender) GarbageCollect() {
-	gcTime := time.Now()
-	if gcTime.Sub(r.lastAggregateContainerStateGC) > AggregateContainerStateGCInterval {
-		r.clusterState.GarbageCollectAggregateCollectionStates(gcTime)
-		r.lastAggregateContainerStateGC = gcTime
-	}
-}
-
-func (r *recommender) RunOnce() {
+func (r *recommender) RunOnce(csv string) {
 
 	ctx := context.Background()
 	ctx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(*checkpointsWriteTimeout))
@@ -164,47 +63,26 @@ func (r *recommender) RunOnce() {
 
 	klog.V(3).Infof("Recommender Run")
 
-	r.clusterStateFeeder.LoadVPAs()
+	// load
 
-	r.clusterStateFeeder.LoadPods()
+	// upodate vpa
+	// gc
+	// maintain checkpoint
 
-	r.clusterStateFeeder.LoadRealTimeMetrics()
-	klog.V(3).Infof("ClusterState is tracking %v PodStates and %v VPAs", len(r.clusterState.Pods), len(r.clusterState.Vpas))
-
-	r.UpdateVPAs()
-
-	r.MaintainCheckpoints(ctx, *minCheckpointsPerRun)
-
-	r.GarbageCollect()
-	klog.V(3).Infof("ClusterState is tracking %d aggregated container states", r.clusterState.StateMapSize())
 }
 
 // RecommenderFactory makes instances of Recommender.
 type RecommenderFactory struct {
-	ClusterState *model.ClusterState
-
-	ClusterStateFeeder     input.ClusterStateFeeder
-	CheckpointWriter       checkpoint.CheckpointWriter
 	PodResourceRecommender logic.PodResourceRecommender
-	VpaClient              vpa_api.VerticalPodAutoscalersGetter
-
-	CheckpointsGCInterval time.Duration
-	UseCheckpoints        bool
+	CheckpointsGCInterval  time.Duration
+	UseCheckpoints         bool
 }
 
 // Make creates a new recommender instance,
 // which can be run in order to provide continuous resource recommendations for containers.
 func (c RecommenderFactory) Make() Recommender {
 	recommender := &recommender{
-		clusterState:                  c.ClusterState,
-		clusterStateFeeder:            c.ClusterStateFeeder,
-		checkpointWriter:              c.CheckpointWriter,
-		checkpointsGCInterval:         c.CheckpointsGCInterval,
-		useCheckpoints:                c.UseCheckpoints,
-		vpaClient:                     c.VpaClient,
-		podResourceRecommender:        c.PodResourceRecommender,
-		lastAggregateContainerStateGC: time.Now(),
-		lastCheckpointGC:              time.Now(),
+		podResourceRecommender: c.PodResourceRecommender,
 	}
 	klog.V(3).Infof("New Recommender created %+v", recommender)
 	return recommender
@@ -213,14 +91,8 @@ func (c RecommenderFactory) Make() Recommender {
 // NewRecommender creates a new recommender instance.
 // Dependencies are created automatically.
 // Deprecated; use RecommenderFactory instead.
-func NewRecommender(config *rest.Config, checkpointsGCInterval time.Duration, useCheckpoints bool, namespace string) Recommender {
-	clusterState := model.NewClusterState()
+func NewRecommender() Recommender {
 	return RecommenderFactory{
-		ClusterState:           clusterState,
-		ClusterStateFeeder:     input.NewClusterStateFeeder(config, clusterState, *memorySaver, namespace),
-		CheckpointWriter:       checkpoint.NewCheckpointWriter(clusterState, nil),
 		PodResourceRecommender: logic.CreatePodResourceRecommender(),
-		CheckpointsGCInterval:  checkpointsGCInterval,
-		UseCheckpoints:         useCheckpoints,
 	}.Make()
 }

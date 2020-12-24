@@ -7,7 +7,6 @@ import (
 	"github.com/turtacn/cloud-prophet/recommender/auto"
 	"github.com/turtacn/cloud-prophet/recommender/input/history"
 	"github.com/turtacn/cloud-prophet/recommender/model"
-	"github.com/turtacn/cloud-prophet/recommender/routines"
 	kube_flag "k8s.io/component-base/cli/flag"
 	"k8s.io/klog"
 )

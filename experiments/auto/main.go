@@ -2,20 +2,10 @@ package main
 
 import (
 	"flag"
-	"time"
-
 	"github.com/turtacn/cloud-prophet/recommender/auto"
 	"github.com/turtacn/cloud-prophet/recommender/model"
 	kube_flag "k8s.io/component-base/cli/flag"
 	"k8s.io/klog"
-)
-
-var (
-	checkpointsGCInterval = flag.Duration("checkpoints-gc-interval", 10*time.Minute, `How often orphaned checkpoints should be garbage collected`)
-	storage               = flag.String("storage", "", `Specifies storage mode. Supported values: prometheus, checkpoint (default)`)
-	// prometheus history provider configs
-	historyLength     = flag.String("history-length", "8d", `How much time back prometheus have to be queried to get historical metrics`)
-	historyResolution = flag.String("history-resolution", "1h", `Resolution at which Prometheus is queried for historical metrics`)
 )
 
 // Aggregation configuration flags

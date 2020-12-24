@@ -18,7 +18,7 @@ var (
 )
 
 func main() {
-	klog.InitFlags(nil)
+	//klog.InitFlags(nil)
 	flag.Parse()
 	model.InitializeAggregationsConfig(model.NewAggregationsConfig(model.DefaultMemoryAggregationInterval, model.DefaultMemoryAggregationIntervalCount,
 		model.DefaultMemoryHistogramDecayHalfLife, *cpuHistogramDecayHalfLife))

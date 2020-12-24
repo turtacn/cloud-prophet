@@ -8,7 +8,6 @@ import (
 	"github.com/turtacn/cloud-prophet/recommender/logic"
 	"github.com/turtacn/cloud-prophet/recommender/model"
 	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
-	vpa_utils "github.com/turtacn/cloud-prophet/recommender/util"
 	"k8s.io/klog"
 	"os"
 	"strconv"
@@ -30,31 +29,6 @@ type Recommender interface {
 
 type recommender struct {
 	podResourceRecommender logic.PodResourceRecommender
-}
-
-// getCappedRecommendation creates a recommendation based on recommended pod
-// resources, setting the UncappedTarget to the calculated recommended target
-// and if necessary, capping the Target, LowerBound and UpperBound according
-// to the ResourcePolicy.
-func getCappedRecommendation(vpaID model.VpaID, resources logic.RecommendedPodResources,
-	policy *vpa_types.PodResourcePolicy) *vpa_types.RecommendedPodResources {
-	containerResources := make([]vpa_types.RecommendedContainerResources, 0, len(resources))
-	for containerName, res := range resources {
-		containerResources = append(containerResources, vpa_types.RecommendedContainerResources{
-			ContainerName:  containerName,
-			Target:         model.ResourcesAsResourceList(res.Target),
-			LowerBound:     model.ResourcesAsResourceList(res.LowerBound),
-			UpperBound:     model.ResourcesAsResourceList(res.UpperBound),
-			UncappedTarget: model.ResourcesAsResourceList(res.Target),
-		})
-	}
-	recommendation := &vpa_types.RecommendedPodResources{containerResources}
-	cappedRecommendation, err := vpa_utils.ApplyVPAPolicy(recommendation, policy)
-	if err != nil {
-		klog.Errorf("Failed to apply policy for VPA %v/%v: %v", vpaID.Namespace, vpaID.VpaName, err)
-		return recommendation
-	}
-	return cappedRecommendation
 }
 
 // make2dFloatArray makes a new 2d array of float64s based on the

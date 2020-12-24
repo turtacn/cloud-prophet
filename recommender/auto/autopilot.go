@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	runOnceTimeout       = flag.Duration("runonce-timeout", time.Hour, `run once time out`)
-	sampleSecondInterval = flag.Int("sample-second-interval", 60, `sample interval seconds`)
+	runOnceTimeout       = flag.Duration("runonce-timeout", time.Hour, `一次运行的最大超时时间`)
+	sampleSecondInterval = flag.Int("sample-second-interval", 60, `样本的采样间隔，单位(秒)，整型`)
 )
 
 // Recommender recommend resources for certain containers, based on utilization periodically got from metrics api.

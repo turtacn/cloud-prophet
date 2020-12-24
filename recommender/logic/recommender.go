@@ -7,7 +7,9 @@ import (
 )
 
 var (
-	safetyMarginFraction         = flag.Float64("recommendation-margin-fraction", 0.15, `Fraction of usage added as the safety margin to the prediction`)
+	safetyMarginFraction         = flag.Float64("recommendation-margin-fraction", 0.15, `预测的安全边缘余量，百分比`)
+	targetCpuPercentile          = flag.Float64("target-cpu-percentile", 0.9, `cpu预测采用的分位值，百分比`)
+	targetMemPercentile          = flag.Float64("target-mem-percentile", 0.9, `cpu预测采用的分位值，百分比`)
 	_podMinCPUMillicores float64 = 0.0
 	podMinCPUMillicores          = &_podMinCPUMillicores //flag.Float64("pod-recommendation-min-cpu-millicores", 0, `Minimum CPU recommendation for a pod`)
 	_podMinMemoryMb      float64 = 0.0
@@ -85,11 +87,11 @@ func FilterControlledResources(estimation model.Resources, controlledResources [
 
 // CreatePodResourceRecommender returns the primary recommender.
 func CreatePodResourceRecommender() PodResourceRecommender {
-	targetCPUPercentile := 0.9
+	targetCPUPercentile := *targetCpuPercentile
 	lowerBoundCPUPercentile := 0.5
 	upperBoundCPUPercentile := 0.95
 
-	targetMemoryPeaksPercentile := 0.9
+	targetMemoryPeaksPercentile := *targetMemPercentile
 	lowerBoundMemoryPeaksPercentile := 0.5
 	upperBoundMemoryPeaksPercentile := 0.95
 

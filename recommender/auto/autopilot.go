@@ -2,6 +2,7 @@ package auto
 
 import (
 	"context"
+	"encoding/csv"
 	"flag"
 	"fmt"
 	"github.com/turtacn/cloud-prophet/recommender/logic"
@@ -9,6 +10,9 @@ import (
 	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
 	vpa_utils "github.com/turtacn/cloud-prophet/recommender/util"
 	"k8s.io/klog"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -53,8 +57,62 @@ func getCappedRecommendation(vpaID model.VpaID, resources logic.RecommendedPodRe
 	return cappedRecommendation
 }
 
-func laodCSVData(csv string) []float64 {
-	return nil
+// make2dFloatArray makes a new 2d array of float64s based on the
+// rowCount and colCount provided as arguments
+func make2dFloatArray(rowCount int, colCount int) [][]float64 {
+	values := make([][]float64, rowCount)
+	for rowIndex := range values {
+		values[rowIndex] = make([]float64, colCount)
+	}
+
+	return values
+}
+
+// stringValuesToFloats converts a 2d array of strings into a 2d array
+// of float64s.
+func stringValuesToFloats(stringValues [][]string) ([][]float64, error) {
+	values := make2dFloatArray(len(stringValues), len(stringValues[0]))
+
+	for rowIndex, _ := range values {
+		for colIndex, _ := range values[rowIndex] {
+			var err error = nil
+
+			trimString :=
+				strings.TrimSpace(stringValues[rowIndex][colIndex])
+
+			values[rowIndex][colIndex], err =
+				strconv.ParseFloat(trimString, 64)
+
+			if err != nil {
+				fmt.Println(err)
+				return values, err
+			}
+		}
+	}
+
+	return values, nil
+}
+
+// ReadFromCsv will read the csv file at filePath and return its
+// contents as a 2d array of floats
+func ReadFromCsv(filePath string) ([][]float64, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	reader := csv.NewReader(file)
+	stringValues, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	values, err := stringValuesToFloats(stringValues)
+	if err != nil {
+		return nil, err
+	}
+
+	return values, nil
 }
 
 func (r *recommender) RunOnce(element, csv string) {
@@ -70,10 +128,14 @@ func (r *recommender) RunOnce(element, csv string) {
 	entityAggregateStateMap := make(model.ContainerNameToAggregateStateMap)
 	entityAggregateStateMap[element] = model.NewAggregateContainerState()
 
-	data := laodCSVData(csv)
+	data, err := ReadFromCsv(csv)
+	if err != nil {
+		klog.Errorf("load data failed")
+	}
+
 	for _, s := range entityAggregateStateMap {
 		timestamp := anyTime
-		for _, d := range data {
+		for _, d := range data[1] {
 			s.AddSample(&model.ContainerUsageSample{
 				timestamp, model.CPUAmountFromCores(d / 100), model.CPUAmountFromCores(1), model.ResourceCPU})
 
@@ -120,7 +182,7 @@ func (c RecommenderFactory) Make() Recommender {
 	recommender := &recommender{
 		podResourceRecommender: c.PodResourceRecommender,
 	}
-	klog.V(3).Infof("New Recommender created %+v", recommender)
+	klog.Infof("New Recommender created %+v", recommender)
 	return recommender
 }
 

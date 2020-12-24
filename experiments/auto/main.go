@@ -4,7 +4,6 @@ import (
 	"flag"
 	"github.com/turtacn/cloud-prophet/recommender/auto"
 	"github.com/turtacn/cloud-prophet/recommender/model"
-	"k8s.io/klog"
 )
 
 // Aggregation configuration flags
@@ -18,7 +17,6 @@ var (
 )
 
 func main() {
-	//klog.InitFlags(nil)
 	flag.Parse()
 	model.InitializeAggregationsConfig(model.NewAggregationsConfig(model.DefaultMemoryAggregationInterval, model.DefaultMemoryAggregationIntervalCount,
 		model.DefaultMemoryHistogramDecayHalfLife, *cpuHistogramDecayHalfLife))

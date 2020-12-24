@@ -4,6 +4,7 @@ import (
 	"flag"
 	"time"
 
+	"github.com/turtacn/cloud-prophet/recommender/auto"
 	"github.com/turtacn/cloud-prophet/recommender/input/history"
 	"github.com/turtacn/cloud-prophet/recommender/model"
 	"github.com/turtacn/cloud-prophet/recommender/routines"
@@ -34,7 +35,7 @@ func main() {
 	model.InitializeAggregationsConfig(model.NewAggregationsConfig(*memoryAggregationInterval, *memoryAggregationIntervalCount, *memoryHistogramDecayHalfLife, *cpuHistogramDecayHalfLife))
 
 	useCheckpoints := *storage != "prometheus"
-	recommender := routines.NewRecommender(nil, *checkpointsGCInterval, useCheckpoints, "")
+	recommender := auto.NewRecommender(nil, *checkpointsGCInterval, useCheckpoints, "")
 
 	if useCheckpoints {
 		recommender.GetClusterStateFeeder().InitFromCheckpoints()

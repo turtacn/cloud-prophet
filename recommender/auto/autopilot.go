@@ -3,6 +3,7 @@ package auto
 import (
 	"context"
 	"flag"
+	"fmt"
 	"github.com/turtacn/cloud-prophet/recommender/logic"
 	"github.com/turtacn/cloud-prophet/recommender/model"
 	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
@@ -11,19 +12,16 @@ import (
 	"time"
 )
 
-// AggregateContainerStateGCInterval defines how often expired AggregateContainerStates are garbage collected.
-const AggregateContainerStateGCInterval = 1 * time.Hour
-
 var (
-	checkpointsWriteTimeout = flag.Duration("checkpoints-timeout", time.Minute, `Timeout for writing checkpoints since the start of the recommender's main loop`)
-	minCheckpointsPerRun    = flag.Int("min-checkpoints", 10, "Minimum number of checkpoints to write per recommender's main loop")
-	memorySaver             = flag.Bool("memory-saver", false, `If true, only track pods which have an associated VPA`)
+	runOnceTimeout       = flag.Duration("runonce-timeout", time.Minute, `一次预测的超时时间`)
+	sampleSecondInterval = flag.Int("sample-second-interval", 60, `样本的时间间隔（int）秒`)
 )
 
 // Recommender recommend resources for certain containers, based on utilization periodically got from metrics api.
 type Recommender interface {
-	// RunOnce performs one iteration of recommender duties followed by update of recommendations in VPA objects.
-	RunOnce(string)
+	// RunOnce performs one iteration of recommender
+	// elementid , csv data
+	RunOnce(string, string)
 }
 
 type recommender struct {
@@ -55,15 +53,53 @@ func getCappedRecommendation(vpaID model.VpaID, resources logic.RecommendedPodRe
 	return cappedRecommendation
 }
 
-func (r *recommender) RunOnce(csv string) {
+func laodCSVData(csv string) []float64 {
+	return nil
+}
+
+func (r *recommender) RunOnce(element, csv string) {
 
 	ctx := context.Background()
-	ctx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(*checkpointsWriteTimeout))
+	ctx, cancelFunc := context.WithDeadline(ctx, time.Now().Add(*runOnceTimeout))
 	defer cancelFunc()
 
 	klog.V(3).Infof("Recommender Run")
-
 	// load
+
+	var anyTime = time.Unix(0, 0)
+	entityAggregateStateMap := make(model.ContainerNameToAggregateStateMap)
+	entityAggregateStateMap[element] = model.NewAggregateContainerState()
+
+	data := laodCSVData(csv)
+	for _, s := range entityAggregateStateMap {
+		timestamp := anyTime
+		for _, d := range data {
+			s.AddSample(&model.ContainerUsageSample{
+				timestamp, model.CPUAmountFromCores(d / 100), model.CPUAmountFromCores(1), model.ResourceCPU})
+
+			timestamp = timestamp.Add(time.Duration(*sampleSecondInterval) * time.Second)
+
+			resources := r.podResourceRecommender.GetRecommendedPodResources(entityAggregateStateMap)
+			containerResources := make([]vpa_types.RecommendedContainerResources, 0, len(resources))
+			for containerName, res := range resources {
+				containerResources = append(containerResources, vpa_types.RecommendedContainerResources{
+					ContainerName:  containerName,
+					Target:         model.ResourcesAsResourceList(res.Target),
+					LowerBound:     model.ResourcesAsResourceList(res.LowerBound),
+					UpperBound:     model.ResourcesAsResourceList(res.UpperBound),
+					UncappedTarget: model.ResourcesAsResourceList(res.Target),
+				})
+			}
+			recommendation := &vpa_types.RecommendedPodResources{containerResources}
+
+			for _, recon := range recommendation.ContainerRecommendations {
+
+				recommendString := fmt.Sprintf("%s,%f",
+					recon.Target.Cpu().AsDec().String(), d)
+				klog.Info(recommendString)
+			}
+		}
+	}
 
 	// upodate vpa
 	// gc

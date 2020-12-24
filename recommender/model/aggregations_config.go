@@ -47,7 +47,7 @@ const (
 	DefaultMemoryAggregationIntervalCount = 8
 	// DefaultMemoryAggregationInterval is the default value for MemoryAggregationInterval.
 	// which the peak memory usage is computed.
-	DefaultMemoryAggregationInterval = time.Hour * 24
+	DefaultMemoryAggregationInterval = time.Hour * 48
 	// DefaultHistogramBucketSizeGrowth is the default value for HistogramBucketSizeGrowth.
 	DefaultHistogramBucketSizeGrowth = 0.05 // Make each bucket 5% larger than the previous one.
 	// DefaultMemoryHistogramDecayHalfLife is the default value for MemoryHistogramDecayHalfLife.

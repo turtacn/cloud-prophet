@@ -1,4 +1,13 @@
 #!/bin/sh
+GO111MODULE=on
+GOROOT=/User/tuxudong/go
+GOPATH=/User/tuxudong/go/gocache
+PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+echo "*******************************************"
+echo "*GOROOT:"$GOROOT
+echo "*GOPATH:"$GOPATH
+echo "*"`go version`
+echo "*******************************************"
 /usr/bin/rm  -rf   _output 
 export GO111MODULE=on
 export COMMIT=`git rev-parse HEAD 2>/dev/null`

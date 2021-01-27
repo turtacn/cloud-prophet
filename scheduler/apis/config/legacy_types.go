@@ -1,14 +1,11 @@
 package config
 
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
+import ()
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Policy describes a struct of a policy resource in api.
 type Policy struct {
-	metav1.TypeMeta
 	// Holds the information to configure the fit predicate functions.
 	// If unspecified, the default predicate functions will be applied.
 	// If empty list, all predicates (except the mandatory ones) will be

@@ -10,15 +10,12 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodelabel"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodename"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeports"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodepreferavoidpods"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/noderesources"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeunschedulable"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodevolumelimits"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/podtopologyspread"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/selectorspread"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/serviceaffinity"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/tainttoleration"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/volumebinding"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/volumerestrictions"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/volumezone"
 	"k8s.io/klog/v2"
@@ -253,10 +250,6 @@ func NewLegacyRegistry() *LegacyRegistry {
 		})
 	registry.registerPredicateConfigProducer(CheckVolumeBindingPred,
 		func(args ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
-			plugins.PreFilter = appendToPluginSet(plugins.PreFilter, volumebinding.Name, nil)
-			plugins.Filter = appendToPluginSet(plugins.Filter, volumebinding.Name, nil)
-			plugins.Reserve = appendToPluginSet(plugins.Reserve, volumebinding.Name, nil)
-			plugins.PreBind = appendToPluginSet(plugins.PreBind, volumebinding.Name, nil)
 			return
 		})
 	registry.registerPredicateConfigProducer(NoDiskConflictPred,
@@ -271,27 +264,22 @@ func NewLegacyRegistry() *LegacyRegistry {
 		})
 	registry.registerPredicateConfigProducer(MaxCSIVolumeCountPred,
 		func(_ ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
-			plugins.Filter = appendToPluginSet(plugins.Filter, nodevolumelimits.CSIName, nil)
 			return
 		})
 	registry.registerPredicateConfigProducer(MaxEBSVolumeCountPred,
 		func(_ ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
-			plugins.Filter = appendToPluginSet(plugins.Filter, nodevolumelimits.EBSName, nil)
 			return
 		})
 	registry.registerPredicateConfigProducer(MaxGCEPDVolumeCountPred,
 		func(_ ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
-			plugins.Filter = appendToPluginSet(plugins.Filter, nodevolumelimits.GCEPDName, nil)
 			return
 		})
 	registry.registerPredicateConfigProducer(MaxAzureDiskVolumeCountPred,
 		func(_ ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
-			plugins.Filter = appendToPluginSet(plugins.Filter, nodevolumelimits.AzureDiskName, nil)
 			return
 		})
 	registry.registerPredicateConfigProducer(MaxCinderVolumeCountPred,
 		func(_ ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
-			plugins.Filter = appendToPluginSet(plugins.Filter, nodevolumelimits.CinderName, nil)
 			return
 		})
 	registry.registerPredicateConfigProducer(MatchInterPodAffinityPred,
@@ -361,7 +349,6 @@ func NewLegacyRegistry() *LegacyRegistry {
 		})
 	registry.registerPriorityConfigProducer(NodePreferAvoidPodsPriority,
 		func(args ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
-			plugins.Score = appendToPluginSet(plugins.Score, nodepreferavoidpods.Name, &args.Weight)
 			return
 		})
 	registry.registerPriorityConfigProducer(MostRequestedPriority,

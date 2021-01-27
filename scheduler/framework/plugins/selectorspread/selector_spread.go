@@ -6,12 +6,12 @@ import (
 
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/helper"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	utilnode "github.com/turtacn/cloud-prophet/scheduler/helper"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	appslisters "k8s.io/client-go/listers/apps/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	utilnode "k8s.io/kubernetes/pkg/util/node"
 )
 
 // SelectorSpread is a plugin that calculates selector spread priority.

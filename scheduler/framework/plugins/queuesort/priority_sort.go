@@ -2,6 +2,7 @@ package queuesort
 
 import (
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	podutil "github.com/turtacn/cloud-prophet/scheduler/helper"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -22,8 +23,8 @@ func (pl *PrioritySort) Name() string {
 // It sorts pods based on their priority. When priorities are equal, it uses
 // PodQueueInfo.timestamp.
 func (pl *PrioritySort) Less(pInfo1, pInfo2 *framework.QueuedPodInfo) bool {
-	p1 := pod.GetPodPriority(pInfo1.Pod)
-	p2 := pod.GetPodPriority(pInfo2.Pod)
+	p1 := podutil.GetPodPriority(pInfo1.Pod)
+	p2 := podutil.GetPodPriority(pInfo2.Pod)
 	return (p1 > p2) || (p1 == p2 && pInfo1.Timestamp.Before(pInfo2.Timestamp))
 }
 

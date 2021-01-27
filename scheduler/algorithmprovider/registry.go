@@ -11,7 +11,6 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeports"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/noderesources"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeunschedulable"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodevolumelimits"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/podtopologyspread"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/queuesort"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/selectorspread"
@@ -78,10 +77,6 @@ func getDefaultConfig() *schedulerapi.Plugins {
 				{Name: nodeaffinity.Name},
 				{Name: volumerestrictions.Name},
 				{Name: tainttoleration.Name},
-				{Name: nodevolumelimits.EBSName},
-				{Name: nodevolumelimits.GCEPDName},
-				{Name: nodevolumelimits.CSIName},
-				{Name: nodevolumelimits.AzureDiskName},
 				{Name: volumezone.Name},
 				{Name: podtopologyspread.Name},
 				{Name: interpodaffinity.Name},

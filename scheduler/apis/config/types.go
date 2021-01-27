@@ -22,7 +22,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
-	componentbaseconfig "k8s.io/component-base/config"
 )
 
 const (
@@ -59,23 +58,12 @@ type KubeSchedulerConfiguration struct {
 	// TODO(#87526): Remove AlgorithmSource from this package
 	// DEPRECATED: AlgorithmSource is removed in the v1beta1 ComponentConfig
 	AlgorithmSource SchedulerAlgorithmSource
-
-	// LeaderElection defines the configuration of leader election client.
-	LeaderElection componentbaseconfig.LeaderElectionConfiguration
-
-	// ClientConnection specifies the kubeconfig file and client connection
-	// settings for the proxy server to use when communicating with the apiserver.
-	ClientConnection componentbaseconfig.ClientConnectionConfiguration
 	// HealthzBindAddress is the IP address and port for the health check server to serve on,
 	// defaulting to 0.0.0.0:10251
 	HealthzBindAddress string
 	// MetricsBindAddress is the IP address and port for the metrics server to
 	// serve on, defaulting to 0.0.0.0:10251.
 	MetricsBindAddress string
-
-	// DebuggingConfiguration holds configuration for Debugging related features
-	// TODO: We might wanna make this a substruct like Debugging componentbaseconfig.DebuggingConfiguration
-	componentbaseconfig.DebuggingConfiguration
 
 	// PercentageOfNodesToScore is the percentage of all nodes that once found feasible
 	// for running a pod, the scheduler stops its search for more feasible nodes in

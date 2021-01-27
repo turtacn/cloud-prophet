@@ -25,6 +25,48 @@ Many extensible steps could be a plugin step integrated into the schedule main p
 |bind||
 |postbind||
 
+```go
+
+type WaitingPod interface {}
+type Plugin interface {}
+type QueueSortPlugin interface {}
+type PreFilterExtensions interface {}
+type PreFilterPlugin interface {}
+type FilterPlugin interface {}
+type PostFilterPlugin interface {}
+type PreScorePlugin interface {}
+type ScoreExtensions interface {}
+type ScorePlugin interface {}
+type ReservePlugin interface {}
+type PreBindPlugin interface {}
+type PostBindPlugin interface {}
+type PermitPlugin interface {}
+type BindPlugin interface {}
+type Framework interface {}
+type FrameworkHandle interface {}
+type PreemptHandle interface {}
+type PodNominator interface {}
+type PluginsRunner interface {}
+
+type Extender interface {}
+
+type ScheduleAlgorithm interface{}
+type Binder interface {}
+
+type Candidate interface {}
+type StateData interface {}
+
+type Framework interface {}
+type FrameworkHandle interface {}
+type PreemptHandle interface {}
+type PodNominator interface {}
+type PluginsRunner interface {}
+type NodeInformLister interface {}
+type SharedLister interface {}
+type Cache interface {}
+type SchedulingQueue interface {}
+```
+
 
 ** Extension
 

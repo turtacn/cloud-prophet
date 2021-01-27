@@ -1,107 +1,15 @@
-/*
-Copyright 2018 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package validation
 
 import (
 	"errors"
 	"fmt"
-
-	"github.com/google/go-cmp/cmp"
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	v1 "k8s.io/api/core/v1"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	componentbasevalidation "k8s.io/component-base/config/validation"
-	v1helper "k8s.io/kubernetes/pkg/apis/core/v1/helper"
 )
-
-// ValidateKubeSchedulerConfiguration ensures validation of the KubeSchedulerConfiguration struct
-func ValidateKubeSchedulerConfiguration(cc *config.KubeSchedulerConfiguration) field.ErrorList {
-	allErrs := field.ErrorList{}
-	allErrs = append(allErrs, componentbasevalidation.ValidateClientConnectionConfiguration(&cc.ClientConnection, field.NewPath("clientConnection"))...)
-	allErrs = append(allErrs, componentbasevalidation.ValidateLeaderElectionConfiguration(&cc.LeaderElection, field.NewPath("leaderElection"))...)
-
-	profilesPath := field.NewPath("profiles")
-	if len(cc.Profiles) == 0 {
-		allErrs = append(allErrs, field.Required(profilesPath, ""))
-	} else {
-		existingProfiles := make(map[string]int, len(cc.Profiles))
-		for i := range cc.Profiles {
-			profile := &cc.Profiles[i]
-			path := profilesPath.Index(i)
-			allErrs = append(allErrs, validateKubeSchedulerProfile(path, profile)...)
-			if idx, ok := existingProfiles[profile.SchedulerName]; ok {
-				allErrs = append(allErrs, field.Duplicate(path.Child("schedulerName"), profilesPath.Index(idx).Child("schedulerName")))
-			}
-			existingProfiles[profile.SchedulerName] = i
-		}
-		allErrs = append(allErrs, validateCommonQueueSort(profilesPath, cc.Profiles)...)
-	}
-	for _, msg := range validation.IsValidSocketAddr(cc.HealthzBindAddress) {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("healthzBindAddress"), cc.HealthzBindAddress, msg))
-	}
-	for _, msg := range validation.IsValidSocketAddr(cc.MetricsBindAddress) {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("metricsBindAddress"), cc.MetricsBindAddress, msg))
-	}
-	if cc.PercentageOfNodesToScore < 0 || cc.PercentageOfNodesToScore > 100 {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("percentageOfNodesToScore"),
-			cc.PercentageOfNodesToScore, "not in valid range [0-100]"))
-	}
-	if cc.PodInitialBackoffSeconds <= 0 {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("podInitialBackoffSeconds"),
-			cc.PodInitialBackoffSeconds, "must be greater than 0"))
-	}
-	if cc.PodMaxBackoffSeconds < cc.PodInitialBackoffSeconds {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("podMaxBackoffSeconds"),
-			cc.PodMaxBackoffSeconds, "must be greater than or equal to PodInitialBackoffSeconds"))
-	}
-
-	allErrs = append(allErrs, validateExtenders(field.NewPath("extenders"), cc.Extenders)...)
-	return allErrs
-}
-
-func validateKubeSchedulerProfile(path *field.Path, profile *config.KubeSchedulerProfile) field.ErrorList {
-	allErrs := field.ErrorList{}
-	if len(profile.SchedulerName) == 0 {
-		allErrs = append(allErrs, field.Required(path.Child("schedulerName"), ""))
-	}
-	return allErrs
-}
-
-func validateCommonQueueSort(path *field.Path, profiles []config.KubeSchedulerProfile) field.ErrorList {
-	allErrs := field.ErrorList{}
-	var canon *config.PluginSet
-	if profiles[0].Plugins != nil {
-		canon = profiles[0].Plugins.QueueSort
-	}
-	for i := 1; i < len(profiles); i++ {
-		var curr *config.PluginSet
-		if profiles[i].Plugins != nil {
-			curr = profiles[i].Plugins.QueueSort
-		}
-		if !cmp.Equal(canon, curr) {
-			allErrs = append(allErrs, field.Invalid(path.Index(i).Child("plugins", "queueSort"), curr, "has to match for all profiles"))
-		}
-	}
-	// TODO(#88093): Validate that all plugin configs for the queue sort extension match.
-	return allErrs
-}
 
 // ValidatePolicy checks for errors in the Config
 // It does not return early so that it can find as many errors as possible
@@ -210,9 +118,6 @@ func validateExtendedResourceName(name v1.ResourceName) []error {
 	}
 	if len(validationErrors) != 0 {
 		return validationErrors
-	}
-	if !v1helper.IsExtendedResourceName(name) {
-		validationErrors = append(validationErrors, fmt.Errorf("%s is an invalid extended resource name", name))
 	}
 	return validationErrors
 }

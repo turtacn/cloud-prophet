@@ -509,8 +509,10 @@ type PostFilterResult struct {
 }
 
 // PreemptHandle incorporates all needed logic to run preemption logic.
+// 抢占处理
 type PreemptHandle interface {
 	// PodNominator abstracts operations to maintain nominated Pods.
+	// 提名Pod处理
 	PodNominator
 	// PluginsRunner abstracts operations to run some plugins.
 	PluginsRunner

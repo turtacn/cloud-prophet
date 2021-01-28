@@ -1,8 +1,6 @@
 package plugins
 
 import (
-	"k8s.io/apimachinery/pkg/util/sets"
-
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/imagelocality"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/interpodaffinity"
@@ -18,6 +16,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/tainttoleration"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/volumerestrictions"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/volumezone"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 )
 

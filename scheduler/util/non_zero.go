@@ -1,7 +1,7 @@
 package util
 
 import (
-	v1 "k8s.io/api/core/v1"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 )
 
 // For each of these resources, a pod that doesn't request the resource explicitly

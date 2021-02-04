@@ -1,7 +1,7 @@
 package defaultpreemption
 
 import (
-	extenderv1 "k8s.io/kube-scheduler/extender/v1"
+	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
 )
 
 // Candidate represents a nominated node on which the preemptor can be scheduled,

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
-	v1 "k8s.io/api/core/v1"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -78,31 +78,12 @@ func createNodeInfoMap(pods []*v1.Pod, nodes []*v1.Node) map[string]*framework.N
 func getNodeImageStates(node *v1.Node, imageExistenceMap map[string]sets.String) map[string]*framework.ImageStateSummary {
 	imageStates := make(map[string]*framework.ImageStateSummary)
 
-	for _, image := range node.Status.Images {
-		for _, name := range image.Names {
-			imageStates[name] = &framework.ImageStateSummary{
-				Size:     image.SizeBytes,
-				NumNodes: len(imageExistenceMap[name]),
-			}
-		}
-	}
 	return imageStates
 }
 
 // createImageExistenceMap returns a map recording on which nodes the images exist, keyed by the images' names.
 func createImageExistenceMap(nodes []*v1.Node) map[string]sets.String {
 	imageExistenceMap := make(map[string]sets.String)
-	for _, node := range nodes {
-		for _, image := range node.Status.Images {
-			for _, name := range image.Names {
-				if _, ok := imageExistenceMap[name]; !ok {
-					imageExistenceMap[name] = sets.NewString(node.Name)
-				} else {
-					imageExistenceMap[name].Insert(node.Name)
-				}
-			}
-		}
-	}
 	return imageExistenceMap
 }
 

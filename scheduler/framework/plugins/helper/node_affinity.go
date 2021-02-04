@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"k8s.io/api/core/v1"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/labels"
 )
 

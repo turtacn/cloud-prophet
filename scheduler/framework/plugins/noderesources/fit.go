@@ -7,7 +7,7 @@ import (
 
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
-	v1 "k8s.io/api/core/v1"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -126,9 +126,6 @@ func computePodResourceRequest(pod *v1.Pod) *preFilterState {
 	}
 
 	// take max_resource(sum_pod, any_init_container)
-	for _, container := range pod.Spec.InitContainers {
-		result.SetMaxResource(container.Resources.Requests)
-	}
 
 	// If Overhead is being utilized, add to the total requests for the pod
 	if pod.Spec.Overhead != nil {

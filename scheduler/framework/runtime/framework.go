@@ -11,7 +11,7 @@ import (
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
-	v1 "k8s.io/api/core/v1"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"

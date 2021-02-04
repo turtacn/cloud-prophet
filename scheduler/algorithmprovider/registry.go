@@ -8,15 +8,13 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/interpodaffinity"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeaffinity"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodename"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeports"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/noderesources"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeunschedulable"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/podtopologyspread"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/queuesort"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/selectorspread"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/tainttoleration"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/volumerestrictions"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/volumezone"
+	// 这里扩展调度插件扩展的引用
 	"k8s.io/klog/v2"
 	"sort"
 	"strings"
@@ -63,7 +61,6 @@ func getDefaultConfig() *schedulerapi.Plugins {
 		PreFilter: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{
 				{Name: noderesources.FitName},
-				{Name: nodeports.Name},
 				{Name: podtopologyspread.Name},
 				{Name: interpodaffinity.Name},
 			},
@@ -73,11 +70,8 @@ func getDefaultConfig() *schedulerapi.Plugins {
 				{Name: nodeunschedulable.Name},
 				{Name: noderesources.FitName},
 				{Name: nodename.Name},
-				{Name: nodeports.Name},
 				{Name: nodeaffinity.Name},
-				{Name: volumerestrictions.Name},
 				{Name: tainttoleration.Name},
-				{Name: volumezone.Name},
 				{Name: podtopologyspread.Name},
 				{Name: interpodaffinity.Name},
 			},

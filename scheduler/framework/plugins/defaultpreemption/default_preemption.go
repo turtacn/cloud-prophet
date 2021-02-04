@@ -14,8 +14,9 @@ import (
 	podutil "github.com/turtacn/cloud-prophet/scheduler/helper"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
+	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/util"
-	v1 "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -23,7 +24,6 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	policylisters "k8s.io/client-go/listers/policy/v1beta1"
-	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 )
 
 const (

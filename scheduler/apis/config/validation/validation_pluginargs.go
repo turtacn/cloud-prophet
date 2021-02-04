@@ -4,8 +4,7 @@ import (
 	"fmt"
 
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/sets"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
@@ -67,13 +66,6 @@ func ValidatePodTopologySpreadArgs(args *config.PodTopologySpreadArgs) error {
 			allErrs = append(allErrs, field.Invalid(f, c.MaxSkew, "must be greater than zero"))
 		}
 		allErrs = append(allErrs, validateTopologyKey(p.Child("topologyKey"), c.TopologyKey)...)
-		if err := validateWhenUnsatisfiable(p.Child("whenUnsatisfiable"), c.WhenUnsatisfiable); err != nil {
-			allErrs = append(allErrs, err)
-		}
-		if c.LabelSelector != nil {
-			f := field.Forbidden(p.Child("labelSelector"), "constraint must not define a selector, as they deduced for each pod")
-			allErrs = append(allErrs, f)
-		}
 		if err := validateConstraintNotRepeat(path, args.DefaultConstraints, i); err != nil {
 			allErrs = append(allErrs, err)
 		}
@@ -90,18 +82,6 @@ func validateTopologyKey(p *field.Path, v string) field.ErrorList {
 		allErrs = append(allErrs, field.Required(p, "can not be empty"))
 	}
 	return allErrs
-}
-
-func validateWhenUnsatisfiable(p *field.Path, v v1.UnsatisfiableConstraintAction) *field.Error {
-	supportedScheduleActions := sets.NewString(string(v1.DoNotSchedule), string(v1.ScheduleAnyway))
-
-	if len(v) == 0 {
-		return field.Required(p, "can not be empty")
-	}
-	if !supportedScheduleActions.Has(string(v)) {
-		return field.NotSupported(p, v, supportedScheduleActions.List())
-	}
-	return nil
 }
 
 func validateConstraintNotRepeat(path *field.Path, constraints []v1.TopologySpreadConstraint, idx int) *field.Error {

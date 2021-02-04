@@ -10,8 +10,7 @@ import (
 	"time"
 
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
 )
@@ -489,10 +488,10 @@ type FrameworkHandle interface {
 	IterateOverWaitingPods(callback func(WaitingPod))
 
 	// GetWaitingPod returns a waiting pod given its UID.
-	GetWaitingPod(uid types.UID) WaitingPod
+	GetWaitingPod(uid string) WaitingPod
 
 	// RejectWaitingPod rejects a waiting pod given its UID.
-	RejectWaitingPod(uid types.UID)
+	RejectWaitingPod(uid string)
 
 	// ClientSet returns a kubernetes clientSet.
 	ClientSet() clientset.Interface

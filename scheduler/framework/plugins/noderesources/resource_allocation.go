@@ -2,8 +2,8 @@ package noderesources
 
 import (
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	schedutil "github.com/turtacn/cloud-prophet/scheduler/util"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -42,28 +42,16 @@ func (r *resourceAllocationScorer) score(
 	var score int64
 
 	// Check if the pod has volumes and this could be added to scorer function for balanced resource allocation.
-	if len(pod.Spec.Volumes) >= 0 && nodeInfo.TransientInfo != nil {
-		score = r.scorer(requested, allocatable, true, nodeInfo.TransientInfo.TransNodeInfo.RequestedVolumes, nodeInfo.TransientInfo.TransNodeInfo.AllocatableVolumesCount)
-	} else {
-		score = r.scorer(requested, allocatable, false, 0, 0)
-	}
-	if klog.V(10).Enabled() {
-		if len(pod.Spec.Volumes) >= 0 && nodeInfo.TransientInfo != nil {
-			klog.Infof(
-				"%v -> %v: %v, map of allocatable resources %v, map of requested resources %v , allocatable volumes %d, requested volumes %d, score %d",
-				pod.Name, node.Name, r.Name,
-				allocatable, requested, nodeInfo.TransientInfo.TransNodeInfo.AllocatableVolumesCount,
-				nodeInfo.TransientInfo.TransNodeInfo.RequestedVolumes,
-				score,
-			)
-		} else {
-			klog.Infof(
-				"%v -> %v: %v, map of allocatable resources %v, map of requested resources %v ,score %d,",
-				pod.Name, node.Name, r.Name,
-				allocatable, requested, score,
-			)
+	score = r.scorer(requested, allocatable, false, 0, 0)
 
-		}
+	if klog.V(10).Enabled() {
+
+		klog.Infof(
+			"%v -> %v: %v, map of allocatable resources %v, map of requested resources %v ,score %d,",
+			pod.Name, node.Name, r.Name,
+			allocatable, requested, score,
+		)
+
 	}
 
 	return score, nil
@@ -102,15 +90,6 @@ func calculatePodResourceRequest(pod *v1.Pod, resource v1.ResourceName) int64 {
 		value := schedutil.GetNonzeroRequestForResource(resource, &container.Resources.Requests)
 		podRequest += value
 	}
-
-	for i := range pod.Spec.InitContainers {
-		initContainer := &pod.Spec.InitContainers[i]
-		value := schedutil.GetNonzeroRequestForResource(resource, &initContainer.Resources.Requests)
-		if podRequest < value {
-			podRequest = value
-		}
-	}
-
 	// If Overhead is being utilized, add to the total requests for the pod
 	if pod.Spec.Overhead != nil {
 		if quantity, found := pod.Spec.Overhead[resource]; found {

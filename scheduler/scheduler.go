@@ -18,9 +18,9 @@ import (
 	internalcache "github.com/turtacn/cloud-prophet/scheduler/internal/cache"
 	internalqueue "github.com/turtacn/cloud-prophet/scheduler/internal/queue"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
 	"github.com/turtacn/cloud-prophet/scheduler/util"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -389,7 +389,7 @@ func (sched *Scheduler) extendersBinding(pod *v1.Pod, node string) (bool, error)
 			continue
 		}
 		return true, extender.Bind(&v1.Binding{
-			ObjectMeta: metav1.ObjectMeta{Namespace: pod.Namespace, Name: pod.Name, UID: pod.UID},
+			ObjectMeta: v1.ObjectMeta{Namespace: pod.Namespace, Name: pod.Name, UID: pod.UID},
 			Target:     v1.ObjectReference{Kind: "Node", Name: node},
 		})
 	}

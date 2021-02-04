@@ -4,7 +4,7 @@ import (
 	"context"
 
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
-	v1 "k8s.io/api/core/v1"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
@@ -30,14 +30,14 @@ func (b DefaultBinder) Name() string {
 	return Name
 }
 
-// Bind binds pods to nodes using the k8s client.
+// Bind binds pods to nodes using the k8s/jvirt client.
 func (b DefaultBinder) Bind(ctx context.Context, state *framework.CycleState, p *v1.Pod, nodeName string) *framework.Status {
 	klog.V(3).Infof("Attempting to bind %v/%v to %v", p.Namespace, p.Name, nodeName)
 	binding := &v1.Binding{
-		ObjectMeta: metav1.ObjectMeta{Namespace: p.Namespace, Name: p.Name, UID: p.UID},
+		ObjectMeta: v1.ObjectMeta{Namespace: p.Namespace, Name: p.Name, UID: p.UID},
 		Target:     v1.ObjectReference{Kind: "Node", Name: nodeName},
 	}
-	err := b.handle.ClientSet().CoreV1().Pods(binding.Namespace).Bind(ctx, binding, metav1.CreateOptions{})
+	err := b.handle.ClientSet().CoreV1().Pods(binding.Namespace).Bind(ctx, nil, metav1.CreateOptions{})
 	if err != nil {
 		return framework.NewStatus(framework.Error, err.Error())
 	}

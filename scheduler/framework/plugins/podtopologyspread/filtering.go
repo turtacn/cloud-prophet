@@ -9,7 +9,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/helper"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
-	v1 "k8s.io/api/core/v1"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/klog/v2"
 )

@@ -7,8 +7,8 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/turtacn/cloud-prophet/scheduler/internal/queue"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
-	v1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/informers"

@@ -8,16 +8,13 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeaffinity"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodelabel"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodename"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeports"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/noderesources"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeunschedulable"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/podtopologyspread"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/queuesort"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/selectorspread"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/serviceaffinity"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/tainttoleration"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/volumerestrictions"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/volumezone"
+	// 调度插件在这里引用扩展
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 )
 
@@ -30,7 +27,6 @@ func NewInTreeRegistry() runtime.Registry {
 		imagelocality.Name:                         imagelocality.New,
 		tainttoleration.Name:                       tainttoleration.New,
 		nodename.Name:                              nodename.New,
-		nodeports.Name:                             nodeports.New,
 		nodeaffinity.Name:                          nodeaffinity.New,
 		podtopologyspread.Name:                     podtopologyspread.New,
 		nodeunschedulable.Name:                     nodeunschedulable.New,
@@ -39,11 +35,8 @@ func NewInTreeRegistry() runtime.Registry {
 		noderesources.MostAllocatedName:            noderesources.NewMostAllocated,
 		noderesources.LeastAllocatedName:           noderesources.NewLeastAllocated,
 		noderesources.RequestedToCapacityRatioName: noderesources.NewRequestedToCapacityRatio,
-		volumerestrictions.Name:                    volumerestrictions.New,
-		volumezone.Name:                            volumezone.New,
 		interpodaffinity.Name:                      interpodaffinity.New,
 		nodelabel.Name:                             nodelabel.New,
-		serviceaffinity.Name:                       serviceaffinity.New,
 		queuesort.Name:                             queuesort.New,
 		defaultbinder.Name:                         defaultbinder.New,
 		defaultpreemption.Name:                     defaultpreemption.New,

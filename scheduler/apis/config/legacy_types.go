@@ -69,9 +69,6 @@ type PredicateArgument struct {
 // PriorityArgument represents the arguments to configure priority functions in scheduler policy configuration.
 // Only one of its members may be specified
 type PriorityArgument struct {
-	// The priority function that ensures a good spread (anti-affinity) for pods belonging to a service
-	// It uses a label to identify nodes that belong to the same "group"
-	ServiceAntiAffinity *ServiceAntiAffinity
 	// The priority function that checks whether a particular node has a certain label
 	// defined or not, regardless of value
 	LabelPreference *LabelPreference

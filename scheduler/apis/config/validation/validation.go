@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
-	v1 "k8s.io/api/core/v1"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -92,10 +92,6 @@ func validateCustomPriorities(priorities map[string]config.PriorityPolicy, prior
 	if priority.Argument != nil {
 		if priority.Argument.LabelPreference != nil {
 			if err := verifyDifferentWeights("LabelPreference"); err != nil {
-				return err
-			}
-		} else if priority.Argument.ServiceAntiAffinity != nil {
-			if err := verifyDifferentWeights("ServiceAntiAffinity"); err != nil {
 				return err
 			}
 		} else if priority.Argument.RequestedToCapacityRatioArguments != nil {

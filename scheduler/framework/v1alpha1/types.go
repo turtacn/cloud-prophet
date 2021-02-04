@@ -7,8 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	schedutil "github.com/turtacn/cloud-prophet/scheduler/util"
-	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -178,8 +178,6 @@ type NodeInfo struct {
 	PodsWithAffinity []*PodInfo
 
 	// Ports allocated on the node.
-	UsedPorts HostPortInfo
-
 	// Total requested resources of all pods on this node. This includes assumed
 	// pods, which scheduler has sent for binding, but may not be scheduled yet.
 	Requested *Resource
@@ -199,7 +197,6 @@ type NodeInfo struct {
 
 	// TransientInfo holds the information pertaining to a scheduling cycle. This will be destructed at the end of
 	// scheduling cycle.
-	// TODO: @ravig. Remove this once we have a clear approach for message passing across predicates and priorities.
 	TransientInfo *TransientSchedulerInfo
 
 	// Whenever NodeInfo changes, generation is bumped.
@@ -382,7 +379,6 @@ func NewNodeInfo(pods ...*v1.Pod) *NodeInfo {
 		Allocatable:      &Resource{},
 		TransientInfo:    NewTransientSchedulerInfo(),
 		Generation:       nextGeneration(),
-		UsedPorts:        make(HostPortInfo),
 		ImageStates:      make(map[string]*ImageStateSummary),
 	}
 	for _, pod := range pods {
@@ -407,22 +403,11 @@ func (n *NodeInfo) Clone() *NodeInfo {
 		NonZeroRequested: n.NonZeroRequested.Clone(),
 		Allocatable:      n.Allocatable.Clone(),
 		TransientInfo:    n.TransientInfo,
-		UsedPorts:        make(HostPortInfo),
 		ImageStates:      n.ImageStates,
 		Generation:       n.Generation,
 	}
 	if len(n.Pods) > 0 {
 		clone.Pods = append([]*PodInfo(nil), n.Pods...)
-	}
-	if len(n.UsedPorts) > 0 {
-		// HostPortInfo is a map-in-map struct
-		// make sure it's deep copied
-		for ip, portMap := range n.UsedPorts {
-			clone.UsedPorts[ip] = make(map[ProtocolPort]struct{})
-			for protocolPort, v := range portMap {
-				clone.UsedPorts[ip][protocolPort] = v
-			}
-		}
 	}
 	if len(n.PodsWithAffinity) > 0 {
 		clone.PodsWithAffinity = append([]*PodInfo(nil), n.PodsWithAffinity...)
@@ -436,8 +421,8 @@ func (n *NodeInfo) String() string {
 	for i, p := range n.Pods {
 		podKeys[i] = p.Pod.Name
 	}
-	return fmt.Sprintf("&NodeInfo{Pods:%v, RequestedResource:%#v, NonZeroRequest: %#v, UsedPort: %#v, AllocatableResource:%#v}",
-		podKeys, n.Requested, n.NonZeroRequested, n.UsedPorts, n.Allocatable)
+	return fmt.Sprintf("&NodeInfo{Pods:%v, RequestedResource:%#v, NonZeroRequest: %#v, AllocatableResource:%#v}",
+		podKeys, n.Requested, n.NonZeroRequested, n.Allocatable)
 }
 
 // AddPod adds pod information to this NodeInfo.
@@ -461,8 +446,7 @@ func (n *NodeInfo) AddPod(pod *v1.Pod) {
 		n.PodsWithAffinity = append(n.PodsWithAffinity, podInfo)
 	}
 
-	// Consume ports when pods added.
-	n.updateUsedPorts(podInfo.Pod, true)
+	// Consume ports when pods added. 计算节点上的共享资源
 
 	n.Generation = nextGeneration()
 }
@@ -512,8 +496,7 @@ func (n *NodeInfo) RemovePod(pod *v1.Pod) error {
 			n.NonZeroRequested.MilliCPU -= non0CPU
 			n.NonZeroRequested.Memory -= non0Mem
 
-			// Release ports when remove Pods.
-			n.updateUsedPorts(pod, false)
+			// Release ports when remove Pods. 计算节点上的共享资源
 
 			n.Generation = nextGeneration()
 			n.resetSlicesIfEmpty()
@@ -544,17 +527,7 @@ func calculateResource(pod *v1.Pod) (res Resource, non0CPU int64, non0Mem int64)
 		// No non-zero resources for GPUs or opaque resources.
 	}
 
-	for _, ic := range pod.Spec.InitContainers {
-		resPtr.SetMaxResource(ic.Resources.Requests)
-		non0CPUReq, non0MemReq := schedutil.GetNonzeroRequests(&ic.Resources.Requests)
-		if non0CPU < non0CPUReq {
-			non0CPU = non0CPUReq
-		}
-
-		if non0Mem < non0MemReq {
-			non0Mem = non0MemReq
-		}
-	}
+	// 去掉非通用的 InitContainers 的最大资源 SetMaxResource
 
 	// If Overhead is being utilized, add to the total requests for the pod
 	if pod.Spec.Overhead != nil {
@@ -573,17 +546,6 @@ func calculateResource(pod *v1.Pod) (res Resource, non0CPU int64, non0Mem int64)
 
 // updateUsedPorts updates the UsedPorts of NodeInfo.
 func (n *NodeInfo) updateUsedPorts(pod *v1.Pod, add bool) {
-	for j := range pod.Spec.Containers {
-		container := &pod.Spec.Containers[j]
-		for k := range container.Ports {
-			podPort := &container.Ports[k]
-			if add {
-				n.UsedPorts.Add(podPort.HostIP, string(podPort.Protocol), podPort.HostPort)
-			} else {
-				n.UsedPorts.Remove(podPort.HostIP, string(podPort.Protocol), podPort.HostPort)
-			}
-		}
-	}
 }
 
 // SetNode sets the overall node information.
@@ -651,109 +613,4 @@ const DefaultBindAllHostIP = "0.0.0.0"
 type ProtocolPort struct {
 	Protocol string
 	Port     int32
-}
-
-// NewProtocolPort creates a ProtocolPort instance.
-func NewProtocolPort(protocol string, port int32) *ProtocolPort {
-	pp := &ProtocolPort{
-		Protocol: protocol,
-		Port:     port,
-	}
-
-	if len(pp.Protocol) == 0 {
-		pp.Protocol = string(v1.ProtocolTCP)
-	}
-
-	return pp
-}
-
-// HostPortInfo stores mapping from ip to a set of ProtocolPort
-type HostPortInfo map[string]map[ProtocolPort]struct{}
-
-// Add adds (ip, protocol, port) to HostPortInfo
-func (h HostPortInfo) Add(ip, protocol string, port int32) {
-	if port <= 0 {
-		return
-	}
-
-	h.sanitize(&ip, &protocol)
-
-	pp := NewProtocolPort(protocol, port)
-	if _, ok := h[ip]; !ok {
-		h[ip] = map[ProtocolPort]struct{}{
-			*pp: {},
-		}
-		return
-	}
-
-	h[ip][*pp] = struct{}{}
-}
-
-// Remove removes (ip, protocol, port) from HostPortInfo
-func (h HostPortInfo) Remove(ip, protocol string, port int32) {
-	if port <= 0 {
-		return
-	}
-
-	h.sanitize(&ip, &protocol)
-
-	pp := NewProtocolPort(protocol, port)
-	if m, ok := h[ip]; ok {
-		delete(m, *pp)
-		if len(h[ip]) == 0 {
-			delete(h, ip)
-		}
-	}
-}
-
-// Len returns the total number of (ip, protocol, port) tuple in HostPortInfo
-func (h HostPortInfo) Len() int {
-	length := 0
-	for _, m := range h {
-		length += len(m)
-	}
-	return length
-}
-
-// CheckConflict checks if the input (ip, protocol, port) conflicts with the existing
-// ones in HostPortInfo.
-func (h HostPortInfo) CheckConflict(ip, protocol string, port int32) bool {
-	if port <= 0 {
-		return false
-	}
-
-	h.sanitize(&ip, &protocol)
-
-	pp := NewProtocolPort(protocol, port)
-
-	// If ip is 0.0.0.0 check all IP's (protocol, port) pair
-	if ip == DefaultBindAllHostIP {
-		for _, m := range h {
-			if _, ok := m[*pp]; ok {
-				return true
-			}
-		}
-		return false
-	}
-
-	// If ip isn't 0.0.0.0, only check IP and 0.0.0.0's (protocol, port) pair
-	for _, key := range []string{DefaultBindAllHostIP, ip} {
-		if m, ok := h[key]; ok {
-			if _, ok2 := m[*pp]; ok2 {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
-// sanitize the parameters
-func (h HostPortInfo) sanitize(ip, protocol *string) {
-	if len(*ip) == 0 {
-		*ip = DefaultBindAllHostIP
-	}
-	if len(*protocol) == 0 {
-		*protocol = string(v1.ProtocolTCP)
-	}
 }

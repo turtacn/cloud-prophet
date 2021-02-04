@@ -7,15 +7,13 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeaffinity"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodelabel"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodename"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeports"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/noderesources"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeunschedulable"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/podtopologyspread"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/selectorspread"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/serviceaffinity"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/tainttoleration"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/volumerestrictions"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/volumezone"
+	//  调度插件扩展在这里追加
+	//  ...
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 )
@@ -206,8 +204,6 @@ func NewLegacyRegistry() *LegacyRegistry {
 					config.PluginConfig{Name: noderesources.FitName, Args: args.NodeResourcesFitArgs})
 			}
 			plugins.Filter = appendToPluginSet(plugins.Filter, nodename.Name, nil)
-			plugins.Filter = appendToPluginSet(plugins.Filter, nodeports.Name, nil)
-			plugins.PreFilter = appendToPluginSet(plugins.PreFilter, nodeports.Name, nil)
 			plugins.Filter = appendToPluginSet(plugins.Filter, nodeaffinity.Name, nil)
 			return
 		})
@@ -233,8 +229,6 @@ func NewLegacyRegistry() *LegacyRegistry {
 		})
 	registry.registerPredicateConfigProducer(PodFitsHostPortsPred,
 		func(_ ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
-			plugins.Filter = appendToPluginSet(plugins.Filter, nodeports.Name, nil)
-			plugins.PreFilter = appendToPluginSet(plugins.PreFilter, nodeports.Name, nil)
 			return
 		})
 	registry.registerPredicateConfigProducer(MatchNodeSelectorPred,
@@ -253,12 +247,10 @@ func NewLegacyRegistry() *LegacyRegistry {
 		})
 	registry.registerPredicateConfigProducer(NoDiskConflictPred,
 		func(_ ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
-			plugins.Filter = appendToPluginSet(plugins.Filter, volumerestrictions.Name, nil)
 			return
 		})
 	registry.registerPredicateConfigProducer(NoVolumeZoneConflictPred,
 		func(_ ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
-			plugins.Filter = appendToPluginSet(plugins.Filter, volumezone.Name, nil)
 			return
 		})
 	registry.registerPredicateConfigProducer(MaxCSIVolumeCountPred,
@@ -294,16 +286,6 @@ func NewLegacyRegistry() *LegacyRegistry {
 				pluginConfig = append(pluginConfig,
 					config.PluginConfig{Name: nodelabel.Name, Args: args.NodeLabelArgs})
 			}
-			return
-		})
-	registry.registerPredicateConfigProducer(CheckServiceAffinityPred,
-		func(args ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
-			plugins.Filter = appendToPluginSet(plugins.Filter, serviceaffinity.Name, nil)
-			if args.ServiceAffinityArgs != nil {
-				pluginConfig = append(pluginConfig,
-					config.PluginConfig{Name: serviceaffinity.Name, Args: args.ServiceAffinityArgs})
-			}
-			plugins.PreFilter = appendToPluginSet(plugins.PreFilter, serviceaffinity.Name, nil)
 			return
 		})
 	registry.registerPredicateConfigProducer(EvenPodsSpreadPred,
@@ -384,19 +366,6 @@ func NewLegacyRegistry() *LegacyRegistry {
 			if args.NodeLabelArgs != nil {
 				pluginConfig = append(pluginConfig,
 					config.PluginConfig{Name: nodelabel.Name, Args: args.NodeLabelArgs})
-			}
-			return
-		})
-	registry.registerPriorityConfigProducer(serviceaffinity.Name,
-		func(args ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
-			// If there are n ServiceAffinity priorities in the policy, the weight for the corresponding
-			// score plugin is n*weight (note that the validation logic verifies that all ServiceAffinity
-			// priorities specified in Policy have the same weight).
-			weight := args.Weight * int32(len(args.ServiceAffinityArgs.AntiAffinityLabelsPreference))
-			plugins.Score = appendToPluginSet(plugins.Score, serviceaffinity.Name, &weight)
-			if args.ServiceAffinityArgs != nil {
-				pluginConfig = append(pluginConfig,
-					config.PluginConfig{Name: serviceaffinity.Name, Args: args.ServiceAffinityArgs})
 			}
 			return
 		})
@@ -511,27 +480,6 @@ func (lr *LegacyRegistry) ProcessPriorityPolicy(policy config.PriorityPolicy, co
 	}
 
 	// generate the priority function, if a custom priority is requested
-	if policy.Argument == nil ||
-		(policy.Argument.ServiceAntiAffinity == nil &&
-			policy.Argument.RequestedToCapacityRatioArguments == nil &&
-			policy.Argument.LabelPreference == nil) {
-		klog.Fatalf("Invalid configuration: Priority type not found for %q", priorityName)
-	}
-
-	if policy.Argument.ServiceAntiAffinity != nil {
-		// We use the ServiceAffinity plugin name for all ServiceAffinity custom priorities.
-		// It may get called multiple times but we essentially only register one instance of
-		// ServiceAffinity priority.
-		// This name is then used to find the registered plugin and run the plugin instead of the priority.
-		priorityName = serviceaffinity.Name
-		if configProducerArgs.ServiceAffinityArgs == nil {
-			configProducerArgs.ServiceAffinityArgs = &config.ServiceAffinityArgs{}
-		}
-		configProducerArgs.ServiceAffinityArgs.AntiAffinityLabelsPreference = append(
-			configProducerArgs.ServiceAffinityArgs.AntiAffinityLabelsPreference,
-			policy.Argument.ServiceAntiAffinity.Label,
-		)
-	}
 
 	if policy.Argument.LabelPreference != nil {
 		// We use the NodeLabel plugin name for all NodeLabel custom priorities.
@@ -601,9 +549,6 @@ func validatePredicateOrDie(predicate config.PredicatePolicy) {
 func validatePriorityOrDie(priority config.PriorityPolicy) {
 	if priority.Argument != nil {
 		numArgs := 0
-		if priority.Argument.ServiceAntiAffinity != nil {
-			numArgs++
-		}
 		if priority.Argument.LabelPreference != nil {
 			numArgs++
 		}

@@ -6,20 +6,19 @@ import (
 	"time"
 
 	"github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 )
 
 // waitingPodsMap a thread-safe map used to maintain pods waiting in the permit phase.
 type waitingPodsMap struct {
-	pods map[types.UID]*waitingPod
+	pods map[string]*waitingPod
 	mu   sync.RWMutex
 }
 
 // newWaitingPodsMap returns a new waitingPodsMap.
 func newWaitingPodsMap() *waitingPodsMap {
 	return &waitingPodsMap{
-		pods: make(map[types.UID]*waitingPod),
+		pods: make(map[string]*waitingPod),
 	}
 }
 
@@ -31,14 +30,14 @@ func (m *waitingPodsMap) add(wp *waitingPod) {
 }
 
 // remove a WaitingPod from the map.
-func (m *waitingPodsMap) remove(uid types.UID) {
+func (m *waitingPodsMap) remove(uid string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	delete(m.pods, uid)
 }
 
 // get a WaitingPod from the map.
-func (m *waitingPodsMap) get(uid types.UID) *waitingPod {
+func (m *waitingPodsMap) get(uid string) *waitingPod {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.pods[uid]

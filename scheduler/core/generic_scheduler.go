@@ -18,12 +18,11 @@ import (
 	internalcache "github.com/turtacn/cloud-prophet/scheduler/internal/cache"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
+	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
 	"github.com/turtacn/cloud-prophet/scheduler/util"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 	utiltrace "k8s.io/utils/trace"
 )
 
@@ -572,36 +571,11 @@ func podPassesBasicChecks(pod *v1.Pod, pvcLister corelisters.PersistentVolumeCla
 	// Check PVCs used by the pod
 	namespace := pod.Namespace
 	manifest := &(pod.Spec)
-	for i := range manifest.Volumes {
-		volume := &manifest.Volumes[i]
-		var pvcName string
-		ephemeral := false
-		switch {
-		case volume.PersistentVolumeClaim != nil:
-			pvcName = volume.PersistentVolumeClaim.ClaimName
-		case volume.Ephemeral != nil:
-			pvcName = pod.Name + "-" + volume.Name
-			ephemeral = true
-		default:
-			// Volume is not using a PVC, ignore
-			continue
-		}
-		pvc, err := pvcLister.PersistentVolumeClaims(namespace).Get(pvcName)
-		if err != nil {
-			// The error has already enough context ("persistentvolumeclaim "myclaim" not found")
-			return err
-		}
+	if manifest == nil || namespace == "" {
 
-		if pvc.DeletionTimestamp != nil {
-			return fmt.Errorf("persistentvolumeclaim %q is being deleted", pvc.Name)
-		}
-
-		if ephemeral &&
-			!metav1.IsControlledBy(pvc, pod) {
-			return fmt.Errorf("persistentvolumeclaim %q was not created for the pod", pvc.Name)
-		}
 	}
 
+	// 检查volume
 	return nil
 }
 

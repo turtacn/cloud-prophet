@@ -18,8 +18,8 @@ import (
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/heap"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/util"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ktypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -711,7 +711,7 @@ type nominatedPodMap struct {
 	nominatedPods map[string][]*v1.Pod
 	// nominatedPodToNode is map keyed by a Pod UID to the node name where it is
 	// nominated.
-	nominatedPodToNode map[ktypes.UID]string
+	nominatedPodToNode map[string]string
 
 	sync.RWMutex
 }
@@ -783,7 +783,7 @@ func (npm *nominatedPodMap) UpdateNominatedPod(oldPod, newPod *v1.Pod) {
 func NewPodNominator() framework.PodNominator {
 	return &nominatedPodMap{
 		nominatedPods:      make(map[string][]*v1.Pod),
-		nominatedPodToNode: make(map[ktypes.UID]string),
+		nominatedPodToNode: make(map[string]string),
 	}
 }
 

@@ -10,11 +10,11 @@ import (
 
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
-	v1 "k8s.io/api/core/v1"
+	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/pkg/util/sets"
 	restclient "k8s.io/client-go/rest"
-	extenderv1 "k8s.io/kube-scheduler/extender/v1"
 )
 
 const (
@@ -428,9 +428,6 @@ func (h *HTTPExtender) IsInterested(pod *v1.Pod) bool {
 		return true
 	}
 	if h.hasManagedResources(pod.Spec.Containers) {
-		return true
-	}
-	if h.hasManagedResources(pod.Spec.InitContainers) {
 		return true
 	}
 	return false

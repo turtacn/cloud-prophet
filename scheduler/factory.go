@@ -20,8 +20,8 @@ import (
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
 	internalcache "github.com/turtacn/cloud-prophet/scheduler/internal/cache"
 	internalqueue "github.com/turtacn/cloud-prophet/scheduler/internal/queue"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
-	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -412,9 +412,9 @@ func MakeDefaultErrorFunc(client clientset.Interface, podLister corelisters.PodL
 	return func(podInfo *framework.QueuedPodInfo, err error) {
 		pod := podInfo.Pod
 		if err == core.ErrNoNodesAvailable {
-			klog.V(2).InfoS("Unable to schedule pod; no nodes are registered to the cluster; waiting", "pod", klog.KObj(pod))
+			klog.V(2).InfoS("Unable to schedule pod; no nodes are registered to the cluster; waiting", "pod", pod)
 		} else if _, ok := err.(*core.FitError); ok {
-			klog.V(2).InfoS("Unable to schedule pod; no fit; waiting", "pod", klog.KObj(pod), "err", err)
+			klog.V(2).InfoS("Unable to schedule pod; no fit; waiting", "pod", pod, "err", err)
 		} else if apierrors.IsNotFound(err) {
 			klog.V(2).Infof("Unable to schedule %v/%v: possibly due to node not found: %v; waiting", pod.Namespace, pod.Name, err)
 			if errStatus, ok := err.(apierrors.APIStatus); ok && errStatus.Status().Details.Kind == "node" {
@@ -423,14 +423,14 @@ func MakeDefaultErrorFunc(client clientset.Interface, podLister corelisters.PodL
 				// the node and if the node is still not found, then remove it from the scheduler cache.
 				_, err := client.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
 				if err != nil && apierrors.IsNotFound(err) {
-					node := v1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeName}}
+					node := v1.Node{ObjectMeta: v1.ObjectMeta{Name: nodeName}}
 					if err := schedulerCache.RemoveNode(&node); err != nil {
 						klog.V(4).Infof("Node %q is not found; failed to remove it from the cache.", node.Name)
 					}
 				}
 			}
 		} else {
-			klog.ErrorS(err, "Error scheduling pod; retrying", "pod", klog.KObj(pod))
+			klog.ErrorS(err, "Error scheduling pod; retrying", "pod", pod)
 		}
 
 		// Check if the Pod exists in informer cache.

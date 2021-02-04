@@ -7,8 +7,8 @@ import (
 
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	schedutil "github.com/turtacn/cloud-prophet/scheduler/util"
-	v1 "k8s.io/api/core/v1"
 )
 
 // preScoreStateKey is the key in CycleState to InterPodAffinity pre-computed data for Scoring.

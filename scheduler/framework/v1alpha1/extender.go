@@ -1,8 +1,8 @@
 package v1alpha1
 
 import (
-	v1 "k8s.io/api/core/v1"
-	extenderv1 "k8s.io/kube-scheduler/extender/v1"
+	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 )
 
 // Extender is an interface for external processes to influence scheduling

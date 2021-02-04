@@ -7,7 +7,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/helper"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
 	utilnode "github.com/turtacn/cloud-prophet/scheduler/helper"
-	v1 "k8s.io/api/core/v1"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	appslisters "k8s.io/client-go/listers/apps/v1"

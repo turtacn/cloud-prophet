@@ -32,6 +32,7 @@ func (pl *NodeUnschedulable) Name() string {
 }
 
 // Filter invoked at the filter extension point.
+// 目前不支持对 Unschedulable (jvirt disable) 节点继续调度的业务逻辑
 func (pl *NodeUnschedulable) Filter(ctx context.Context, _ *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
 	if nodeInfo == nil || nodeInfo.Node() == nil {
 		return framework.NewStatus(framework.UnschedulableAndUnresolvable, ErrReasonUnknownCondition)
@@ -42,7 +43,7 @@ func (pl *NodeUnschedulable) Filter(ctx context.Context, _ *framework.CycleState
 	//	Key:    v1.TaintNodeUnschedulable,
 	//	Effect: v1.TaintEffectNoSchedule,
 	//})
-	// TODO (k82cn): deprecates `node.Spec.Unschedulable` in 1.13.
+
 	if nodeInfo.Node().Spec.Unschedulable && !podToleratesUnschedulable {
 		return framework.NewStatus(framework.UnschedulableAndUnresolvable, ErrReasonUnschedulable)
 	}

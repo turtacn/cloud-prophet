@@ -38,3 +38,7 @@ const (
 	// LabelNamespaceNodeRestriction is a forbidden label namespace that kubelets may not self-set when the NodeRestriction admission plugin is enabled
 	LabelNamespaceNodeRestriction = "node-restriction.free.io"
 )
+
+func (n *Node) GetLabels() map[string]string {
+	return n.Labels
+}

@@ -13,7 +13,6 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
@@ -906,7 +905,7 @@ func (f *frameworkImpl) IterateOverWaitingPods(callback func(framework.WaitingPo
 }
 
 // GetWaitingPod returns a reference to a WaitingPod given its UID.
-func (f *frameworkImpl) GetWaitingPod(uid types.UID) framework.WaitingPod {
+func (f *frameworkImpl) GetWaitingPod(uid string) framework.WaitingPod {
 	if wp := f.waitingPods.get(uid); wp != nil {
 		return wp
 	}
@@ -914,7 +913,7 @@ func (f *frameworkImpl) GetWaitingPod(uid types.UID) framework.WaitingPod {
 }
 
 // RejectWaitingPod rejects a WaitingPod given its UID.
-func (f *frameworkImpl) RejectWaitingPod(uid types.UID) {
+func (f *frameworkImpl) RejectWaitingPod(uid string) {
 	waitingPod := f.waitingPods.get(uid)
 	if waitingPod != nil {
 		waitingPod.Reject("removed")

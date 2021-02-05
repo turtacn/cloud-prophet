@@ -632,25 +632,6 @@ func (cache *schedulerCache) RemoveNode(node *v1.Node) error {
 func (cache *schedulerCache) addNodeImageStates(node *v1.Node, nodeInfo *framework.NodeInfo) {
 	newSum := make(map[string]*framework.ImageStateSummary)
 
-	for _, image := range node.Status.Images {
-		for _, name := range image.Names {
-			// update the entry in imageStates
-			state, ok := cache.imageStates[name]
-			if !ok {
-				state = &imageState{
-					size:  image.SizeBytes,
-					nodes: sets.NewString(node.Name),
-				}
-				cache.imageStates[name] = state
-			} else {
-				state.nodes.Insert(node.Name)
-			}
-			// create the imageStateSummary for this image
-			if _, ok := newSum[name]; !ok {
-				newSum[name] = cache.createImageStateSummary(state)
-			}
-		}
-	}
 	nodeInfo.ImageStates = newSum
 }
 
@@ -661,21 +642,8 @@ func (cache *schedulerCache) removeNodeImageStates(node *v1.Node) {
 	if node == nil {
 		return
 	}
+	// 通过node上实时images 更新cache数据
 
-	for _, image := range node.Status.Images {
-		for _, name := range image.Names {
-			state, ok := cache.imageStates[name]
-			if ok {
-				state.nodes.Delete(node.Name)
-				if len(state.nodes) == 0 {
-					// Remove the unused image to make sure the length of
-					// imageStates represents the total number of different
-					// images on all nodes
-					delete(cache.imageStates, name)
-				}
-			}
-		}
-	}
 }
 
 func (cache *schedulerCache) run() {

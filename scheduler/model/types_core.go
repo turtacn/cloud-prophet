@@ -101,7 +101,9 @@ type Pod struct {
 }
 
 type PodStatus struct {
-	StartTime time.Time `json:"start_time"`
+	StartTime         *time.Time `json:"start_time"`
+	Phase             PodPhase   `json:"phase"`
+	NominatedNodeName string     `json:"dominated_node_name"`
 }
 
 // PodSpec is a description of a pod.

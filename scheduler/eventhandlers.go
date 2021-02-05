@@ -312,23 +312,10 @@ func (sched *Scheduler) skipPodUpdate(pod *v1.Pod) bool {
 	// equal (with certain fields excluded), this pod update will be skipped.
 	f := func(pod *v1.Pod) *v1.Pod {
 		p := pod.DeepCopy()
-		// ResourceVersion must be excluded because each object update will
-		// have a new resource version.
-		p.ResourceVersion = ""
 		// Spec.NodeName must be excluded because the pod assumed in the cache
 		// is expected to have a node assigned while the pod update may nor may
 		// not have this field set.
 		p.Spec.NodeName = ""
-		// Annotations must be excluded for the reasons described in
-		// https://github.com/kubernetes/kubernetes/issues/52914.
-		p.Annotations = nil
-		// Same as above, when annotations are modified with ServerSideApply,
-		// ManagedFields may also change and must be excluded
-		p.ManagedFields = nil
-		// The following might be changed by external controllers, but they don't
-		// affect scheduling decisions.
-		p.Finalizers = nil
-		p.Status.Conditions = nil
 		return p
 	}
 	assumedPodCopy, podCopy := f(assumedPod), f(pod)

@@ -26,17 +26,19 @@ func GetPodFullName(pod *v1.Pod) string {
 
 // GetPodStartTime returns start time of the given pod or current timestamp
 // if it hasn't started yet.
-func GetPodStartTime(pod *v1.Pod) *metav1.Time {
+func GetPodStartTime(pod *v1.Pod) time.Time {
 	if pod.Status.StartTime != nil {
-		return pod.Status.StartTime
+		return *pod.Status.StartTime
 	}
+
+	t := time.Now()
 	// Assumed pods and bound pods that haven't started don't have a StartTime yet.
-	return &metav1.Time{Time: time.Now()}
+	return t
 }
 
 // GetEarliestPodStartTime returns the earliest start time of all pods that
 // have the highest priority among all victims.
-func GetEarliestPodStartTime(victims *extenderv1.Victims) *metav1.Time {
+func GetEarliestPodStartTime(victims *extenderv1.Victims) *time.Time {
 	if len(victims.Pods) == 0 {
 		// should not reach here.
 		klog.Errorf("victims.Pods is empty. Should not reach here.")
@@ -57,7 +59,7 @@ func GetEarliestPodStartTime(victims *extenderv1.Victims) *metav1.Time {
 		}
 	}
 
-	return earliestPodStartTime
+	return &earliestPodStartTime
 }
 
 // MoreImportantPod return true when priority of the first pod is higher than
@@ -119,7 +121,7 @@ func PatchPod(cs kubernetes.Interface, old *v1.Pod, new *v1.Pod) error {
 
 // GetUpdatedPod returns the latest version of <pod> from API server.
 func GetUpdatedPod(cs kubernetes.Interface, pod *v1.Pod) (*v1.Pod, error) {
-	return cs.CoreV1().Pods(pod.Namespace).Get(context.TODO(), pod.Name, metav1.GetOptions{})
+	return nil, nil
 }
 
 // DeletePod deletes the given <pod> from API server

@@ -1,3 +1,4 @@
+//
 package scheduler
 
 import (
@@ -15,6 +16,7 @@ import (
 	frameworkplugins "github.com/turtacn/cloud-prophet/scheduler/framework/plugins"
 	frameworkruntime "github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	podutil "github.com/turtacn/cloud-prophet/scheduler/helper"
 	internalcache "github.com/turtacn/cloud-prophet/scheduler/internal/cache"
 	internalqueue "github.com/turtacn/cloud-prophet/scheduler/internal/queue"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
@@ -466,7 +468,7 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 			// No nodes available is counted as unschedulable rather than an error.
 			metrics.PodUnschedulable(prof.Name, metrics.SinceInSeconds(start))
 		} else {
-			klog.ErrorS(err, "Error selecting node for pod", "pod", klog.KObj(pod))
+			klog.ErrorS(err, "Error selecting node for pod", "pod", pod)
 			metrics.PodScheduleError(prof.Name, metrics.SinceInSeconds(start))
 		}
 		sched.recordSchedulingFailure(prof, podInfo, err, v1.PodReasonUnschedulable, nominatedNode)
@@ -573,7 +575,7 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 		} else {
 			// Calculating nodeResourceString can be heavy. Avoid it if klog verbosity is below 2.
 			if klog.V(2).Enabled() {
-				klog.InfoS("Successfully bound pod to node", "pod", klog.KObj(pod), "node", scheduleResult.SuggestedHost, "evaluatedNodes", scheduleResult.EvaluatedNodes, "feasibleNodes", scheduleResult.FeasibleNodes)
+				klog.InfoS("Successfully bound pod to node", "pod", pod, "node", scheduleResult.SuggestedHost, "evaluatedNodes", scheduleResult.EvaluatedNodes, "feasibleNodes", scheduleResult.FeasibleNodes)
 			}
 			metrics.PodScheduled(prof.Name, metrics.SinceInSeconds(start))
 			metrics.PodSchedulingAttempts.Observe(float64(podInfo.Attempts))

@@ -1,3 +1,4 @@
+//
 package model
 
 // 亲和, 支持节点亲和、Pod亲和、Pod反亲和

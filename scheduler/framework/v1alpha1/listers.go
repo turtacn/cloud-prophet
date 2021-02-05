@@ -1,3 +1,4 @@
+//
 package v1alpha1
 
 // NodeInfoLister interface represents anything that can list/get NodeInfo objects from node name.

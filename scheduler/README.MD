@@ -99,6 +99,12 @@ We use predicted resource utility, here we call predicted resource limit upper.
 ** Feasible 
  
 
+## 更新所有代码
+```shell
+ find  . -name  '*.go'  -type f  -exec   sed  -i  '1i\\/\/'   {}  \;
+```
+
+
  
 
 

@@ -1,3 +1,4 @@
+//
 package noderesources
 
 import (

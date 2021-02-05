@@ -1,3 +1,4 @@
+//
 package model
 
 import (
@@ -11,6 +12,8 @@ type ObjectMeta struct {
 	Labels            map[string]string `json:"labels"`
 	UID               string            `json:"uid"`
 	Kind              string            `json:"kind"`
+	ResourceVersion   string            `json:"resource_version"`
+	Generation        int64             `json:"generation"`
 	CreationTimestamp time.Time         `json:"creation_timestamp"`
 	DeletionTimestamp *time.Time        `json:"deletion_timestamp"`
 }

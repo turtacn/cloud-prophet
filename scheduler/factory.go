@@ -1,4 +1,5 @@
 //
+//
 package scheduler
 
 import (
@@ -13,12 +14,13 @@ import (
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config/validation"
 	"github.com/turtacn/cloud-prophet/scheduler/core"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	frameworkplugins "github.com/turtacn/cloud-prophet/scheduler/framework/plugins"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/defaultbinder"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/noderesources"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/queuesort"
 	frameworkruntime "github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	internalcache "github.com/turtacn/cloud-prophet/scheduler/internal/cache"
 	internalqueue "github.com/turtacn/cloud-prophet/scheduler/internal/queue"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
@@ -27,7 +29,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/informers"
 	coreinformers "k8s.io/client-go/informers/core/v1"
 	clientset "k8s.io/client-go/kubernetes"
@@ -404,7 +405,7 @@ func NewPodInformer(client clientset.Interface, resyncPeriod time.Duration) core
 			",status.phase!=" + string(v1.PodFailed))
 	lw := cache.NewListWatchFromClient(client.CoreV1().RESTClient(), string(v1.ResourcePods), metav1.NamespaceAll, selector)
 	return &podInformer{
-		informer: cache.NewSharedIndexInformer(lw, &v1.Pod{}, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
+		informer: cache.NewSharedIndexInformer(lw, nil, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
 	}
 }
 
@@ -441,7 +442,10 @@ func MakeDefaultErrorFunc(client clientset.Interface, podLister corelisters.PodL
 			return
 		}
 		// As <cachedPod> is from SharedInformer, we need to do a DeepCopy() here.
-		podInfo.Pod = cachedPod.DeepCopy()
+		if cachedPod == nil {
+			podInfo.Pod = nil
+
+		}
 		if err := podQueue.AddUnschedulableIfNotPresent(podInfo, podQueue.SchedulingCycle()); err != nil {
 			klog.Error(err)
 		}

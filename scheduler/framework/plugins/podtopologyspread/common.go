@@ -1,12 +1,13 @@
 //
+//
 package podtopologyspread
 
 import (
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/helper"
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	metav1 "github.com/turtacn/cloud-prophet/scheduler/helper"
+	labels "github.com/turtacn/cloud-prophet/scheduler/helper/label"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 )
 
 type topologyPair struct {

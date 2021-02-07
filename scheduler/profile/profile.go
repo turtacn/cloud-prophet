@@ -1,4 +1,5 @@
 //
+//
 // Package profile holds the definition of a scheduling Profile.
 package profile
 
@@ -8,8 +9,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	frameworkruntime "github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 

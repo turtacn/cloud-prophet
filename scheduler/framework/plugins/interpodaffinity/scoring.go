@@ -1,4 +1,5 @@
 //
+//
 package interpodaffinity
 
 import (
@@ -6,7 +7,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	schedutil "github.com/turtacn/cloud-prophet/scheduler/util"

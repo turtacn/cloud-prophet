@@ -1,4 +1,5 @@
 //
+//
 // This file contains structures that implement scheduling queue types.
 // Scheduling queues hold pods waiting to be scheduled. This file implements a/
 // priority queue which has two sub queues. One sub-queue holds pods that are
@@ -16,12 +17,12 @@ import (
 
 	"k8s.io/klog/v2"
 
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	metav1 "github.com/turtacn/cloud-prophet/scheduler/helper"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/heap"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ktypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"

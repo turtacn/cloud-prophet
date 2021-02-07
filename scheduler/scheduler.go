@@ -1,4 +1,5 @@
 //
+//
 package scheduler
 
 import (
@@ -13,10 +14,10 @@ import (
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config/scheme"
 	"github.com/turtacn/cloud-prophet/scheduler/core"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	frameworkplugins "github.com/turtacn/cloud-prophet/scheduler/framework/plugins"
 	frameworkruntime "github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
-	podutil "github.com/turtacn/cloud-prophet/scheduler/helper"
+	podutil "github.com/turtacn/cloud-prophet/scheduler/helper/pod"
 	internalcache "github.com/turtacn/cloud-prophet/scheduler/internal/cache"
 	internalqueue "github.com/turtacn/cloud-prophet/scheduler/internal/queue"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"

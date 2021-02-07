@@ -1,5 +1,6 @@
 //
-package v1alpha1
+//
+package k8s
 
 import (
 	"errors"
@@ -8,12 +9,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	metav1 "github.com/turtacn/cloud-prophet/scheduler/helper"
+	labels "github.com/turtacn/cloud-prophet/scheduler/helper/label"
+	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	schedutil "github.com/turtacn/cloud-prophet/scheduler/util"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/klog/v2"
 )
 

@@ -1,10 +1,11 @@
 //
+//
 package runtime
 
 import (
 	"time"
 
-	"github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	"github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
 	k8smetrics "k8s.io/component-base/metrics"
 )
@@ -48,7 +49,7 @@ func newMetricsRecorder(bufferSize int, interval time.Duration) *metricsRecorder
 
 // observePluginDurationAsync observes the plugin_execution_duration_seconds metric.
 // The metric will be flushed to Prometheus asynchronously.
-func (r *metricsRecorder) observePluginDurationAsync(extensionPoint, pluginName string, status *v1alpha1.Status, value float64) {
+func (r *metricsRecorder) observePluginDurationAsync(extensionPoint, pluginName string, status *k8s.Status, value float64) {
 	newMetric := &frameworkMetric{
 		metric:      metrics.PluginExecutionDuration,
 		labelValues: []string{pluginName, extensionPoint, status.Code().String()},

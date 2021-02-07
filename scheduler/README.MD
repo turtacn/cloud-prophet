@@ -1,15 +1,16 @@
 # A Universal Resource Scheduler
 
-
-A light-weight, universal resource scheduler for resource orchestrator systems. It is derived from kubernetes scheduler framwork, and adopt the popular concept of "node" and "pod". The pod here has no containers belongs to, just the concept of allocation of resource.
+A light-weight, universal resource scheduler for resource orchestrator systems. 
+It is derived from kubernetes scheduler framework, and adopt the popular concept of "node" and "pod". 
+The pod here has no containers belongs to, just the concept of allocation of resource.
 
 ## Feature 
 
-** Plugins
+### Plugins
 
-Many extensible steps could be a plugin step integrated into the schedule main pipeline. Each plugin was defined as an interface. Given a processing context, we could package all the steps in one process logic unit. 
-
-
+Many extensible steps could be a plugin step integrated into the schedule main pipeline. 
+Each plugin was defined as an interface. 
+Given a processing context, we could package all the steps in one process logic unit. 
 
 |Steps|Functions|
 | --  | -- |
@@ -25,8 +26,7 @@ Many extensible steps could be a plugin step integrated into the schedule main p
 |bind||
 |postbind||
 
-```go
-
+```text 
 type WaitingPod interface {}
 type Plugin interface {}
 type QueueSortPlugin interface {}
@@ -68,7 +68,7 @@ type SchedulingQueue interface {}
 ```
 
 
-** Extension
+### Extension
 
 The extender could replace any plugin of the main schedule plan. It would be standalone binary program, acting as callee service, embedded in those schedule pipeline. If some external definition and configuration for this scheduler is given,
 it the bypass the default process unit predefined in our schedule framwork. 
@@ -91,7 +91,7 @@ it the bypass the default process unit predefined in our schedule framwork.
     - Topology and plan 
     
 
-** Prediction
+### Prediction
 
 We use predicted resource utility, here we call predicted resource limit upper. 
 

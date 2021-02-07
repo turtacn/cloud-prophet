@@ -1,4 +1,5 @@
 //
+//
 package defaultpreemption
 
 import (
@@ -11,8 +12,8 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/turtacn/cloud-prophet/scheduler/core"
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
-	podutil "github.com/turtacn/cloud-prophet/scheduler/helper"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	podutil "github.com/turtacn/cloud-prophet/scheduler/helper/pod"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
 	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
@@ -448,7 +449,7 @@ func pickOneNodeForPreemption(nodesToVictims map[string]*extenderv1.Victims) str
 			klog.Errorf("earliestStartTime is nil for node %s. Should not reach here.", node)
 			continue
 		}
-		if earliestStartTimeOnNode.After(latestStartTime.Time) {
+		if earliestStartTimeOnNode.After(*latestStartTime) {
 			latestStartTime = earliestStartTimeOnNode
 			nodeToReturn = node
 		}

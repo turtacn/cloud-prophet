@@ -1,4 +1,5 @@
 //
+//
 package noderesources
 
 import (
@@ -6,7 +7,7 @@ import (
 	"fmt"
 	"math"
 
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/runtime"
 )

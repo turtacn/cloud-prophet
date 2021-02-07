@@ -1,12 +1,13 @@
 //
+//
 package tainttoleration
 
 import (
 	"context"
 	"fmt"
 
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	pluginhelper "github.com/turtacn/cloud-prophet/scheduler/framework/plugins/helper"
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/runtime"
 )

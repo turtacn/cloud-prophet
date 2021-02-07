@@ -1,4 +1,5 @@
 //
+//
 package util
 
 import (
@@ -7,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	podutil "github.com/turtacn/cloud-prophet/scheduler/helper"
+	podutil "github.com/turtacn/cloud-prophet/scheduler/helper/pod"
 	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

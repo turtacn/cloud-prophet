@@ -1,4 +1,5 @@
 //
+//
 package model
 
 import (
@@ -370,7 +371,7 @@ type NodeStatus struct {
 	Conditions []NodeCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,4,rep,name=conditions"`
 }
 
-// 绑定
+// 绑定, 描述资源请求Pod 和 目标物理机的映射关系
 type Binding struct {
 	ObjectMeta `json:"metadata"`
 	Target     ObjectReference `json:"target"`

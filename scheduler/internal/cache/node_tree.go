@@ -1,10 +1,11 @@
 //
+//
 package cache
 
 import (
 	"fmt"
 
-	utilnode "github.com/turtacn/cloud-prophet/scheduler/helper"
+	utilnode "github.com/turtacn/cloud-prophet/scheduler/helper/node"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/klog/v2"
 )

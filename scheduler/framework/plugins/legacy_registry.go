@@ -1,4 +1,5 @@
 //
+//
 package plugins
 
 import (
@@ -15,7 +16,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/tainttoleration"
 	//  调度插件扩展在这里追加
 	//  ...
-	"k8s.io/apimachinery/pkg/util/sets"
+	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	"k8s.io/klog/v2"
 )
 

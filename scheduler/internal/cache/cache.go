@@ -1,4 +1,5 @@
 //
+//
 package cache
 
 import (
@@ -6,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/util/sets"

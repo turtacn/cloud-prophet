@@ -1,4 +1,5 @@
 //
+//
 package core
 
 import (
@@ -13,9 +14,9 @@ import (
 
 	"k8s.io/klog/v2"
 
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
-	podutil "github.com/turtacn/cloud-prophet/scheduler/helper"
+	podutil "github.com/turtacn/cloud-prophet/scheduler/helper/pod"
 	internalcache "github.com/turtacn/cloud-prophet/scheduler/internal/cache"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"

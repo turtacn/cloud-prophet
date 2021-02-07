@@ -1,4 +1,5 @@
 //
+//
 package runtime
 
 import (
@@ -9,7 +10,7 @@ import (
 
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config/scheme"
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"

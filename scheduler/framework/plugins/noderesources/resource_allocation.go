@@ -1,8 +1,9 @@
 //
+//
 package noderesources
 
 import (
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/v1alpha1"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	schedutil "github.com/turtacn/cloud-prophet/scheduler/util"
 	"k8s.io/klog/v2"

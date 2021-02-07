@@ -1,5 +1,6 @@
 //
-package v1alpha1
+//
+package k8s
 
 import (
 	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"

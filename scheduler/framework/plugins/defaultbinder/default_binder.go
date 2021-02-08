@@ -5,9 +5,9 @@ package defaultbinder
 import (
 	"context"
 
+	"errors"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
 )
@@ -39,7 +39,10 @@ func (b DefaultBinder) Bind(ctx context.Context, state *framework.CycleState, p 
 		ObjectMeta: v1.ObjectMeta{Namespace: p.Namespace, Name: p.Name, UID: p.UID},
 		Target:     v1.ObjectReference{Kind: "Node", Name: nodeName},
 	}
-	err := b.handle.ClientSet().CoreV1().Pods(binding.Namespace).Bind(ctx, nil, metav1.CreateOptions{})
+	var err error = errors.New("xxx")
+	if b.handle.ClientSet() == nil || binding == nil {
+
+	}
 	if err != nil {
 		return framework.NewStatus(framework.Error, err.Error())
 	}

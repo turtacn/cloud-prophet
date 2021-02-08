@@ -3,7 +3,6 @@
 package util
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -11,8 +10,6 @@ import (
 	podutil "github.com/turtacn/cloud-prophet/scheduler/helper/pod"
 	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/client-go/kubernetes"
@@ -117,7 +114,9 @@ func PatchPod(cs kubernetes.Interface, old *v1.Pod, new *v1.Pod) error {
 	if err != nil {
 		return fmt.Errorf("failed to create merge patch for pod %q/%q: %v", old.Namespace, old.Name, err)
 	}
-	_, err = cs.CoreV1().Pods(old.Namespace).Patch(context.TODO(), old.Name, types.StrategicMergePatchType, patchBytes, metav1.PatchOptions{}, "status")
+	if patchBytes == nil {
+		return nil
+	}
 	return err
 }
 
@@ -128,7 +127,7 @@ func GetUpdatedPod(cs kubernetes.Interface, pod *v1.Pod) (*v1.Pod, error) {
 
 // DeletePod deletes the given <pod> from API server
 func DeletePod(cs kubernetes.Interface, pod *v1.Pod) error {
-	return cs.CoreV1().Pods(pod.Namespace).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{})
+	return nil
 }
 
 // ClearNominatedNodeName internally submit a patch request to API server

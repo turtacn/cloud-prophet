@@ -3,7 +3,6 @@
 package scheduler
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"sort"
@@ -26,7 +25,6 @@ import (
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/informers"
@@ -403,7 +401,7 @@ func NewPodInformer(client clientset.Interface, resyncPeriod time.Duration) core
 	selector := fields.ParseSelectorOrDie(
 		"status.phase!=" + string(v1.PodSucceeded) +
 			",status.phase!=" + string(v1.PodFailed))
-	lw := cache.NewListWatchFromClient(client.CoreV1().RESTClient(), string(v1.ResourcePods), metav1.NamespaceAll, selector)
+	lw := cache.NewListWatchFromClient(client.CoreV1().RESTClient(), string(v1.ResourcePods), "", selector)
 	return &podInformer{
 		informer: cache.NewSharedIndexInformer(lw, nil, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}),
 	}
@@ -423,7 +421,9 @@ func MakeDefaultErrorFunc(client clientset.Interface, podLister corelisters.PodL
 				nodeName := errStatus.Status().Details.Name
 				// when node is not found, We do not remove the node right away. Trying again to get
 				// the node and if the node is still not found, then remove it from the scheduler cache.
-				_, err := client.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
+				if client == nil {
+
+				}
 				if err != nil && apierrors.IsNotFound(err) {
 					node := v1.Node{ObjectMeta: v1.ObjectMeta{Name: nodeName}}
 					if err := schedulerCache.RemoveNode(&node); err != nil {

@@ -9,9 +9,9 @@ import (
 
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 

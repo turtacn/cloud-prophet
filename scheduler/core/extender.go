@@ -12,10 +12,10 @@ import (
 
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
-	"k8s.io/apimachinery/pkg/util/sets"
 	restclient "k8s.io/client-go/rest"
 )
 

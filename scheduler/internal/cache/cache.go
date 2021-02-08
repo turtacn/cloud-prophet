@@ -8,9 +8,9 @@ import (
 	"time"
 
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
 )

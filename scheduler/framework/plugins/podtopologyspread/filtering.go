@@ -10,9 +10,9 @@ import (
 
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/helper"
+	labels "github.com/turtacn/cloud-prophet/scheduler/helper/label"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/klog/v2"
 )
 

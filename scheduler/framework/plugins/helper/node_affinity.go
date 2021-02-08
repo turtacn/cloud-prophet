@@ -3,8 +3,8 @@
 package helper
 
 import (
+	labels "github.com/turtacn/cloud-prophet/scheduler/helper/label"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	"k8s.io/apimachinery/pkg/labels"
 )
 
 // PodMatchesNodeSelectorAndAffinityTerms checks whether the pod is schedulable onto nodes according to

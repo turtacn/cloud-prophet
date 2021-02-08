@@ -10,9 +10,9 @@ import (
 
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	pluginhelper "github.com/turtacn/cloud-prophet/scheduler/framework/plugins/helper"
+	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 const preScoreStateKey = "PreScore" + Name

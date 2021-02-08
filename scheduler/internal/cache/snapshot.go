@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 // Snapshot is a snapshot of cache NodeInfo and NodeTree order. The scheduler takes a

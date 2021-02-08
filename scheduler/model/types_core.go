@@ -531,3 +531,16 @@ type PodCondition struct {
 	// +optional
 	Message string `json:"message,omitempty" protobuf:"bytes,6,opt,name=message"`
 }
+
+// Capability represent POSIX capabilities type
+type Capability string
+
+// Adds and removes POSIX capabilities from running containers.
+type Capabilities struct {
+	// Added capabilities
+	// +optional
+	Add []Capability `json:"add,omitempty" protobuf:"bytes,1,rep,name=add,casttype=Capability"`
+	// Removed capabilities
+	// +optional
+	Drop []Capability `json:"drop,omitempty" protobuf:"bytes,2,rep,name=drop,casttype=Capability"`
+}

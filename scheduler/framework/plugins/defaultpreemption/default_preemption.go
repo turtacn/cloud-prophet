@@ -13,15 +13,15 @@ import (
 
 	"github.com/turtacn/cloud-prophet/scheduler/core"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	metav1 "github.com/turtacn/cloud-prophet/scheduler/helper"
+	labels "github.com/turtacn/cloud-prophet/scheduler/helper/label"
 	podutil "github.com/turtacn/cloud-prophet/scheduler/helper/pod"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	"github.com/turtacn/cloud-prophet/scheduler/metrics"
 	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
+	policy "github.com/turtacn/cloud-prophet/scheduler/model"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/util"
-	policy "k8s.io/api/policy/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -682,7 +682,7 @@ func getPDBLister(informerFactory informers.SharedInformerFactory) policylisters
 
 func getPodDisruptionBudgets(pdbLister policylisters.PodDisruptionBudgetLister) ([]*policy.PodDisruptionBudget, error) {
 	if pdbLister != nil {
-		return pdbLister.List(labels.Everything())
+		return nil, nil
 	}
 	return nil, nil
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler"
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
+	"k8s.io/klog"
 )
 
 type Option func(registry runtime.Registry) error
@@ -24,6 +25,7 @@ func main() {
 	)
 
 	if err != nil {
+		klog.Fatalf("Init uniform scheduler derived from k8s scheduler. error=%+v", err)
 		return
 	}
 

@@ -6,6 +6,8 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler"
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
+	"k8s.io/client-go/informers"
+	kubernetes "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/klog"
 )
 
@@ -15,12 +17,19 @@ func main() {
 	flag.Parse()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	//create a fake client
+	client := kubernetes.NewSimpleClientset()
 
-	scheduler, err := scheduler.New(nil,
-		nil,
-		nil,
+	clusterInformer := informers.NewSharedInformerFactory(client, 0)
+	podInformer := scheduler.NewPodInformer(client, 0)
+	schedulerAlgorithmProvider := config.SchedulerDefaultProviderName
+	scheduler, err := scheduler.New(client,
+		clusterInformer,
+		podInformer,
 		ctx.Done(),
-		scheduler.WithAlgorithmSource(config.SchedulerAlgorithmSource{}),
+		scheduler.WithAlgorithmSource(config.SchedulerAlgorithmSource{
+			Provider: &schedulerAlgorithmProvider,
+		}),
 		scheduler.WithExtenders(config.Extender{}),
 	)
 

@@ -4,11 +4,15 @@ import (
 	"context"
 	"flag"
 	"github.com/turtacn/cloud-prophet/scheduler"
-	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	"k8s.io/client-go/informers"
 	kubernetes "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/klog"
+)
+
+var (
+	hostInfoFile      = flag.String("host-info", "hosts.csv", `节点元信息csv文件（包含起始状态）`)
+	scheduleTraceFile = flag.String("schedule-trace", "schedule.csv", `调度trace文件`)
 )
 
 type Option func(registry runtime.Registry) error
@@ -22,15 +26,11 @@ func main() {
 
 	clusterInformer := informers.NewSharedInformerFactory(client, 0)
 	podInformer := scheduler.NewPodInformer(client, 0)
-	schedulerAlgorithmProvider := config.SchedulerDefaultProviderName
 	scheduler, err := scheduler.New(client,
 		clusterInformer,
 		podInformer,
 		ctx.Done(),
-		scheduler.WithAlgorithmSource(config.SchedulerAlgorithmSource{
-			Provider: &schedulerAlgorithmProvider,
-		}),
-		scheduler.WithExtenders(config.Extender{}),
+		nil,
 	)
 
 	if err != nil {

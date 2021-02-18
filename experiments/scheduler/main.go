@@ -30,7 +30,8 @@ func main() {
 		clusterInformer,
 		podInformer,
 		ctx.Done(),
-		nil,
+		scheduler.WithPodMaxBackoffSeconds(0),
+		scheduler.WithPercentageOfNodesToScore(0),
 	)
 
 	if err != nil {

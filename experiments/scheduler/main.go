@@ -7,7 +7,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	"k8s.io/client-go/informers"
 	kubernetes "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 var (
@@ -19,6 +19,7 @@ type Option func(registry runtime.Registry) error
 
 func main() {
 	flag.Parse()
+	klog.InitFlags(nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//create a fake client

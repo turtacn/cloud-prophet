@@ -105,6 +105,11 @@ We use predicted resource utility, here we call predicted resource limit upper.
 ```
 
 
- 
+
+## Add List-Watch to DBMS
+
+```text
+https://github.com/pingcap/tidb-binlog
+``` 
 
 

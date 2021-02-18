@@ -7,7 +7,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	"k8s.io/client-go/informers"
 	kubernetes "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/klog/v2"
+	"k8s.io/klog"
 )
 
 var (

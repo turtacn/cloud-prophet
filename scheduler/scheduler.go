@@ -188,6 +188,7 @@ func New(client clientset.Interface,
 
 	registry := frameworkplugins.NewInTreeRegistry()
 	if err := registry.Merge(options.frameworkOutOfTreeRegistry); err != nil {
+		klog.Errorf("registry merge out of tree failed, error=%v", err)
 		return nil, err
 	}
 

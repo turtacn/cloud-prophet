@@ -142,9 +142,11 @@ func (c *Configurator) create() (*Scheduler, error) {
 	profiles, err := profile.NewMap(c.profiles, c.buildFramework,
 		frameworkruntime.WithPodNominator(nominator))
 	if err != nil {
+		klog.Errorf("initializing profiles: %v", err)
 		return nil, fmt.Errorf("initializing profiles: %v", err)
 	}
 	if len(profiles) == 0 {
+		klog.Errorf("at least one profile is required")
 		return nil, errors.New("at least one profile is required")
 	}
 	// Profiles are required to have equivalent queue sort plugins.
@@ -178,14 +180,16 @@ func (c *Configurator) create() (*Scheduler, error) {
 
 // createFromProvider creates a scheduler from the name of a registered algorithm provider.
 func (c *Configurator) createFromProvider(providerName string) (*Scheduler, error) {
-	klog.V(2).Infof("Creating scheduler from algorithm provider '%v'", providerName)
+	klog.Infof("Creating scheduler from algorithm provider '%v'", providerName)
 	r := algorithmprovider.NewRegistry()
 	defaultPlugins, exist := r[providerName]
 	if !exist {
+		klog.Errorf("algorithm provider %q is not registered", providerName)
 		return nil, fmt.Errorf("algorithm provider %q is not registered", providerName)
 	}
 
 	for i := range c.profiles {
+		klog.Infof("meet %d-th(%d) profile", i, len(c.profiles))
 		prof := &c.profiles[i]
 		plugins := &schedulerapi.Plugins{}
 		plugins.Append(defaultPlugins)

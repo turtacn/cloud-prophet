@@ -19,7 +19,6 @@ type Option func(registry runtime.Registry) error
 
 func main() {
 	flag.Parse()
-	klog.InitFlags(nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//create a fake client

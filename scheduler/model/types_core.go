@@ -506,7 +506,7 @@ type TopologySpreadConstraint struct {
 }
 
 const (
-	DefaultSchedulerName = "turta"
+	DefaultSchedulerName = "default-scheduler"
 )
 
 // PodCondition contains details for the current condition of this pod.

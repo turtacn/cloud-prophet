@@ -228,6 +228,7 @@ func NewFramework(r Registry, plugins *config.Plugins, args []config.PluginConfi
 	for i := range args {
 		name := args[i].Name
 		if _, ok := pluginConfig[name]; ok {
+			klog.Errorf("repeated config for plugin %s", name)
 			return nil, fmt.Errorf("repeated config for plugin %s", name)
 		}
 		pluginConfig[name] = args[i].Args
@@ -238,11 +239,13 @@ func NewFramework(r Registry, plugins *config.Plugins, args []config.PluginConfi
 	for name, factory := range r {
 		// initialize only needed plugins.
 		if _, ok := pg[name]; !ok {
+			klog.Warningf("not found plugin name %s", name)
 			continue
 		}
 
 		args, err := getPluginArgsOrDefault(pluginConfig, name)
 		if err != nil {
+			klog.Errorf("getting args for Plugin %q: %w", name, err)
 			return nil, fmt.Errorf("getting args for Plugin %q: %w", name, err)
 		}
 		p, err := factory(args, f)
@@ -300,9 +303,13 @@ func getPluginArgsOrDefault(pluginConfig map[string]runtime.Object, name string)
 	if ok {
 		return res, nil
 	}
+	klog.Infof("not found plugin config name %s, we create", name)
 	// Use defaults from latest config API version.
 	gvk := v1beta1.SchemeGroupVersion.WithKind(name + "Args")
 	obj, _, err := configDecoder.Decode(nil, &gvk, nil)
+	if err != nil {
+		klog.Errorf("v1beta1 schema group version with kind decoder failed error %v", err)
+	}
 	if runtime.IsNotRegisteredError(err) {
 		// This plugin is out-of-tree or doesn't require configuration.
 		return nil, nil

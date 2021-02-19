@@ -12,6 +12,7 @@ import (
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	frameworkruntime "github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/klog"
 )
 
 // FrameworkFactory builds a Framework for a given profile configuration.
@@ -48,10 +49,12 @@ func NewMap(cfgs []config.KubeSchedulerProfile, frameworkFact FrameworkFactory,
 
 	for _, cfg := range cfgs {
 		if err := v.validate(cfg); err != nil {
+			klog.Errorf("validate kube schedule profile config error=%v", err)
 			return nil, err
 		}
 		p, err := NewProfile(cfg, frameworkFact, opts...)
 		if err != nil {
+			klog.Errorf("creating profile for scheduler name %s: %v", cfg.SchedulerName, err)
 			return nil, fmt.Errorf("creating profile for scheduler name %s: %v", cfg.SchedulerName, err)
 		}
 		m[cfg.SchedulerName] = p

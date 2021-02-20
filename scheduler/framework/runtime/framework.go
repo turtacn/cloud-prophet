@@ -225,8 +225,10 @@ func NewFramework(r Registry, plugins *config.Plugins, args []config.PluginConfi
 	pg := f.pluginsNeeded(plugins)
 
 	pluginConfig := make(map[string]runtime.Object, len(args))
+	klog.Infof("length of plugin config is %d", len(args))
 	for i := range args {
 		name := args[i].Name
+		klog.Infof("list plugin %s config args", name)
 		if _, ok := pluginConfig[name]; ok {
 			klog.Errorf("repeated config for plugin %s", name)
 			return nil, fmt.Errorf("repeated config for plugin %s", name)

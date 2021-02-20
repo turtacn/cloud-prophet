@@ -1,39 +1,19 @@
 #!/bin/sh
-GO111MODULE=on
-GOROOT=/User/tuxudong/go
-GOPATH=/User/tuxudong/go/gocache
-PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+alias go="docker run --rm -t -i -v \$(pwd):\$(pwd) -w \$(pwd) -e GO111MODULE=on -e GOPROXY=https://goproxy.io --entrypoint /usr/local/go/bin/go golang:1.14-alpine"
 echo "*******************************************"
-echo "*GOROOT:"$GOROOT
-echo "*GOPATH:"$GOPATH
 echo "*"`go version`
 echo "*******************************************"
-/usr/bin/rm  -rf   _output 
-export GO111MODULE=on
-export COMMIT=`git rev-parse HEAD 2>/dev/null`
-export GOPROXY="https://goproxy.io"
-#export GOPROXY=""
-export GOPRIVATE=git.jd.com
-current_branch() {
-	local folder="$(pwd)"
-	[ -n "$1" ] && folder="$1"
-	git rev-parse --abbrev-ref HEAD | grep -v HEAD || \
-	git describe --exact-match HEAD || \
-	git rev-parse HEAD
-}
 
-BRANCH=`current_branch`
-
-printf "build ... \ncommitid:"$COMMIT"\nbranch:"$BRANCH"\n"
-mkdir -p ./_output/$BRANCH/$COMMIT
-COMMIT=_output/$BRANCH/$COMMIT
-
-#git pull
+git pull
 go mod init github.com/turtacn/cloud-prophet
-go mod vendor 
+#go mod vendor
 #go mod tidy
 #go mod verify
+
+go build -v -o ./a  experiments/autopilot/main.go
+go build -v -o ./b  experiments/scheduler/main.go
+
 #go build -v -o ./${COMMIT}/cpu  app/ctl/mainCPU.go
-#go build -v -o ./${COMMIT}/nnet app/ctl/mainNeural.go  
-go build -v -o ./${COMMIT}/ql   app/ctl/mainQl.go  
+#go build -v -o ./${COMMIT}/nnet app/ctl/mainNeural.go
+#go build -v -o ./${COMMIT}/ql   app/ctl/mainQl.go
 #go build -v -o ./${COMMIT}/     app/ctl/neural.go

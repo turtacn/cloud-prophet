@@ -239,6 +239,7 @@ func NewFramework(r Registry, plugins *config.Plugins, args []config.PluginConfi
 	pluginsMap := make(map[string]framework.Plugin)
 	var totalPriority int64
 	for name, factory := range r {
+		klog.Infof("list plugin of framework %s", name)
 		// initialize only needed plugins.
 		if _, ok := pg[name]; !ok {
 			klog.Warningf("not found plugin name %s", name)

@@ -24,3 +24,7 @@ func init() {
 func AddToScheme(scheme *runtime.Scheme) {
 	utilruntime.Must(kubeschedulerconfig.AddToScheme(scheme))
 }
+
+func NewFromSchemeByName(name string) runtime.Object {
+	return nil
+}

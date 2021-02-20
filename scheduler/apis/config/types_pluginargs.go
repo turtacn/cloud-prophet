@@ -144,3 +144,7 @@ type VolumeBindingArgs struct {
 	// If this value is nil, the default value will be used.
 	BindTimeoutSeconds int64
 }
+type NodeUnschedulableArgs struct {
+	metav1.TypeMeta
+	Name string
+}

@@ -5,7 +5,7 @@ echo "*"`go version`
 echo "*******************************************"
 
 git pull
-go mod init github.com/turtacn/cloud-prophet
+#go mod init github.com/turtacn/cloud-prophet
 #go mod vendor
 #go mod tidy
 #go mod verify

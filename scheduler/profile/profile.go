@@ -30,6 +30,7 @@ func NewProfile(cfg config.KubeSchedulerProfile, frameworkFact FrameworkFactory,
 	opts = append(opts, frameworkruntime.WithProfileName(cfg.SchedulerName))
 	fwk, err := frameworkFact(cfg, opts...)
 	if err != nil {
+		klog.Errorf("famework factory for scheduler %s create error %v", cfg.SchedulerName, err)
 		return nil, err
 	}
 	return &Profile{

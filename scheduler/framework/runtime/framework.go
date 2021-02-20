@@ -41,8 +41,6 @@ const (
 	permit                                    = "Permit"
 )
 
-var configDecoder = scheme.Codecs.UniversalDecoder()
-
 // frameworkImpl is the component responsible for initializing and running scheduler
 // plugins.
 type frameworkImpl struct {

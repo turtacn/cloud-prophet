@@ -12,7 +12,6 @@ import (
 	"time"
 
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
-	"github.com/turtacn/cloud-prophet/scheduler/apis/config/scheme"
 	"github.com/turtacn/cloud-prophet/scheduler/core"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	frameworkplugins "github.com/turtacn/cloud-prophet/scheduler/framework/plugins"
@@ -24,7 +23,6 @@ import (
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
 	"github.com/turtacn/cloud-prophet/scheduler/util"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	coreinformers "k8s.io/client-go/informers/core/v1"
@@ -264,14 +262,10 @@ func initPolicyFromFile(policyFile string, policy *schedulerapi.Policy) error {
 		return fmt.Errorf("missing policy config file %s", policyFile)
 	}
 	data, err := ioutil.ReadFile(policyFile)
-	if err != nil {
+	if err != nil || data == nil {
 		return fmt.Errorf("couldn't read policy config: %v", err)
 	}
-	err = runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), []byte(data), policy)
-	if err != nil {
-		return fmt.Errorf("invalid policy: %v", err)
-	}
-	return nil
+	return fmt.Errorf("init policy from file not supported: %v", err)
 }
 
 // initPolicyFromConfigMap initialize policy from configMap

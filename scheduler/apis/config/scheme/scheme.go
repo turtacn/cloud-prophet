@@ -6,7 +6,6 @@ import (
 	kubeschedulerconfig "github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 )
 
 var (
@@ -22,7 +21,6 @@ func init() {
 }
 
 func AddToScheme(scheme *runtime.Scheme) {
-	utilruntime.Must(kubeschedulerconfig.AddToScheme(scheme))
 }
 
 func NewFromSchemeByName(name string) runtime.Object {

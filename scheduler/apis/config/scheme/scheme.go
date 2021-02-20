@@ -31,6 +31,10 @@ func NewFromSchemeByName(name string) runtime.Object {
 		return &kubeschedulerconfig.PodTopologySpreadArgs{}
 	case name == "NodeResourcesLeastAllocated":
 		return &kubeschedulerconfig.NodeResourcesLeastAllocatedArgs{}
+	case name == "InterPodAffinity":
+		return &kubeschedulerconfig.InterPodAffinityArgs{}
+	case name == "NodeResourcesFit":
+		return &kubeschedulerconfig.NodeResourcesFitArgs{}
 	default:
 		return nil
 	}

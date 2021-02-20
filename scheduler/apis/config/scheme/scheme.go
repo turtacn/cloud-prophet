@@ -29,6 +29,8 @@ func NewFromSchemeByName(name string) runtime.Object {
 	switch {
 	case name == "PodTopologySpread":
 		return &kubeschedulerconfig.PodTopologySpreadArgs{}
+	case name == "NodeResourcesLeastAllocated":
+		return &kubeschedulerconfig.NodeResourcesLeastAllocatedArgs{}
 	default:
 		return nil
 	}

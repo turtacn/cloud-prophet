@@ -313,6 +313,8 @@ func getPluginArgsOrDefault(pluginConfig map[string]runtime.Object, name string)
 	if err != nil {
 		klog.Errorf("v1beta1 schema group version with kind decoder failed error %v", err)
 	}
+	return scheme.NewFromSchemeByName(name), nil
+
 	if runtime.IsNotRegisteredError(err) {
 		// This plugin is out-of-tree or doesn't require configuration.
 		return nil, nil

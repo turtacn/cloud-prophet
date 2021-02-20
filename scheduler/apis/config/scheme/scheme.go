@@ -26,5 +26,11 @@ func AddToScheme(scheme *runtime.Scheme) {
 }
 
 func NewFromSchemeByName(name string) runtime.Object {
+	switch {
+	case name == "PodTopologySpread":
+		return &kubeschedulerconfig.PodTopologySpreadArgs{}
+	default:
+		return nil
+	}
 	return nil
 }

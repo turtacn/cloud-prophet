@@ -19,7 +19,6 @@ import (
 	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
-	//"k8s.io/kube-scheduler/config/v1beta1"
 )
 
 const (
@@ -307,19 +306,7 @@ func getPluginArgsOrDefault(pluginConfig map[string]runtime.Object, name string)
 		return res, nil
 	}
 	klog.Infof("not found plugin config name %s, we create", name)
-	//// Use defaults from latest config API version.
-	//gvk := v1beta1.SchemeGroupVersion.WithKind(name + "Args")
-	//obj, _, err := configDecoder.Decode(nil, &gvk, nil)
-	//if err != nil {
-	//	klog.Errorf("v1beta1 schema group version with kind decoder failed error %v", err)
-	//}
 	return scheme.NewFromSchemeByName(name), nil
-
-	//if runtime.IsNotRegisteredError(err) {
-	//	// This plugin is out-of-tree or doesn't require configuration.
-	//	return nil, nil
-	//}
-	//return obj, err
 }
 
 func updatePluginList(pluginList interface{}, pluginSet *config.PluginSet, pluginsMap map[string]framework.Plugin) error {

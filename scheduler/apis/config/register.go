@@ -16,7 +16,7 @@ var (
 )
 
 func init() {
-	localSchemeBuilder.Register(RegisterDefaults)
+	//localSchemeBuilder.Register(RegisterDefaults)
 }
 
 func RegisterDefaults(scheme *runtime.Scheme) error {

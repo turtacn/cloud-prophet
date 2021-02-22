@@ -6,6 +6,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	"github.com/turtacn/cloud-prophet/scheduler/model"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/klog"
@@ -24,9 +25,26 @@ func main() {
 	defer cancel()
 	//create a fake client
 	client := fake.NewSimpleClientset(
-		&model.Pod{},
-		&model.Pod{},
-	)
+		&model.Pod{
+			TypeMeta: v1.TypeMeta{
+				Kind:       "k8s-pod",
+				APIVersion: "k8s-v1beta1",
+			},
+			ObjectMeta: model.ObjectMeta{
+				Name:      "test-1",
+				Namespace: "test",
+			},
+		},
+		&model.Pod{
+			TypeMeta: v1.TypeMeta{
+				Kind:       "k8s-pod",
+				APIVersion: "k8s-v1beta1",
+			},
+			ObjectMeta: model.ObjectMeta{
+				Name:      "test-2",
+				Namespace: "test",
+			},
+		})
 
 	clusterInformer := informers.NewSharedInformerFactory(client, 0)
 	podInformer := scheduler.NewPodInformer(client, 0)

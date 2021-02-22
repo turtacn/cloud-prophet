@@ -733,7 +733,7 @@ func (npm *nominatedPodMap) add(p *v1.Pod, nodeName string) {
 	npm.nominatedPodToNode[p.UID] = nnn
 	for _, np := range npm.nominatedPods[nnn] {
 		if np.UID == p.UID {
-			klog.V(4).Infof("Pod %v/%v already exists in the nominated map!", p.Namespace, p.Name)
+			klog.Infof("Pod %v/%v already exists in the nominated map!", p.Namespace, p.Name)
 			return
 		}
 	}

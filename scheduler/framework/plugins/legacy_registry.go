@@ -422,7 +422,7 @@ func (lr *LegacyRegistry) ProcessPredicatePolicy(policy config.PredicatePolicy, 
 
 	if _, ok := lr.PredicateToConfigProducer[predicateName]; ok {
 		// checking to see if a pre-defined predicate is requested
-		klog.V(2).Infof("Predicate type %s already registered, reusing.", policy.Name)
+		klog.Infof("Predicate type %s already registered, reusing.", policy.Name)
 		return predicateName
 	}
 
@@ -477,7 +477,7 @@ func (lr *LegacyRegistry) ProcessPriorityPolicy(policy config.PriorityPolicy, co
 	}
 
 	if _, ok := lr.PriorityToConfigProducer[priorityName]; ok {
-		klog.V(2).Infof("Priority type %s already registered, reusing.", priorityName)
+		klog.Infof("Priority type %s already registered, reusing.", priorityName)
 		return priorityName
 	}
 

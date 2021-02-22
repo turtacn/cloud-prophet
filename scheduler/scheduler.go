@@ -309,7 +309,7 @@ func (sched *Scheduler) recordSchedulingFailure(prof *profile.Profile, podInfo *
 }
 
 func updatePod(client clientset.Interface, pod *v1.Pod, condition *v1.PodCondition, nominatedNode string) error {
-	klog.V(3).Infof("Updating pod condition for %s/%s to (%s==%s, Reason=%s)", pod.Namespace, pod.Name, condition.Type, condition.Status, condition.Reason)
+	klog.Infof("Updating pod condition for %s/%s to (%s==%s, Reason=%s)", pod.Namespace, pod.Name, condition.Type, condition.Status, condition.Reason)
 	podCopy := pod.DeepCopy()
 	// NominatedNodeName is updated only if we are trying to set it, and the value is
 	// different from the existing one.
@@ -414,7 +414,7 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 		return
 	}
 
-	klog.V(3).Infof("Attempting to schedule pod: %v/%v", pod.Namespace, pod.Name)
+	klog.Infof("Attempting to schedule pod: %v/%v", pod.Namespace, pod.Name)
 
 	// Synchronously attempt to find a fit for the pod.
 	start := time.Now()
@@ -431,14 +431,14 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 		nominatedNode := ""
 		if fitError, ok := err.(*core.FitError); ok {
 			if !prof.HasPostFilterPlugins() {
-				klog.V(3).Infof("No PostFilter plugins are registered, so no preemption will be performed.")
+				klog.Infof("No PostFilter plugins are registered, so no preemption will be performed.")
 			} else {
 				// Run PostFilter plugins to try to make the pod schedulable in a future scheduling cycle.
 				result, status := prof.RunPostFilterPlugins(ctx, state, pod, fitError.FilteredNodesStatuses)
 				if status.Code() == framework.Error {
 					klog.Errorf("Status after running PostFilter plugins for pod %v/%v: %v", pod.Namespace, pod.Name, status)
 				} else {
-					klog.V(5).Infof("Status after running PostFilter plugins for pod %v/%v: %v", pod.Namespace, pod.Name, status)
+					klog.Infof("Status after running PostFilter plugins for pod %v/%v: %v", pod.Namespace, pod.Name, status)
 				}
 				if status.IsSuccess() && result != nil {
 					nominatedNode = result.NominatedNodeName
@@ -558,7 +558,8 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 			sched.recordSchedulingFailure(prof, assumedPodInfo, fmt.Errorf("Binding rejected: %v", err), SchedulerError, "")
 		} else {
 			// Calculating nodeResourceString can be heavy. Avoid it if klog verbosity is below 2.
-			if klog.V(2).Enabled() {
+			//if klog.V(2).Enabled()
+			if true {
 				klog.InfoS("Successfully bound pod to node", "pod", pod, "node", scheduleResult.SuggestedHost, "evaluatedNodes", scheduleResult.EvaluatedNodes, "feasibleNodes", scheduleResult.FeasibleNodes)
 			}
 			metrics.PodScheduled(prof.Name, metrics.SinceInSeconds(start))
@@ -592,7 +593,7 @@ func (sched *Scheduler) profileForPod(pod *v1.Pod) (*profile.Profile, error) {
 func (sched *Scheduler) skipPodSchedule(prof *profile.Profile, pod *v1.Pod) bool {
 	// Case 1: pod is being deleted.
 	if pod.DeletionTimestamp != nil {
-		klog.V(3).Infof("Skip schedule deleting pod: %v/%v", pod.Namespace, pod.Name)
+		klog.Infof("Skip schedule deleting pod: %v/%v", pod.Namespace, pod.Name)
 		return true
 	}
 

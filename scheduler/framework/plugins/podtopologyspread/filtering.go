@@ -280,7 +280,7 @@ func (pl *PodTopologySpread) Filter(ctx context.Context, cycleState *framework.C
 		tpKey := c.TopologyKey
 		tpVal, ok := node.Labels[c.TopologyKey]
 		if !ok {
-			klog.V(5).Infof("node '%s' doesn't have required label '%s'", node.Name, tpKey)
+			klog.Infof("node '%s' doesn't have required label '%s'", node.Name, tpKey)
 			return framework.NewStatus(framework.UnschedulableAndUnresolvable, ErrReasonNodeLabelNotMatch)
 		}
 
@@ -305,7 +305,7 @@ func (pl *PodTopologySpread) Filter(ctx context.Context, cycleState *framework.C
 		}
 		skew := matchNum + selfMatchNum - minMatchNum
 		if skew > c.MaxSkew {
-			klog.V(5).Infof("node '%s' failed spreadConstraint[%s]: MatchNum(%d) + selfMatchNum(%d) - minMatchNum(%d) > maxSkew(%d)", node.Name, tpKey, matchNum, selfMatchNum, minMatchNum, c.MaxSkew)
+			klog.Infof("node '%s' failed spreadConstraint[%s]: MatchNum(%d) + selfMatchNum(%d) - minMatchNum(%d) > maxSkew(%d)", node.Name, tpKey, matchNum, selfMatchNum, minMatchNum, c.MaxSkew)
 			return framework.NewStatus(framework.Unschedulable, ErrReasonConstraintsNotMatch)
 		}
 	}

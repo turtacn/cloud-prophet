@@ -352,7 +352,7 @@ func (cache *schedulerCache) finishBinding(pod *v1.Pod, now time.Time) error {
 	cache.mu.RLock()
 	defer cache.mu.RUnlock()
 
-	klog.V(5).Infof("Finished binding for pod %v. Can be expired.", key)
+	klog.Infof("Finished binding for pod %v. Can be expired.", key)
 	currState, ok := cache.podStates[key]
 	if ok && cache.assumedPods[key] {
 		dl := now.Add(cache.ttl)
@@ -670,7 +670,7 @@ func (cache *schedulerCache) cleanupAssumedPods(now time.Time) {
 			klog.Fatal("Key found in assumed set but not in podStates. Potentially a logical error.")
 		}
 		if !ps.bindingFinished {
-			klog.V(5).Infof("Couldn't expire cache for pod %v/%v. Binding is still in progress.",
+			klog.Infof("Couldn't expire cache for pod %v/%v. Binding is still in progress.",
 				ps.pod.Namespace, ps.pod.Name)
 			continue
 		}

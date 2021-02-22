@@ -99,7 +99,7 @@ func (pl *DefaultPreemption) preempt(ctx context.Context, state *framework.Cycle
 
 	// 1) Ensure the preemptor is eligible to preempt other pods.
 	if !PodEligibleToPreemptOthers(pod, nodeLister, m[pod.Status.NominatedNodeName]) {
-		klog.V(5).Infof("Pod %v/%v is not eligible for more preemption.", pod.Namespace, pod.Name)
+		klog.Infof("Pod %v/%v is not eligible for more preemption.", pod.Namespace, pod.Name)
 		return "", nil
 	}
 
@@ -144,7 +144,7 @@ func FindCandidates(ctx context.Context, cs kubernetes.Interface, state *framewo
 
 	potentialNodes := nodesWherePreemptionMightHelp(allNodes, m)
 	if len(potentialNodes) == 0 {
-		klog.V(3).Infof("Preemption will not help schedule pod %v/%v on any node.", pod.Namespace, pod.Name)
+		klog.Infof("Preemption will not help schedule pod %v/%v on any node.", pod.Namespace, pod.Name)
 		// In this case, we should clean-up any existing nominated node name of the pod.
 		if err := util.ClearNominatedNodeName(cs, pod); err != nil {
 			klog.Errorf("Cannot clear 'NominatedNodeName' field of pod %v/%v: %v", pod.Namespace, pod.Name, err)
@@ -152,7 +152,9 @@ func FindCandidates(ctx context.Context, cs kubernetes.Interface, state *framewo
 		}
 		return nil, nil
 	}
-	if klog.V(5).Enabled() {
+
+	//if klog.V(5).Enabled() {
+	if true {
 		var sample []string
 		for i := 0; i < 10 && i < len(potentialNodes); i++ {
 			sample = append(sample, potentialNodes[i].Node().Name)
@@ -174,7 +176,7 @@ func FindCandidates(ctx context.Context, cs kubernetes.Interface, state *framewo
 // terminating pods on the node, we don't consider this for preempting more pods.
 func PodEligibleToPreemptOthers(pod *v1.Pod, nodeInfos framework.NodeInfoLister, nominatedNodeStatus *framework.Status) bool {
 	if pod.Spec.PreemptionPolicy != nil && *pod.Spec.PreemptionPolicy == v1.PreemptNever {
-		klog.V(5).Infof("Pod %v/%v is not eligible for preemption because it has a preemptionPolicy of %v", pod.Namespace, pod.Name, v1.PreemptNever)
+		klog.Infof("Pod %v/%v is not eligible for preemption because it has a preemptionPolicy of %v", pod.Namespace, pod.Name, v1.PreemptNever)
 		return false
 	}
 	nomNodeName := pod.Status.NominatedNodeName
@@ -548,7 +550,7 @@ func selectVictimsOnNode(
 				return false, err
 			}
 			victims = append(victims, p)
-			klog.V(5).Infof("Pod %v/%v is a potential preemption victim on node %v.", p.Namespace, p.Name, nodeInfo.Node().Name)
+			klog.Infof("Pod %v/%v is a potential preemption victim on node %v.", p.Namespace, p.Name, nodeInfo.Node().Name)
 		}
 		return fits, nil
 	}

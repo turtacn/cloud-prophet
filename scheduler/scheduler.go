@@ -386,7 +386,7 @@ func (sched *Scheduler) finishBinding(prof *profile.Profile, assumed *v1.Pod, ta
 		klog.Errorf("scheduler cache FinishBinding failed: %v", finErr)
 	}
 	if err != nil {
-		klog.V(1).Infof("Failed to bind pod: %v/%v", assumed.Namespace, assumed.Name)
+		klog.Infof("Failed to bind pod: %v/%v", assumed.Namespace, assumed.Name)
 		return
 	}
 

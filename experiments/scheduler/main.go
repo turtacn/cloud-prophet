@@ -56,8 +56,8 @@ func main() {
 
 	go podInformer.Informer().Run(ctx.Done())
 
-	clusterInformer.Start(ctx.Done())
-	clusterInformer.WaitForCacheSync(ctx.Done())
+	//clusterInformer.Start(ctx.Done())
+	//clusterInformer.WaitForCacheSync(ctx.Done())
 	klog.Infof("begin to run scheduler")
 	scheduler.Run(ctx)
 }

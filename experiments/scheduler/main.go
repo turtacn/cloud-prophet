@@ -54,7 +54,7 @@ func main() {
 		return
 	}
 
-	go podInformer.Informer().Run(ctx.Done())
+	//go podInformer.Informer().Run(ctx.Done())
 
 	//clusterInformer.Start(ctx.Done())
 	//clusterInformer.WaitForCacheSync(ctx.Done())

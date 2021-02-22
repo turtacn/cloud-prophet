@@ -280,8 +280,10 @@ func (sched *Scheduler) Run(ctx context.Context) {
 		return
 	}
 	sched.SchedulingQueue.Run()
+	klog.Infof("scheduling queue was ready for in-coming pod.")
 	wait.UntilWithContext(ctx, sched.scheduleOne, 0)
 	sched.SchedulingQueue.Close()
+	klog.Infof("scheduling queue was closed.")
 }
 
 // recordSchedulingFailure records an event for the pod that indicates the

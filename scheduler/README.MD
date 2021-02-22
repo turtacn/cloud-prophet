@@ -14,17 +14,17 @@ Given a processing context, we could package all the steps in one process logic 
 
 |Steps|Functions|
 | --  | -- |
-|prefilter|初粒度过滤，布隆过滤器，快速排出大量不匹配节点|
+|prefilter|初粒度过滤，布隆过滤器，快速排除大量不匹配节点|
 |filter | 精过滤 |
 |postfilter| 代价，日志，统计  |
 |reserved | 内存预占，调度周期结束|
 |permit| 检查候选节点的实时状态 |
 |prescore| 预打分 |
 |score | 打分|
-|postscore||
-|prebind||
-|bind||
-|postbind||
+|postscore| 规格化打分 |
+|prebind| 预绑定， 内存预占 |
+|bind| 持久化入库绑定 |
+|postbind| 代价，日志，统计信息|
 
 ```text 
 type WaitingPod interface {}

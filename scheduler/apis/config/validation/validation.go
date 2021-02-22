@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
+	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )

@@ -3,16 +3,15 @@
 package config
 
 import (
-	"math"
-
+	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/sets"
+	"math"
 )
 
 const (
 	// SchedulerDefaultLockObjectNamespace defines default scheduler lock object namespace ("kube-system")
-	SchedulerDefaultLockObjectNamespace string = metav1.NamespaceSystem
+	SchedulerDefaultLockObjectNamespace string = "kube-system"
 
 	// SchedulerDefaultLockObjectName defines default scheduler lock object name ("kube-scheduler")
 	SchedulerDefaultLockObjectName = "kube-scheduler"

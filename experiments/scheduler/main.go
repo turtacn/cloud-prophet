@@ -7,6 +7,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/klog"
@@ -50,8 +51,13 @@ func main() {
 	go func() {
 		for i := 1; true; i++ {
 			scheduler.SchedulingQueue.Add(&v1.Pod{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Pod",
+					APIVersion: "v1",
+				},
 				ObjectMeta: v1.ObjectMeta{
-					Name: fmt.Sprintf("pod-%d", i),
+					Name:      fmt.Sprintf("pod-%d", i),
+					Namespace: "test",
 				},
 			})
 			time.Sleep(1 * time.Second)

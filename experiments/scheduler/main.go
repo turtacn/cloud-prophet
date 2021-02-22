@@ -65,6 +65,7 @@ func main() {
 				ObjectMeta: v1.ObjectMeta{
 					Name:      fmt.Sprintf("pod-%d", i),
 					Namespace: "test",
+					UID:       fmt.Sprint("test-pod-%s", fmt.Sprintf("pod-%d", i)),
 				},
 				Spec: v1.PodSpec{
 					SchedulerName: v1.DefaultSchedulerName,

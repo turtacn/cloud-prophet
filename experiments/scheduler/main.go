@@ -7,6 +7,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
@@ -42,11 +43,17 @@ func main() {
 		klog.Fatalf("Init uniform scheduler derived from k8s scheduler. error=%+v", err)
 		return
 	}
-
 	//go podInformer.Informer().Run(ctx.Done())
-
 	//clusterInformer.Start(ctx.Done())
 	//clusterInformer.WaitForCacheSync(ctx.Done())
+
+	// make nodes
+	for i := 1; i <= 200; i++ {
+		node := makeNode(fmt.Sprintf("node-%d", i), 8000, 80000)
+		if err := scheduler.SchedulerCache.AddNode(node); err != nil {
+			klog.Warningf("scheduler cache add node failed %v", err)
+		}
+	}
 
 	go func() {
 		for i := 1; true; i++ {
@@ -70,4 +77,20 @@ func main() {
 
 	klog.Infof("begin to run scheduler")
 	scheduler.Run(ctx)
+}
+
+func makeNode(node string, milliCPU, memory int64) *v1.Node {
+	return &v1.Node{
+		ObjectMeta: v1.ObjectMeta{Name: node},
+		Status: v1.NodeStatus{
+			Capacity: v1.ResourceList{
+				v1.ResourceCPU:    *resource.NewMilliQuantity(milliCPU, resource.DecimalSI),
+				v1.ResourceMemory: *resource.NewQuantity(memory, resource.BinarySI),
+			},
+			Allocatable: v1.ResourceList{
+				v1.ResourceCPU:    *resource.NewMilliQuantity(milliCPU, resource.DecimalSI),
+				v1.ResourceMemory: *resource.NewQuantity(memory, resource.BinarySI),
+			},
+		},
+	}
 }

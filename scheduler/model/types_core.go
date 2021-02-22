@@ -4,6 +4,7 @@ package model
 
 import (
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 )
 
@@ -98,10 +99,11 @@ const (
 
 // 借用K8S的概念，资源分配的单位，可扩展支持1:vm ; 2: docker ; 3: nc ; 4: pod
 type Pod struct {
-	ObjectMeta `json:"metadata"`
-	JvirtMeta  `json:"jvirt_meta"`
-	Spec       PodSpec   `json:"spec"`
-	Status     PodStatus `json:"status"`
+	metav1.TypeMeta `json:"meta"`
+	ObjectMeta      `json:"metadata"`
+	JvirtMeta       `json:"jvirt_meta"`
+	Spec            PodSpec   `json:"spec"`
+	Status          PodStatus `json:"status"`
 }
 
 type PodStatus struct {

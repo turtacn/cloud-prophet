@@ -342,6 +342,7 @@ const (
 
 // 计算节点
 type Node struct {
+	metav1.TypeMeta
 	ObjectMeta
 	Spec   NodeSpec   `json:"spec"`
 	Status NodeStatus `json:"status"`

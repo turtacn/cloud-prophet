@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"github.com/turtacn/cloud-prophet/scheduler"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/klog"
+	"time"
 )
 
 var (
@@ -24,20 +25,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//create a fake client
-	client := fake.NewSimpleClientset(
-		&v1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        "influxdb-v2",
-				Namespace:   "default",
-				Annotations: map[string]string{},
-			},
-		}, &v1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        "chronograf",
-				Namespace:   "default",
-				Annotations: map[string]string{},
-			},
-		})
+	client := fake.NewSimpleClientset()
 
 	clusterInformer := informers.NewSharedInformerFactory(client, 0)
 	podInformer := scheduler.NewPodInformer(client, 0)
@@ -58,6 +46,19 @@ func main() {
 
 	//clusterInformer.Start(ctx.Done())
 	//clusterInformer.WaitForCacheSync(ctx.Done())
+
+	go func() {
+		for i := 1; true; i++ {
+			scheduler.SchedulingQueue.Add(&v1.Pod{
+				ObjectMeta: v1.ObjectMeta{
+					Name: fmt.Sprintf("pod-%d", i),
+				},
+			})
+			time.Sleep(1 * time.Second)
+		}
+
+	}()
+
 	klog.Infof("begin to run scheduler")
 	scheduler.Run(ctx)
 }

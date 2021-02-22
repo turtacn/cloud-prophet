@@ -4,6 +4,7 @@ package model
 
 import (
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func (in *Node) DeepCopy() *Node {
@@ -33,5 +34,9 @@ func (in *Pod) DeepCopyObject() runtime.Object {
 	if c := in.DeepCopy(); c != nil {
 		return c
 	}
+	return nil
+}
+
+func (in *Pod) GetObjectKind() schema.ObjectKind {
 	return nil
 }

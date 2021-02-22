@@ -122,7 +122,7 @@ func PatchPod(cs kubernetes.Interface, old *v1.Pod, new *v1.Pod) error {
 
 // GetUpdatedPod returns the latest version of <pod> from API server.
 func GetUpdatedPod(cs kubernetes.Interface, pod *v1.Pod) (*v1.Pod, error) {
-	return nil, nil
+	return pod, nil
 }
 
 // DeletePod deletes the given <pod> from API server

@@ -54,6 +54,6 @@ func main() {
 		return
 	}
 
+	klog.Infof("begin to run scheduler")
 	scheduler.Run(ctx)
-
 }

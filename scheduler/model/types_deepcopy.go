@@ -52,5 +52,5 @@ func (in *Pod) DeepCopyObject() runtime.Object {
 }
 
 func (in *Pod) GetObjectKind() schema.ObjectKind {
-	return nil
+	return in
 }

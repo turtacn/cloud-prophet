@@ -397,6 +397,7 @@ func (sched *Scheduler) finishBinding(prof *profile.Profile, assumed *v1.Pod, ta
 // scheduleOne does the entire scheduling workflow for a single pod.  It is serialized on the scheduling algorithm's host fitting.
 func (sched *Scheduler) scheduleOne(ctx context.Context) {
 	podInfo := sched.NextPod()
+	klog.Infof("查看资源请求=%v，开始调度...", podInfo)
 	// pod could be nil when schedulerQueue is closed
 	if podInfo == nil || podInfo.Pod == nil {
 		return

@@ -73,7 +73,7 @@ type SchedulingQueue interface {}
 The extender could replace any plugin of the main schedule plan. It would be standalone binary program, acting as callee service, embedded in those schedule pipeline. If some external definition and configuration for this scheduler is given,
 it the bypass the default process unit predefined in our schedule framwork. 
 
-** Heuristics
+#### Heuristics
 
 - Multiple Objectives 
     - Energy Consumption
@@ -96,7 +96,7 @@ it the bypass the default process unit predefined in our schedule framwork.
 We use predicted resource utility, here we call predicted resource limit upper. 
 
 
-** Feasible 
+####  Feasible 
  
 
 ## 更新所有代码

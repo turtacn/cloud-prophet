@@ -804,5 +804,10 @@ func MakeNextPodFunc(queue SchedulingQueue) func() *framework.QueuedPodInfo {
 }
 
 func podInfoKeyFunc(obj interface{}) (string, error) {
-	return cache.MetaNamespaceKeyFunc(obj.(*framework.QueuedPodInfo).Pod)
+	ret, err := cache.MetaNamespaceKeyFunc(obj.(*framework.QueuedPodInfo).Pod)
+	if err != nil {
+		pod := obj.(*framework.QueuedPodInfo).Pod
+		return fmt.Sprintf("%s-%s-%s", pod.Namespace, pod.TypeMeta, pod.Name), nil
+	}
+	return ret, nil
 }

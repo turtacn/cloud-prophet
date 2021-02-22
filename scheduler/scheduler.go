@@ -276,7 +276,7 @@ func initPolicyFromConfigMap(client clientset.Interface, policyRef *schedulerapi
 
 // Run begins watching and scheduling. It waits for cache to be synced, then starts scheduling and blocked until the context is done.
 func (sched *Scheduler) Run(ctx context.Context) {
-	if !cache.WaitForCacheSync(ctx.Done(), sched.scheduledPodsHasSynced) {
+	if false && !cache.WaitForCacheSync(ctx.Done(), sched.scheduledPodsHasSynced) {
 		return
 	}
 	sched.SchedulingQueue.Run()

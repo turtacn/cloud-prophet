@@ -59,6 +59,9 @@ func main() {
 					Name:      fmt.Sprintf("pod-%d", i),
 					Namespace: "test",
 				},
+				Spec: v1.PodSpec{
+					SchedulerName: v1.DefaultSchedulerName,
+				},
 			})
 			time.Sleep(1 * time.Second)
 		}

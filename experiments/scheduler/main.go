@@ -84,6 +84,7 @@ func makeNode(node string, milliCPU, memory int64) *v1.Node {
 	return &v1.Node{
 		ObjectMeta: v1.ObjectMeta{Name: node},
 		Status: v1.NodeStatus{
+			Phase: v1.NodeRunning,
 			Capacity: v1.ResourceList{
 				v1.ResourceCPU:    *resource.NewMilliQuantity(milliCPU, resource.DecimalSI),
 				v1.ResourceMemory: *resource.NewQuantity(memory, resource.BinarySI),

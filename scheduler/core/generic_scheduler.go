@@ -252,6 +252,7 @@ func (g *genericScheduler) findNodesThatFitPod(ctx context.Context, prof *profil
 
 	// Run "prefilter" plugins.
 	s := prof.RunPreFilterPlugins(ctx, state, pod)
+	klog.Infof("Run prefilter plugins status %v", s)
 	if !s.IsSuccess() {
 		if !s.IsUnschedulable() {
 			klog.Errorf("unschedulable reason error %v", s.AsError())
@@ -295,6 +296,7 @@ func (g *genericScheduler) findNodesThatPassFilters(ctx context.Context, prof *p
 	}
 
 	numNodesToFind := g.numFeasibleNodesToFind(int32(len(allNodes)))
+	klog.Infof("Number of feasible node to find is %d, all nodes number is %d", numNodesToFind, len(allNodes))
 
 	// Create feasible list with enough space to avoid growing it
 	// and allow assigning.

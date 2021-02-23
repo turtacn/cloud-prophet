@@ -126,29 +126,37 @@ func (g *genericScheduler) Schedule(ctx context.Context, prof *profile.Profile, 
 		return result, err
 	}
 	trace.Step("Basic checks done")
+	klog.Infof("Basic checks done")
 
 	if err := g.snapshot(); err != nil {
+		klog.Errorf("snapshot from generic scheduler error %v", err)
 		return result, err
 	}
 	trace.Step("Snapshotting scheduler cache and node infos done")
+	klog.Infof("Snapshotting scheduler cache and node infos done")
 
 	if g.nodeInfoSnapshot.NumNodes() == 0 {
+		klog.Errorf("node info snapshot error %v", ErrNoNodesAvailable)
 		return result, ErrNoNodesAvailable
 	}
 
 	startPredicateEvalTime := time.Now()
 	feasibleNodes, filteredNodesStatuses, err := g.findNodesThatFitPod(ctx, prof, state, pod)
 	if err != nil {
+		klog.Errorf("find nodes fit pod error %v", err)
 		return result, err
 	}
 	trace.Step("Computing predicates done")
+	klog.Info("Computing predicates done")
 
 	if len(feasibleNodes) == 0 {
-		return result, &FitError{
+		fitErr := &FitError{
 			Pod:                   pod,
 			NumAllNodes:           g.nodeInfoSnapshot.NumNodes(),
 			FilteredNodesStatuses: filteredNodesStatuses,
 		}
+		klog.Errorf("feasible nodes not found error %v", fitErr)
+		return result, fitErr
 	}
 
 	metrics.DeprecatedSchedulingAlgorithmPredicateEvaluationSecondsDuration.Observe(metrics.SinceInSeconds(startPredicateEvalTime))
@@ -175,6 +183,7 @@ func (g *genericScheduler) Schedule(ctx context.Context, prof *profile.Profile, 
 
 	host, err := g.selectHost(priorityList)
 	trace.Step("Prioritizing done")
+	klog.Info("Prioritizing done")
 
 	return ScheduleResult{
 		SuggestedHost:  host,

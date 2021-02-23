@@ -254,17 +254,20 @@ func (g *genericScheduler) findNodesThatFitPod(ctx context.Context, prof *profil
 	s := prof.RunPreFilterPlugins(ctx, state, pod)
 	if !s.IsSuccess() {
 		if !s.IsUnschedulable() {
+			klog.Errorf("unschedulable reason error %v", s.AsError())
 			return nil, nil, s.AsError()
 		}
 		// All nodes will have the same status. Some non trivial refactoring is
 		// needed to avoid this copy.
 		allNodes, err := g.nodeInfoSnapshot.NodeInfos().List()
 		if err != nil {
+			klog.Errorf("nodeinfo snapshot list nodes error %v", err)
 			return nil, nil, err
 		}
 		for _, n := range allNodes {
 			filteredNodesStatuses[n.Node().Name] = s
 		}
+		klog.Warningf("no fit nodes found and status %v", filteredNodesStatuses)
 		return nil, filteredNodesStatuses, nil
 
 	}

@@ -362,7 +362,9 @@ func (f *frameworkImpl) RunPreFilterPlugins(ctx context.Context, state *framewor
 	defer func() {
 		metrics.FrameworkExtensionPointDuration.WithLabelValues(preFilter, status.Code().String(), f.profileName).Observe(metrics.SinceInSeconds(startTime))
 	}()
+	klog.Infof("To run %d prefilter plugin", len(f.preFilterPlugins))
 	for _, pl := range f.preFilterPlugins {
+		klog.Infof("Run prefilter plugin %s", pl.Name())
 		status = f.runPreFilterPlugin(ctx, pl, state, pod)
 		if !status.IsSuccess() {
 			if status.IsUnschedulable() {

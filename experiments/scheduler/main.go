@@ -82,6 +82,9 @@ func main() {
 
 func makeNode(node string, milliCPU, memory int64) *v1.Node {
 	return &v1.Node{
+		Spec: v1.NodeSpec{
+			Unschedulable: false,
+		},
 		ObjectMeta: v1.ObjectMeta{Name: node},
 		Status: v1.NodeStatus{
 			Phase: v1.NodeRunning,

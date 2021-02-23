@@ -274,11 +274,13 @@ func (g *genericScheduler) findNodesThatFitPod(ctx context.Context, prof *profil
 
 	feasibleNodes, err := g.findNodesThatPassFilters(ctx, prof, state, pod, filteredNodesStatuses)
 	if err != nil {
+		klog.Errorf("findNodesThatPassFilters error %v", err)
 		return nil, nil, err
 	}
 
 	feasibleNodes, err = g.findNodesThatPassExtenders(pod, feasibleNodes, filteredNodesStatuses)
 	if err != nil {
+		klog.Errorf("findNodesThatPassExtenders error %v", err)
 		return nil, nil, err
 	}
 	return feasibleNodes, filteredNodesStatuses, nil
@@ -288,6 +290,7 @@ func (g *genericScheduler) findNodesThatFitPod(ctx context.Context, prof *profil
 func (g *genericScheduler) findNodesThatPassFilters(ctx context.Context, prof *profile.Profile, state *framework.CycleState, pod *v1.Pod, statuses framework.NodeToStatusMap) ([]*v1.Node, error) {
 	allNodes, err := g.nodeInfoSnapshot.NodeInfos().List()
 	if err != nil {
+		klog.Errorf("node inf snapshot list nodes error %v", err)
 		return nil, err
 	}
 

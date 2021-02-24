@@ -57,7 +57,7 @@ func main() {
 
 	go func() {
 		for i := 1; i < 2; i++ {
-			scheduler.SchedulingQueue.Add(&v1.Pod{
+			pod := &v1.Pod{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Pod",
 					APIVersion: "v1",
@@ -69,8 +69,22 @@ func main() {
 				},
 				Spec: v1.PodSpec{
 					SchedulerName: v1.DefaultSchedulerName,
+					Containers: append([]v1.Container{}, v1.Container{
+						Name: fmt.Sprint("container-%d", i),
+						Resources: v1.ResourceRequirements{
+							Limits: v1.ResourceList{
+								v1.ResourceCPU:    *resource.NewMilliQuantity(80, resource.DecimalSI),
+								v1.ResourceMemory: *resource.NewQuantity(80, resource.BinarySI),
+							},
+							Requests: v1.ResourceList{
+								v1.ResourceCPU:    *resource.NewMilliQuantity(80, resource.DecimalSI),
+								v1.ResourceMemory: *resource.NewQuantity(80, resource.BinarySI),
+							},
+						},
+					}),
 				},
-			})
+			}
+			scheduler.SchedulingQueue.Add(pod)
 			time.Sleep(1 * time.Second)
 		}
 

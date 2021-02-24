@@ -49,7 +49,7 @@ func (r *resourceAllocationScorer) score(
 	// Check if the pod has volumes and this could be added to scorer function for balanced resource allocation.
 	score = r.scorer(requested, allocatable, false, 0, 0)
 
-	if klog.V(10).Enabled() {
+	if true {
 
 		klog.Infof(
 			"%v -> %v: %v, map of allocatable resources %v, map of requested resources %v ,score %d,",

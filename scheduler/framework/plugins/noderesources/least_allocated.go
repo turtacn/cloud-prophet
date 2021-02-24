@@ -82,10 +82,10 @@ func leastResourceScorer(resToWeightMap resourceToWeightMap) func(resourceToValu
 	return func(requested, allocable resourceToValueMap, includeVolumes bool, requestedVolumes int, allocatableVolumes int) int64 {
 		var nodeScore, weightSum int64
 		for resource, weight := range resToWeightMap {
+			klog.Infof("leastResourceScorer compute request %d allocable %d resource %s weight %d", requested[resource], allocable[resource], resource, weight)
 			resourceScore := leastRequestedScore(requested[resource], allocable[resource])
 			nodeScore += resourceScore * weight
 			weightSum += weight
-			klog.Infof("leastResourceScorer compute score weightSum:%d weight:%d")
 		}
 		return nodeScore / weightSum
 	}

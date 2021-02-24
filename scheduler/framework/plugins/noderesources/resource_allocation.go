@@ -42,6 +42,7 @@ func (r *resourceAllocationScorer) score(
 	allocatable := make(resourceToValueMap, len(r.resourceToWeightMap))
 	for resource := range r.resourceToWeightMap {
 		allocatable[resource], requested[resource] = calculateResourceAllocatableRequest(nodeInfo, pod, resource)
+		klog.Infof("scorer get resource %s allocatable %d requested %d given node %v", resource, allocatable[resource], requested[resource], node)
 	}
 	var score int64
 

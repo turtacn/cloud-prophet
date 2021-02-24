@@ -56,7 +56,7 @@ func main() {
 	}
 
 	go func() {
-		for i := 1; i < 2; i++ {
+		for i := 1; true; i++ {
 			pod := &v1.Pod{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Pod",

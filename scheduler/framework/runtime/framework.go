@@ -364,8 +364,8 @@ func (f *frameworkImpl) RunPreFilterPlugins(ctx context.Context, state *framewor
 	}()
 	klog.Infof("To run %d prefilter plugin", len(f.preFilterPlugins))
 	for _, pl := range f.preFilterPlugins {
-		klog.Infof("Run prefilter plugin %s", pl.Name())
 		status = f.runPreFilterPlugin(ctx, pl, state, pod)
+		klog.Infof("Run prefilter plugin %s status %v", pl.Name(), status)
 		if !status.IsSuccess() {
 			if status.IsUnschedulable() {
 				return status

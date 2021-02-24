@@ -43,7 +43,7 @@ func (b DefaultBinder) Bind(ctx context.Context, state *framework.CycleState, p 
 	if e != nil {
 		return framework.NewStatus(framework.Error, e.Error())
 	}
-
+	node.AddPod(p)
 	for i, _ := range node.Pods {
 		klog.Infof("pod %s binding node %s has pods: ", p.Name, nodeName, node.Pods[i])
 	}

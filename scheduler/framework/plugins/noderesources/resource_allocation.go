@@ -64,7 +64,7 @@ func (r *resourceAllocationScorer) score(
 // calculateResourceAllocatableRequest returns resources Allocatable and Requested values
 func calculateResourceAllocatableRequest(nodeInfo *framework.NodeInfo, pod *v1.Pod, resource v1.ResourceName) (int64, int64) {
 	podRequest := calculatePodResourceRequest(pod, resource)
-	klog.Info("calculatePodResourceRequest pod %v resource %v => podRequest %v", pod, resource, podRequest)
+	klog.Infof("calculatePodResourceRequest pod %v resource %v => podRequest %v", pod, resource, podRequest)
 	switch resource {
 	case v1.ResourceCPU:
 		return nodeInfo.Allocatable.MilliCPU, (nodeInfo.NonZeroRequested.MilliCPU + podRequest)
@@ -76,7 +76,7 @@ func calculateResourceAllocatableRequest(nodeInfo *framework.NodeInfo, pod *v1.P
 		// 默认支持超卖
 		return nodeInfo.Allocatable.ScalarResources[resource], (nodeInfo.Requested.ScalarResources[resource] + podRequest)
 	}
-	if klog.V(10).Enabled() {
+	if true {
 		klog.Infof("requested resource %v not considered for node score calculation",
 			resource,
 		)

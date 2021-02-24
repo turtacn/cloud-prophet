@@ -39,6 +39,9 @@ func (b DefaultBinder) Bind(ctx context.Context, state *framework.CycleState, p 
 		ObjectMeta: v1.ObjectMeta{Namespace: p.Namespace, Name: p.Name, UID: p.UID},
 		Target:     v1.ObjectReference{Kind: "Node", Name: nodeName},
 	}
+
+	return nil
+
 	var err error = errors.New("xxx")
 	if b.handle.ClientSet() == nil || binding == nil {
 

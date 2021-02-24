@@ -27,7 +27,9 @@
 |bind| 持久化入库绑定 |
 |postbind| 代价，日志，统计信息|
 
-#### 主要接口模型（差系统架构图）
+#### 主要接口模型
+
+![architecuture](/docs/img/architecture.png)
 
 ```text 
 type WaitingPod interface {}

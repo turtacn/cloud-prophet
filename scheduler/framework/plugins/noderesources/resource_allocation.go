@@ -31,9 +31,11 @@ func (r *resourceAllocationScorer) score(
 	nodeInfo *framework.NodeInfo) (int64, *framework.Status) {
 	node := nodeInfo.Node()
 	if node == nil {
+		klog.Warningf("not found score node %v", node)
 		return 0, framework.NewStatus(framework.Error, "node not found")
 	}
 	if r.resourceToWeightMap == nil {
+		klog.Warningf("not found resource to weightmap, resource allocation score %v", r)
 		return 0, framework.NewStatus(framework.Error, "resources not found")
 	}
 	requested := make(resourceToValueMap, len(r.resourceToWeightMap))
@@ -62,12 +64,12 @@ func (r *resourceAllocationScorer) score(
 // calculateResourceAllocatableRequest returns resources Allocatable and Requested values
 func calculateResourceAllocatableRequest(nodeInfo *framework.NodeInfo, pod *v1.Pod, resource v1.ResourceName) (int64, int64) {
 	podRequest := calculatePodResourceRequest(pod, resource)
+	klog.Info("calculatePodResourceRequest pod %v resource %v => podRequest %v", pod, resource, podRequest)
 	switch resource {
 	case v1.ResourceCPU:
 		return nodeInfo.Allocatable.MilliCPU, (nodeInfo.NonZeroRequested.MilliCPU + podRequest)
 	case v1.ResourceMemory:
 		return nodeInfo.Allocatable.Memory, (nodeInfo.NonZeroRequested.Memory + podRequest)
-
 	case v1.ResourceEphemeralStorage:
 		return nodeInfo.Allocatable.EphemeralStorage, (nodeInfo.Requested.EphemeralStorage + podRequest)
 	default:

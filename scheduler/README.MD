@@ -29,7 +29,7 @@
 
 #### 主要接口模型
 
-![architecuture](/docs/img/architecture.png)
+![architecuture](../docs/img/architecture.png)
 
 ```text 
 type WaitingPod interface {}

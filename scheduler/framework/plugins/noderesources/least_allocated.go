@@ -11,6 +11,7 @@ import (
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/klog"
 )
 
 // LeastAllocated is a score plugin that favors nodes with fewer allocation requested resources based on requested resources.
@@ -32,6 +33,7 @@ func (la *LeastAllocated) Name() string {
 // Score invoked at the score extension point.
 func (la *LeastAllocated) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
 	nodeInfo, err := la.handle.SnapshotSharedLister().NodeInfos().Get(nodeName)
+	klog.Infof("LeastAllocated Score by name get node %v", nodeInfo)
 	if err != nil {
 		return 0, framework.NewStatus(framework.Error, fmt.Sprintf("getting node %q from Snapshot: %v", nodeName, err))
 	}
@@ -83,6 +85,7 @@ func leastResourceScorer(resToWeightMap resourceToWeightMap) func(resourceToValu
 			resourceScore := leastRequestedScore(requested[resource], allocable[resource])
 			nodeScore += resourceScore * weight
 			weightSum += weight
+			klog.Infof("leastResourceScorer compute score weightSum:%d weight:%d")
 		}
 		return nodeScore / weightSum
 	}

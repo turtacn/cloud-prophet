@@ -8,6 +8,7 @@ import (
 	"errors"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
+	"jd.com/jvirt/k8s-dependency/src/gopkg.in/alecthomas/kingpin.v2"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
 )
@@ -38,6 +39,14 @@ func (b DefaultBinder) Bind(ctx context.Context, state *framework.CycleState, p 
 	binding := &v1.Binding{
 		ObjectMeta: v1.ObjectMeta{Namespace: p.Namespace, Name: p.Name, UID: p.UID},
 		Target:     v1.ObjectReference{Kind: "Node", Name: nodeName},
+	}
+	node, e := b.handle.SnapshotSharedLister().NodeInfos().Get(nodeName)
+	if e != nil {
+		return framework.NewStatus(framework.Error, e.Error())
+	}
+
+	for i, _ := range node.Pods {
+		klog.Infof("pod %s binding node %s has pods: ", p.Name, nodeName, node.Pods[i])
 	}
 
 	return nil

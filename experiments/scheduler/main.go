@@ -56,7 +56,7 @@ func main() {
 	}
 
 	go func() {
-		for i := 1; true; i++ {
+		for i := 1; i < 2; i++ {
 			scheduler.SchedulingQueue.Add(&v1.Pod{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Pod",

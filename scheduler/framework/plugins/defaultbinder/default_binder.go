@@ -8,7 +8,6 @@ import (
 	"errors"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	"jd.com/jvirt/k8s-dependency/src/gopkg.in/alecthomas/kingpin.v2"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
 )

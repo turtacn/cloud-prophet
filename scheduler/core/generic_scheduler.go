@@ -273,14 +273,18 @@ func (g *genericScheduler) findNodesThatFitPod(ctx context.Context, prof *profil
 		return nil, filteredNodesStatuses, nil
 
 	}
-	klog.Infof("RunPreFilterPlugins success to findNodesThatPassFilters, profile %v cyclestate %v pod %v status %v", prof, state, pod, filteredNodesStatuses)
+	klog.Infof("RunPreFilterPlugins success to findNodesThatPassFilters, profile %v cyclestate %v pod %v status-size %d", prof, state, pod, len(filteredNodesStatuses))
 	feasibleNodes, err := g.findNodesThatPassFilters(ctx, prof, state, pod, filteredNodesStatuses)
 	if err != nil {
 		klog.Errorf("findNodesThatPassFilters error %v", err)
 		return nil, nil, err
 	}
 
-	klog.Infof("RunPreFilterPlugins success to findNodesThatPassExtenders, feasibleNodes-size %d cyclestate %v pod %v status %v", len(feasibleNodes), state, pod, filteredNodesStatuses)
+	klog.Infof("RunPreFilterPlugins success to findNodesThatPassExtenders, feasibleNodes-size %d cyclestate %v pod %v status-size %d", len(feasibleNodes), state, pod, len(filteredNodesStatuses))
+	for k, v := range filteredNodesStatuses {
+		klog.Infof("node %s status %v", k, v.Reasons())
+		break
+	}
 
 	feasibleNodes, err = g.findNodesThatPassExtenders(pod, feasibleNodes, filteredNodesStatuses)
 	if err != nil {

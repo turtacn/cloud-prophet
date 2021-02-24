@@ -42,7 +42,7 @@ func (r *resourceAllocationScorer) score(
 	allocatable := make(resourceToValueMap, len(r.resourceToWeightMap))
 	for resource := range r.resourceToWeightMap {
 		allocatable[resource], requested[resource] = calculateResourceAllocatableRequest(nodeInfo, pod, resource)
-		klog.Infof("scorer get resource %s allocatable %d requested %d given node %v", resource, allocatable[resource], requested[resource], node)
+		//klog.Infof("scorer get resource %s allocatable %d requested %d given node %v", resource, allocatable[resource], requested[resource], node)
 	}
 	var score int64
 
@@ -65,7 +65,7 @@ func (r *resourceAllocationScorer) score(
 // calculateResourceAllocatableRequest returns resources Allocatable and Requested values
 func calculateResourceAllocatableRequest(nodeInfo *framework.NodeInfo, pod *v1.Pod, resource v1.ResourceName) (int64, int64) {
 	podRequest := calculatePodResourceRequest(pod, resource)
-	klog.Infof("calculatePodResourceRequest pod %v resource %v => podRequest %v", pod, resource, podRequest)
+	//klog.Infof("calculatePodResourceRequest pod %v resource %v => podRequest %v", pod, resource, podRequest)
 	switch resource {
 	case v1.ResourceCPU:
 		return nodeInfo.Allocatable.MilliCPU, (nodeInfo.NonZeroRequested.MilliCPU + podRequest)
@@ -78,7 +78,7 @@ func calculateResourceAllocatableRequest(nodeInfo *framework.NodeInfo, pod *v1.P
 		return nodeInfo.Allocatable.ScalarResources[resource], (nodeInfo.Requested.ScalarResources[resource] + podRequest)
 	}
 	if true {
-		klog.Infof("requested resource %v not considered for node score calculation",
+		klog.Warningf("requested resource %v not considered for node score calculation",
 			resource,
 		)
 	}

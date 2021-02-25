@@ -571,6 +571,7 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 
 			// Run "postbind" plugins.
 			klog.Infof("Step begin at postbindplugins")
+
 			prof.RunPostBindPlugins(bindingCycleCtx, state, assumedPod, scheduleResult.SuggestedHost)
 		}
 	}()

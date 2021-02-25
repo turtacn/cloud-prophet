@@ -19,6 +19,7 @@ type DefaultBinder struct {
 }
 
 var _ framework.BindPlugin = &DefaultBinder{}
+var _ framework.PostBindPlugin = &DefaultBinder{}
 
 // New creates a DefaultBinder.
 func New(_ runtime.Object, handle framework.FrameworkHandle) (framework.Plugin, error) {
@@ -41,4 +42,8 @@ func (b DefaultBinder) Bind(ctx context.Context, state *framework.CycleState, p 
 
 	}
 	return nil
+}
+
+func (b DefaultBinder) PostBind(ctx context.Context, state *framework.CycleState, p *v1.Pod, nodeName string) {
+	klog.Infof("Attempting to post bind %v/%v to %v", p.Namespace, p.Name, nodeName)
 }

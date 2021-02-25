@@ -563,7 +563,7 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 			// Calculating nodeResourceString can be heavy. Avoid it if klog verbosity is below 2.
 			//if klog.V(2).Enabled()
 			if true {
-				klog.InfoS("Successfully bound pod to node", "pod", pod, "node", scheduleResult.SuggestedHost, "evaluatedNodes", scheduleResult.EvaluatedNodes, "feasibleNodes", scheduleResult.FeasibleNodes)
+				klog.InfoS("Successfully bound pod to node", "pod", pod.Name, "node", scheduleResult.SuggestedHost, "evaluatedNodes", scheduleResult.EvaluatedNodes, "feasibleNodes", scheduleResult.FeasibleNodes)
 			}
 			metrics.PodScheduled(prof.Name, metrics.SinceInSeconds(start))
 			metrics.PodSchedulingAttempts.Observe(float64(podInfo.Attempts))

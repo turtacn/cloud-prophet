@@ -742,6 +742,7 @@ func (f *frameworkImpl) RunPostBindPlugins(ctx context.Context, state *framework
 		metrics.FrameworkExtensionPointDuration.WithLabelValues(postBind, framework.Success.String(), f.profileName).Observe(metrics.SinceInSeconds(startTime))
 	}()
 	for _, pl := range f.postBindPlugins {
+		klog.Infof("plugins => RunPostBindPlugins step[%s] for node %s pod %s", pl.Name(), nodeName, pod.Name)
 		f.runPostBindPlugin(ctx, pl, state, pod, nodeName)
 	}
 }

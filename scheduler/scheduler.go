@@ -570,6 +570,7 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 			metrics.PodSchedulingDuration.WithLabelValues(getAttemptsLabel(podInfo)).Observe(metrics.SinceInSeconds(podInfo.InitialAttemptTimestamp))
 
 			// Run "postbind" plugins.
+			klog.Infof("Step begin at postbindplugins")
 			prof.RunPostBindPlugins(bindingCycleCtx, state, assumedPod, scheduleResult.SuggestedHost)
 		}
 	}()

@@ -39,29 +39,8 @@ func (b DefaultBinder) Bind(ctx context.Context, state *framework.CycleState, p 
 		ObjectMeta: v1.ObjectMeta{Namespace: p.Namespace, Name: p.Name, UID: p.UID},
 		Target:     v1.ObjectReference{Kind: "Node", Name: nodeName},
 	}
-	node, e := b.handle.SnapshotSharedLister().NodeInfos().Get(nodeName)
-	if e != nil {
-		return framework.NewStatus(framework.Error, e.Error())
-	}
-	node.Allocatable.Memory -= p.Spec.Containers[0].Resources.Requests.Memory().Value()
-	node.Allocatable.MilliCPU -= p.Spec.Containers[0].Resources.Requests.Cpu().Value()
-	if p == nil {
-		return nil
-	}
-	node.AddPod(p)
-	//node allacable and  pod list is empty when leave this area
-	//for i, _ := range node.Pods {
-	//	klog.Infof("pod %s binding node %s has pod[%d]: %v", p.Name, nodeName, i, len(node.Pods))
-	//}
+	if binding == nil {
 
-	return nil
-
-	var err error = errors.New("xxx")
-	if b.handle.ClientSet() == nil || binding == nil {
-
-	}
-	if err != nil {
-		return framework.NewStatus(framework.Error, err.Error())
 	}
 	return nil
 }

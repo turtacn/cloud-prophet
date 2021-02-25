@@ -12,6 +12,7 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/klog"
+	"time"
 )
 
 var (
@@ -84,7 +85,7 @@ func main() {
 				},
 			}
 			scheduler.SchedulingQueue.Add(pod)
-			//time.Sleep(1 * time.Second)
+			time.Sleep(1 * time.Second)
 		}
 
 	}()

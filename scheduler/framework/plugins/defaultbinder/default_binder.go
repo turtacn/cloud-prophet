@@ -43,6 +43,8 @@ func (b DefaultBinder) Bind(ctx context.Context, state *framework.CycleState, p 
 	if e != nil {
 		return framework.NewStatus(framework.Error, e.Error())
 	}
+	node.Allocatable.Memory -= p.Spec.Containers[0].Resources.Requests.Memory().Value()
+	node.Allocatable.MilliCPU -= p.Spec.Containers[0].Resources.Requests.Cpu().Value()
 	node.AddPod(p)
 	for i, _ := range node.Pods {
 		klog.Infof("pod %s binding node %s has pod[%d]: %v", p.Name, nodeName, i, node.Pods[i].Pod)

@@ -502,6 +502,8 @@ type FrameworkHandle interface {
 
 	// TODO: unroll the wrapped interfaces to FrameworkHandle.
 	PreemptHandle() PreemptHandle
+
+	NodeUpdateHandle() NodeUpdater
 }
 
 // PostFilterResult wraps needed info for scheduler framework to act upon PostFilter phase.

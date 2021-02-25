@@ -44,8 +44,10 @@ const (
 // frameworkImpl is the component responsible for initializing and running scheduler
 // plugins.
 type frameworkImpl struct {
-	registry              Registry
-	snapshotSharedLister  framework.SharedLister
+	registry             Registry
+	snapshotSharedLister framework.SharedLister
+	//turta：NodeUpdater
+	nodeUpdater           framework.NodeUpdater
 	waitingPods           *waitingPodsMap
 	pluginNameToWeightMap map[string]int
 	queueSortPlugins      []framework.QueueSortPlugin
@@ -899,6 +901,11 @@ func (f *frameworkImpl) WaitOnPermit(ctx context.Context, pod *v1.Pod) (status *
 // remains unchanged after "Reserve".
 func (f *frameworkImpl) SnapshotSharedLister() framework.SharedLister {
 	return f.snapshotSharedLister
+}
+
+// 节点仿真更新器
+func (f *frameworkImpl) NodeUpdateHandle() framework.NodeUpdater {
+	return f.nodeUpdater
 }
 
 // IterateOverWaitingPods acquires a read lock and iterates over the WaitingPods map.

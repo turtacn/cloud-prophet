@@ -49,9 +49,10 @@ func (b DefaultBinder) Bind(ctx context.Context, state *framework.CycleState, p 
 		return nil
 	}
 	node.AddPod(p)
-	for i, _ := range node.Pods {
-		klog.Infof("pod %s binding node %s has pod[%d]: %v", p.Name, nodeName, i, len(node.Pods))
-	}
+	//node allacable and  pod list is empty when leave this area
+	//for i, _ := range node.Pods {
+	//	klog.Infof("pod %s binding node %s has pod[%d]: %v", p.Name, nodeName, i, len(node.Pods))
+	//}
 
 	return nil
 

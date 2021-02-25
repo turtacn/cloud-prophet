@@ -111,6 +111,11 @@ func getDefaultConfig() *schedulerapi.Plugins {
 				{Name: defaultbinder.Name},
 			},
 		},
+		PostBind: &schedulerapi.PluginSet{
+			Enabled: []schedulerapi.Plugin{
+				{Name: defaultbinder.NameFakeAllocater},
+			},
+		},
 	}
 }
 

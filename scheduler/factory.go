@@ -275,6 +275,9 @@ func (c *Configurator) createFromConfig(policy schedulerapi.Policy) (*Scheduler,
 		Bind: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{{Name: defaultbinder.Name}},
 		},
+		PostBind: &schedulerapi.PluginSet{
+			Enabled: []schedulerapi.Plugin{{Name: defaultbinder.NameFakeAllocater}},
+		},
 	})
 	defPlugins.Append(pluginsForPredicates)
 	defPlugins.Append(pluginsForPriorities)

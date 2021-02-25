@@ -41,6 +41,7 @@ func NewInTreeRegistry() runtime.Registry {
 		nodelabel.Name:                             nodelabel.New,
 		queuesort.Name:                             queuesort.New,
 		defaultbinder.Name:                         defaultbinder.New,
+		defaultbinder.NameFakeAllocater:            defaultbinder.NewFA,
 		defaultpreemption.Name:                     defaultpreemption.New,
 	}
 }

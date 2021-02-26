@@ -23,6 +23,7 @@ func (self *ResourceList) CpuSub(q *resource.Quantity) {
 	if _, ok := (*self)[ResourceCPU]; ok {
 		r := (*self)[ResourceCPU]
 		r.Sub(*q)
+		(*self)[ResourceCPU] = r
 	}
 }
 
@@ -30,6 +31,7 @@ func (self *ResourceList) MemSub(q *resource.Quantity) {
 	if _, ok := (*self)[ResourceMemory]; ok {
 		r := (*self)[ResourceMemory]
 		r.Sub(*q)
+		(*self)[ResourceMemory] = r
 	}
 }
 

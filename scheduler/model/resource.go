@@ -21,13 +21,15 @@ func (self *ResourceList) Cpu() *resource.Quantity {
 
 func (self *ResourceList) CpuSub(q *resource.Quantity) {
 	if _, ok := (*self)[ResourceCPU]; ok {
-		(*self)[ResourceCPU].Sub(*q)
+		r := (*self)[ResourceCPU]
+		r.Sub(*q)
 	}
 }
 
 func (self *ResourceList) MemSub(q *resource.Quantity) {
 	if _, ok := (*self)[ResourceMemory]; ok {
-		(*self)[ResourceMemory].Sub(*q)
+		r := (*self)[ResourceMemory]
+		r.Sub(*q)
 	}
 }
 

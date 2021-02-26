@@ -575,6 +575,16 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 			prof.RunPostBindPlugins(bindingCycleCtx, state, assumedPod, scheduleResult.SuggestedHost)
 		}
 	}()
+	// 以上完成调度的全过程
+
+	// 数据更新
+	targetNode, err := prof.SnapshotSharedLister().NodeInfos().Get(scheduleResult.SuggestedHost)
+	schedPod := assumedPod
+	newNode := targetNode.Clone()
+	newNode.Allocatable.MilliCPU -= schedPod.Spec.Containers[0].Resources.Requests.Cpu().Value()
+	newNode.Allocatable.Memory -= schedPod.Spec.Containers[0].Resources.Requests.Memory().Value()
+	newNode.AddPod(schedPod)
+	sched.updateNodeInCache(targetNode, newNode)
 }
 
 func getAttemptsLabel(p *framework.QueuedPodInfo) string {

@@ -1,4 +1,4 @@
-//
+// PostBindPlugin 示例，
 //
 package defaultbinder
 
@@ -31,6 +31,5 @@ func (b FakeAllocater) Name() string {
 }
 
 func (b FakeAllocater) PostBind(ctx context.Context, state *framework.CycleState, p *v1.Pod, nodeName string) {
-
 	klog.Infof("Attempting to post bind %v/%v to %v", p.Namespace, p.Name, nodeName)
 }

@@ -25,26 +25,19 @@ const (
 	// AssignedPodDelete is the event when a pod is deleted that causes pods with matching affinity
 	// terms to be more schedulable.
 	AssignedPodDelete = "AssignedPodDelete"
-	// PvAdd is the event when a persistent volume is added in the cluster.
-	PvAdd = "PvAdd"
-	// PvUpdate is the event when a persistent volume is updated in the cluster.
-	PvUpdate = "PvUpdate"
-	// PvcAdd is the event when a persistent volume claim is added in the cluster.
-	PvcAdd = "PvcAdd"
-	// PvcUpdate is the event when a persistent volume claim is updated in the cluster.
-	PvcUpdate = "PvcUpdate"
-	// StorageClassAdd is the event when a StorageClass is added in the cluster.
-	StorageClassAdd = "StorageClassAdd"
+
+	// 节点app服务开启/关闭，增加/删除
 	// ServiceAdd is the event when a service is added in the cluster.
 	ServiceAdd = "ServiceAdd"
 	// ServiceUpdate is the event when a service is updated in the cluster.
 	ServiceUpdate = "ServiceUpdate"
 	// ServiceDelete is the event when a service is deleted in the cluster.
 	ServiceDelete = "ServiceDelete"
-	// CSINodeAdd is the event when a CSI node is added in the cluster.
-	CSINodeAdd = "CSINodeAdd"
-	// CSINodeUpdate is the event when a CSI node is updated in the cluster.
-	CSINodeUpdate = "CSINodeUpdate"
+
+	// 特殊节点增加、更新
+	GPUNodeAdd = "GPUNodeAdd"
+
+	// 节点自身调特征变更
 	// NodeSpecUnschedulableChange is the event when unschedulable node spec is changed.
 	NodeSpecUnschedulableChange = "NodeSpecUnschedulableChange"
 	// NodeAllocatableChange is the event when node allocatable is changed.

@@ -19,6 +19,18 @@ func (self *ResourceList) Cpu() *resource.Quantity {
 	return &resource.Quantity{Format: resource.DecimalSI}
 }
 
+func (self *ResourceList) CpuSub(q *resource.Quantity) {
+	if _, ok := (*self)[ResourceCPU]; ok {
+		(*self)[ResourceCPU].Sub(*q)
+	}
+}
+
+func (self *ResourceList) MemSub(q *resource.Quantity) {
+	if _, ok := (*self)[ResourceMemory]; ok {
+		(*self)[ResourceMemory].Sub(*q)
+	}
+}
+
 // Returns the Memory limit if specified.
 func (self *ResourceList) Memory() *resource.Quantity {
 	if val, ok := (*self)[ResourceMemory]; ok {

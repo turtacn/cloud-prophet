@@ -11,56 +11,11 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/internal/queue"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
-	storagev1 "k8s.io/api/storage/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/informers"
 	coreinformers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/tools/cache"
 )
-
-func (sched *Scheduler) onPvAdd(obj interface{}) {
-	// Pods created when there are no PVs available will be stuck in
-	// unschedulable queue. But unbound PVs created for static provisioning and
-	// delay binding storage class are skipped in PV controller dynamic
-	// provisioning and binding process, will not trigger events to schedule pod
-	// again. So we need to move pods to active queue on PV add for this
-	// scenario.
-	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.PvAdd)
-}
-
-func (sched *Scheduler) onPvUpdate(old, new interface{}) {
-	// Scheduler.bindVolumesWorker may fail to update assumed pod volume
-	// bindings due to conflicts if PVs are updated by PV controller or other
-	// parties, then scheduler will add pod back to unschedulable queue. We
-	// need to move pods to active queue on PV update for this scenario.
-	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.PvUpdate)
-}
-
-func (sched *Scheduler) onPvcAdd(obj interface{}) {
-	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.PvcAdd)
-}
-
-func (sched *Scheduler) onPvcUpdate(old, new interface{}) {
-	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.PvcUpdate)
-}
-
-func (sched *Scheduler) onStorageClassAdd(obj interface{}) {
-	sc, ok := obj.(*storagev1.StorageClass)
-	if !ok {
-		klog.Errorf("cannot convert to *storagev1.StorageClass: %v", obj)
-		return
-	}
-
-	// CheckVolumeBindingPred fails if pod has unbound immediate PVCs. If these
-	// PVCs have specified StorageClass name, creating StorageClass objects
-	// with late binding will cause predicates to pass, so we need to move pods
-	// to active queue.
-	// We don't need to invalidate cached results because results will not be
-	// cached for pod that has unbound immediate PVCs.
-	if sc.VolumeBindingMode != nil && *sc.VolumeBindingMode == storagev1.VolumeBindingWaitForFirstConsumer {
-		sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.StorageClassAdd)
-	}
-}
 
 func (sched *Scheduler) onServiceAdd(obj interface{}) {
 	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.ServiceAdd)
@@ -142,14 +97,6 @@ func (sched *Scheduler) deleteNodeFromCache(obj interface{}) {
 	if err := sched.SchedulerCache.RemoveNode(node); err != nil {
 		klog.Errorf("scheduler cache RemoveNode failed: %v", err)
 	}
-}
-
-func (sched *Scheduler) onCSINodeAdd(obj interface{}) {
-	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.CSINodeAdd)
-}
-
-func (sched *Scheduler) onCSINodeUpdate(oldObj, newObj interface{}) {
-	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.CSINodeUpdate)
 }
 
 func (sched *Scheduler) addPodToSchedulingQueue(obj interface{}) {
@@ -394,31 +341,6 @@ func addAllEventHandlers(
 		},
 	)
 
-	informerFactory.Storage().V1().CSINodes().Informer().AddEventHandler(
-		cache.ResourceEventHandlerFuncs{
-			AddFunc:    sched.onCSINodeAdd,
-			UpdateFunc: sched.onCSINodeUpdate,
-		},
-	)
-
-	// On add and delete of PVs, it will affect equivalence cache items
-	// related to persistent volume
-	informerFactory.Core().V1().PersistentVolumes().Informer().AddEventHandler(
-		cache.ResourceEventHandlerFuncs{
-			// MaxPDVolumeCountPredicate: since it relies on the counts of PV.
-			AddFunc:    sched.onPvAdd,
-			UpdateFunc: sched.onPvUpdate,
-		},
-	)
-
-	// This is for MaxPDVolumeCountPredicate: add/delete PVC will affect counts of PV when it is bound.
-	informerFactory.Core().V1().PersistentVolumeClaims().Informer().AddEventHandler(
-		cache.ResourceEventHandlerFuncs{
-			AddFunc:    sched.onPvcAdd,
-			UpdateFunc: sched.onPvcUpdate,
-		},
-	)
-
 	// This is for ServiceAffinity: affected by the selector of the service is updated.
 	// Also, if new service is added, equivalence cache will also become invalid since
 	// existing pods may be "captured" by this service and change this predicate result.
@@ -430,11 +352,6 @@ func addAllEventHandlers(
 		},
 	)
 
-	informerFactory.Storage().V1().StorageClasses().Informer().AddEventHandler(
-		cache.ResourceEventHandlerFuncs{
-			AddFunc: sched.onStorageClassAdd,
-		},
-	)
 }
 
 func nodeSchedulingPropertiesChange(newNode *v1.Node, oldNode *v1.Node) string {

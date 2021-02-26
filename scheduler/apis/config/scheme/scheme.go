@@ -17,6 +17,8 @@ func NewFromSchemeByName(name string) runtime.Object {
 		return &kubeschedulerconfig.InterPodAffinityArgs{}
 	case name == "NodeResourcesFit":
 		return &kubeschedulerconfig.NodeResourcesFitArgs{}
+	case name == "NodeResourcesMostAllocated":
+		return &kubeschedulerconfig.NodeResourcesMostAllocatedArgs{}
 	default:
 		return nil
 	}

@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	hostInfoFile      = flag.String("host-info", "hosts.csv", `节点元信息csv文件（包含起始状态）`)
-	scheduleTraceFile = flag.String("schedule-trace", "schedule.csv", `调度trace文件`)
+	hostInfoFile           = flag.String("host-info", "hosts.csv", `节点元信息csv文件（包含起始状态）`)
+	scheduleTraceFile      = flag.String("schedule-trace", "schedule.csv", `调度trace文件`)
+	scheduleIntervalSecond = flag.Int("pod-interval", 1, "pod资源请求间隔")
 )
 
 type Option func(registry runtime.Registry) error
@@ -85,7 +86,10 @@ func main() {
 				},
 			}
 			scheduler.SchedulingQueue.Add(pod)
-			time.Sleep(1 * time.Second)
+			sleepInterval := *scheduleIntervalSecond
+			if sleepInterval != 0 {
+				time.Sleep(time.Duration(sleepInterval) * time.Second)
+			}
 		}
 
 	}()

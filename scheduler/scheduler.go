@@ -581,9 +581,10 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 			newNode := newNodeInfo.Node()
 			newNode.Status.Allocatable.CpuSub(schedRequest.Cpu())
 			newNode.Status.Allocatable.MemSub(schedRequest.Memory())
+			klog.Infof("[===]node %s cpu %d memory %d", newNode.Name, newNode.Status.Allocatable.Cpu().Value(), newNode.Status.Allocatable.Memory().Value())
 			newNodeInfo.AddPod(assumedPod)
 			sched.updateNodeInCache(targetNode.Node(), newNode)
-			klog.Infof("[===]node %s cpu %d memory %d", newNode.Name, newNode.Status.Allocatable.Cpu().Value(), newNode.Status.Allocatable.Memory().Value())
+
 		}
 	}()
 	// 以上完成调度的全过程

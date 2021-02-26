@@ -584,7 +584,7 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 	newNode.Allocatable.MilliCPU -= schedPod.Spec.Containers[0].Resources.Requests.Cpu().Value()
 	newNode.Allocatable.Memory -= schedPod.Spec.Containers[0].Resources.Requests.Memory().Value()
 	newNode.AddPod(schedPod)
-	sched.updateNodeInCache(targetNode, newNode)
+	sched.updateNodeInCache(targetNode.Node(), newNode.Node())
 }
 
 func getAttemptsLabel(p *framework.QueuedPodInfo) string {

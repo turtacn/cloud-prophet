@@ -5,7 +5,7 @@ import (
 )
 
 func (s *Scheduler) AddNode(node *model.Node) {
-	s.addNodeToCache(node)
+	s.addNodeToScheduling(node)
 }
 func (s *Scheduler) DeleteNode(node *model.Node) {
 	s.deleteNodeFromCache(node)

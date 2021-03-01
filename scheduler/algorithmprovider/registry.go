@@ -92,7 +92,7 @@ func getDefaultConfig() *schedulerapi.Plugins {
 		},
 		Score: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{
-				//{Name: noderesources.BalancedAllocationName, Weight: 1},
+				{Name: noderesources.BalancedAllocationName, Weight: 1},
 				{Name: imagelocality.Name, Weight: 1},
 				{Name: interpodaffinity.Name, Weight: 1},
 				//{Name: noderesources.LeastAllocatedName, Weight: 1}, //  spread 模式

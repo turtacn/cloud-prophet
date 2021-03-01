@@ -29,6 +29,18 @@ func (sched *Scheduler) onServiceDelete(obj interface{}) {
 	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.ServiceDelete)
 }
 
+func (sched *Scheduler) addNodeToScheduling(obj interface{}) {
+	node, ok := obj.(*v1.Node)
+	if !ok {
+		klog.Errorf("cannot convert to *v1.Node: %v", obj)
+		return
+	}
+
+	if err := sched.SchedulerCache.AddNode(node); err != nil {
+		klog.Errorf("scheduler cache AddNode failed: %v", err)
+	}
+}
+
 func (sched *Scheduler) addNodeToCache(obj interface{}) {
 	node, ok := obj.(*v1.Node)
 	if !ok {

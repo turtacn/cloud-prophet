@@ -92,17 +92,17 @@ func getDefaultConfig() *schedulerapi.Plugins {
 		},
 		Score: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{
-				{Name: noderesources.BalancedAllocationName, Weight: 1},
-				{Name: imagelocality.Name, Weight: 1},
-				{Name: interpodaffinity.Name, Weight: 1},
-				//{Name: noderesources.LeastAllocatedName, Weight: 1}, //  spread 模式
-				{Name: noderesources.MostAllocatedName, Weight: 1}, // binpack 模式
-				{Name: nodeaffinity.Name, Weight: 1},
+				{Name: noderesources.BalancedAllocationName, Weight: 0},
+				{Name: imagelocality.Name, Weight: 0},
+				{Name: interpodaffinity.Name, Weight: 0},
+				{Name: noderesources.LeastAllocatedName, Weight: 0}, //  spread 模式
+				{Name: noderesources.MostAllocatedName, Weight: 1},  // binpack 模式
+				{Name: nodeaffinity.Name, Weight: 0},
 				// Weight is doubled because:
 				// - This is a score coming from user preference.
 				// - It makes its signal comparable to NodeResourcesLeastAllocated.
-				{Name: podtopologyspread.Name, Weight: 2},
-				{Name: tainttoleration.Name, Weight: 1},
+				{Name: podtopologyspread.Name, Weight: 0},
+				{Name: tainttoleration.Name, Weight: 0},
 			},
 		},
 		Reserve: &schedulerapi.PluginSet{},

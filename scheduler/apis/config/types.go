@@ -7,6 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"math"
+	"time"
 )
 
 const (
@@ -217,6 +218,9 @@ const (
 
 	// MaxWeight defines the max weight value allowed for custom PriorityPolicy
 	MaxWeight = MaxTotalScore / MaxCustomPriorityScore
+
+	// Max time Duration
+	MaxDuration = (1<<63 - 1) * time.Second
 )
 
 func appendPluginSet(dst *PluginSet, src *PluginSet) *PluginSet {

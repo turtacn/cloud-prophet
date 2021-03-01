@@ -182,7 +182,8 @@ func New(client clientset.Interface,
 		opt(&options)
 	}
 
-	schedulerCache := internalcache.New(30*time.Second, stopEverything)
+	//schedulerCache := internalcache.New(30*time.Second, stopEverything)
+	schedulerCache := internalcache.New(schedulerapi.MaxDuration, stopEverything)
 
 	registry := frameworkplugins.NewInTreeRegistry()
 	if err := registry.Merge(options.frameworkOutOfTreeRegistry); err != nil {

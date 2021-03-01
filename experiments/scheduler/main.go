@@ -86,7 +86,7 @@ func main() {
 				},
 			}
 			scheduler.SchedulingQueue.Add(pod)
-			scheduler.SchedulingQueue.Delete(pod)
+			//scheduler.SchedulingQueue.Delete(pod)
 			sleepInterval := *scheduleIntervalSecond
 			if sleepInterval != 0 {
 				time.Sleep(time.Duration(sleepInterval) * time.Second)
@@ -94,7 +94,6 @@ func main() {
 		}
 
 	}()
-
 	klog.Infof("begin to run scheduler")
 	scheduler.Run(ctx)
 }

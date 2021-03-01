@@ -195,6 +195,10 @@ func (sched *Scheduler) updatePodInCache(oldObj, newObj interface{}) {
 	sched.SchedulingQueue.AssignedPodUpdated(newPod)
 }
 
+func (sched *Scheduler) DeletePod(pod *v1.Pod) {
+	sched.deletePodFromCache(pod)
+}
+
 func (sched *Scheduler) deletePodFromCache(obj interface{}) {
 	var pod *v1.Pod
 	switch t := obj.(type) {

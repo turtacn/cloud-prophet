@@ -220,7 +220,7 @@ const (
 	MaxWeight = MaxTotalScore / MaxCustomPriorityScore
 
 	// Max time Duration
-	MaxDuration = (1<<63 - 1) * time.Second
+	MaxDuration = (1<<32 - 1) * time.Second
 )
 
 func appendPluginSet(dst *PluginSet, src *PluginSet) *PluginSet {

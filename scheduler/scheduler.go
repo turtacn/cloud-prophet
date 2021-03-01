@@ -581,7 +581,8 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 			newNode := newNodeInfo.Node()
 			newNode.Status.Allocatable.CpuSub(schedRequest.Cpu())
 			newNode.Status.Allocatable.MemSub(schedRequest.Memory())
-			klog.Infof("[===]node %s cpu %d memory %d", newNode.Name, newNode.Status.Allocatable.Cpu().MilliValue(), newNode.Status.Allocatable.Memory().Value())
+			pc, _ := sched.SchedulerCache.PodCount()
+			klog.Infof("[===]node %s cpu %d memory %d; total pods count %d", newNode.Name, newNode.Status.Allocatable.Cpu().MilliValue(), newNode.Status.Allocatable.Memory().Value(), pc)
 			newNodeInfo.AddPod(assumedPod)
 			sched.updateNodeInCache(targetNode.Node(), newNode)
 

@@ -46,7 +46,7 @@ func (r *resourceAllocationScorer) score(
 	}
 	var score int64
 
-	// Check if the pod has volumes and this could be added to scorer function for balanced resource allocation.
+	// 打分，将一般资源和扩展资源分开处理
 	score = r.scorer(requested, allocatable, false, 0, 0)
 
 	if true {

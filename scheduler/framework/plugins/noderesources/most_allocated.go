@@ -11,6 +11,7 @@ import (
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/klog"
 )
 
 // MostAllocated is a score plugin that favors nodes with high allocation based on requested resources.
@@ -77,6 +78,7 @@ func NewMostAllocated(maArgs runtime.Object, h framework.FrameworkHandle) (frame
 func mostResourceScorer(resToWeightMap resourceToWeightMap) func(requested, allocable resourceToValueMap, includeVolumes bool, requestedVolumes int, allocatableVolumes int) int64 {
 	return func(requested, allocable resourceToValueMap, includeVolumes bool, requestedVolumes int, allocatableVolumes int) int64 {
 		var nodeScore, weightSum int64
+		klog.Infof("mostResourceScorer find resource to weight map size is %d", len(resToWeightMap))
 		if len(resToWeightMap) == 0 {
 			return 0
 		}

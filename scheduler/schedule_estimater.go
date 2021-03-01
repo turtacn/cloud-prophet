@@ -14,7 +14,7 @@ func (s *Scheduler) UpdateNode(old, new *model.Node) {
 	s.updateNodeInCache(old, new)
 }
 func (s *Scheduler) AddPod(pod *model.Pod) {
-	s.addPodToCache(pod)
+	s.addPodToScheduling(pod)
 }
 func (s *Scheduler) DeletePod(pod *model.Pod) {
 	s.deletePodFromCache(pod)

@@ -90,6 +90,28 @@ func main() {
 		}
 
 	}()
+
+	go func() {
+		for i := 1; true; i++ {
+			sleepInterval := *scheduleIntervalSecond
+			time.Sleep(time.Duration(5*sleepInterval) * time.Second)
+			pod := &v1.Pod{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Pod",
+					APIVersion: "v1",
+				},
+				ObjectMeta: v1.ObjectMeta{
+					Name:      fmt.Sprintf("pod-%d", i),
+					Namespace: "test",
+					UID:       fmt.Sprintf("test-%s", fmt.Sprintf("pod-%d", i)),
+				}}
+			p, e := scheduler.SchedulerCache.GetPod(pod)
+			if e != nil {
+				klog.Errorf("scheduler get pod failed error %v", e)
+			}
+			scheduler.DeletePod(p)
+		}
+	}()
 	klog.Infof("begin to run scheduler")
 	scheduler.Run(ctx)
 }

@@ -50,10 +50,7 @@ func main() {
 
 	// make nodes
 	for i := 1; i <= 200; i++ {
-		node := makeNode(fmt.Sprintf("node-%d", i), 8000, 80000)
-		if err := scheduler.SchedulerCache.AddNode(node); err != nil {
-			klog.Warningf("scheduler cache add node failed %v", err)
-		}
+		scheduler.AddNode(makeNode(fmt.Sprintf("node-%d", i), 8000, 80000))
 	}
 
 	go func() {
@@ -85,8 +82,7 @@ func main() {
 					}),
 				},
 			}
-			scheduler.SchedulingQueue.Add(pod)
-			//scheduler.SchedulingQueue.Delete(pod)
+			scheduler.AddPod(pod)
 			sleepInterval := *scheduleIntervalSecond
 			if sleepInterval != 0 {
 				time.Sleep(time.Duration(sleepInterval) * time.Second)

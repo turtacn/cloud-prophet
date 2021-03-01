@@ -1,4 +1,4 @@
-// 调度算法的组成
+// 调度算法的组成,包含哪些Plugin; 打分的Plugin的静态权重
 //
 package algorithmprovider
 
@@ -95,7 +95,8 @@ func getDefaultConfig() *schedulerapi.Plugins {
 				{Name: noderesources.BalancedAllocationName, Weight: 1},
 				{Name: imagelocality.Name, Weight: 1},
 				{Name: interpodaffinity.Name, Weight: 1},
-				{Name: noderesources.LeastAllocatedName, Weight: 1},
+				//{Name: noderesources.LeastAllocatedName, Weight: 1}, //  spread 模式
+				{Name: noderesources.MostAllocatedName, Weight: 1}, // binpack 模式
 				{Name: nodeaffinity.Name, Weight: 1},
 				// Weight is doubled because:
 				// - This is a score coming from user preference.

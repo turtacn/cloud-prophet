@@ -29,18 +29,6 @@ func (sched *Scheduler) onServiceDelete(obj interface{}) {
 	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.ServiceDelete)
 }
 
-func (sched *Scheduler) addNodeToScheduling(obj interface{}) {
-	node, ok := obj.(*v1.Node)
-	if !ok {
-		klog.Errorf("cannot convert to *v1.Node: %v", obj)
-		return
-	}
-
-	if err := sched.SchedulerCache.AddNode(node); err != nil {
-		klog.Errorf("scheduler cache AddNode failed: %v", err)
-	}
-}
-
 func (sched *Scheduler) addNodeToCache(obj interface{}) {
 	node, ok := obj.(*v1.Node)
 	if !ok {
@@ -180,12 +168,7 @@ func (sched *Scheduler) addPodToScheduling(obj interface{}) {
 		klog.Errorf("cannot convert to *v1.Pod: %v", obj)
 		return
 	}
-	klog.Infof("add event for scheduled pod %s/%s ", pod.Namespace, pod.Name)
-
-	if err := sched.SchedulerCache.AddPod(pod); err != nil {
-		klog.Errorf("scheduler cache AddPod failed: %v", err)
-	}
-
+	klog.Infof("scheduling pod %s/%s ", pod.Namespace, pod.Name)
 	sched.SchedulingQueue.Add(pod)
 }
 

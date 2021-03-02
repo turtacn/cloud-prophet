@@ -156,7 +156,9 @@ func checkError(message string, err error) {
 // RecommenderFactory makes instances of Recommender.
 type RecommenderFactory struct {
 	PodResourceRecommender logic.PodResourceRecommender
-	// 扩展其他的创建参数
+	//  扩展其他的创建参数
+	//  ...
+
 }
 
 // Make creates a new recommender instance,

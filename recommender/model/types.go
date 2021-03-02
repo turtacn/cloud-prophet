@@ -4,6 +4,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/klog"
+	"time"
 )
 
 // ResourceName represents the name of the resource monitored by recommender.
@@ -84,14 +85,6 @@ func ResourcesAsResourceList(resources Resources) apiv1.ResourceList {
 	return result
 }
 
-// ResourceAmountMax returns the larger of two resource amounts.
-func ResourceAmountMax(amount1, amount2 ResourceAmount) ResourceAmount {
-	if amount1 > amount2 {
-		return amount1
-	}
-	return amount2
-}
-
 func resourceAmountFromFloat(amount float64) ResourceAmount {
 	if amount < 0 {
 		return ResourceAmount(0)
@@ -121,4 +114,29 @@ type ContainerID struct {
 type VpaID struct {
 	Namespace string
 	VpaName   string
+}
+
+// ContainerUsageSample is a measure of resource usage of a container over some
+// interval.
+type ContainerUsageSample struct {
+	// Start of the measurement interval.
+	MeasureStart time.Time
+	// Average CPU usage in cores or memory usage in bytes.
+	Usage ResourceAmount
+	// CPU or memory request at the time of measurment.
+	Request ResourceAmount
+	// Which resource is this sample for.
+	Resource ResourceName
+}
+
+type RecommendedPodResources struct {
+	ContainerRecommendations []RecommendedContainerResources `json:"container_recommendations"`
+}
+
+type RecommendedContainerResources struct {
+	ContainerName  string             `json:"container_name"`
+	Target         apiv1.ResourceList `json:"target"`
+	LowerBound     apiv1.ResourceList `json:"lower_bound"`
+	UpperBound     apiv1.ResourceList `json:"upper_bound"`
+	UncappedTarget apiv1.ResourceList `json:"uncapped_target"`
 }

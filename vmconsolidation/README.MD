@@ -1,6 +1,8 @@
 # 虚机动态平衡
 
 ## 算法
+
+### Vm Consolidation
 | 标签 | 文章|
 |--|--|
 |[SAT'17]|[Introducing Pareto Minimal Correction Subsets](https://link.springer.com/chapter/10.1007/978-3-319-66263-3_13)|
@@ -9,6 +11,20 @@
 |[Heuristics'18]|[Virtual machine consolidation using constraint-based multi-objective optimization](https://link.springer.com/article/10.1007/s10732-018-9400-2)|
 |[IJCAI'19]|[Integrating Pseudo-Boolean Constraint Reasoning in multi-objective evelutionary algorithm](papers/Integrating%20Pseudo-Boolean%20Constraint%20Reasoning%20in%20multi-objective%20evolutionary%20algorithms.pdf)|
 |[VMPMBBO]|[Virtual machine consolidated placement based on multi-objective biogeography-based optimization](papers/Virtual%20machine%20consolidated%20placement%20based%20on%20multi-objective%20biogeography-based%20optimization.pdf)|
+
+### Benchmark
+|Benchmark缩写|含义|
+|--|--|
+|GIA||
+|VMPMBBO||
+|MGGA||
+|MOEA/D||
+|NSGAII||
+
+### 多目标优化
+
+-  https://github.com/AnjieCheng/awesome-multi-objective-optimization
+
 
 ## 评估
 

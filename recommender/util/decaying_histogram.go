@@ -1,3 +1,4 @@
+// 带半衰期的历史样本数据
 package util
 
 import (

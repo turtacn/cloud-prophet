@@ -1,3 +1,4 @@
+// 数据直方图基类，基于桶的实现
 package util
 
 import (

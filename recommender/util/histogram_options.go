@@ -1,3 +1,4 @@
+// 直方图Option接口，实现线性，指数类型
 package util
 
 import (

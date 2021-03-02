@@ -1,9 +1,9 @@
+// 聚合配置
 package model
 
 import (
-	"time"
-
 	"github.com/turtacn/cloud-prophet/recommender/util"
+	"time"
 )
 
 // AggregationsConfig is used to configure aggregation behaviour.

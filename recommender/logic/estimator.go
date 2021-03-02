@@ -1,13 +1,12 @@
+// 资源利用率估计器，CPU Memory 统一处理
+// 1) 普通分位数的估计 2）安全边界 + 普通分位数估计 3）最大最小估计
 package logic
 
 import (
+	"github.com/turtacn/cloud-prophet/recommender/model"
 	"math"
 	"time"
-
-	"github.com/turtacn/cloud-prophet/recommender/model"
 )
-
-// TODO: Split the estimator to have a separate estimator object for CPU and memory.
 
 // ResourceEstimator is a function from AggregateContainerState to
 // model.Resources, e.g. a prediction of resources needed by a group of

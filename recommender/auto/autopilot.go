@@ -1,3 +1,4 @@
+// Library入口，输出输出， 调用autopilot逻辑
 package auto
 
 import (
@@ -46,8 +47,8 @@ func make2dFloatArray(rowCount int, colCount int) [][]float64 {
 func stringValuesToFloats(stringValues [][]string) ([][]float64, error) {
 	values := make2dFloatArray(len(stringValues), len(stringValues[0]))
 
-	for rowIndex, _ := range values {
-		for colIndex, _ := range values[rowIndex] {
+	for rowIndex := range values {
+		for colIndex := range values[rowIndex] {
 			var err error = nil
 
 			trimString :=

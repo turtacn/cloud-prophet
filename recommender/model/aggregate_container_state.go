@@ -1,12 +1,12 @@
+// 聚合状态——样本集合状态
 package model
 
 import (
 	"fmt"
+	"github.com/turtacn/cloud-prophet/recommender/util"
+	corev1 "k8s.io/api/core/v1" // 重用kubernetes的多维资源模型
 	"math"
 	"time"
-
-	"github.com/turtacn/cloud-prophet/recommender/util"
-	corev1 "k8s.io/api/core/v1"
 )
 
 // ContainerNameToAggregateStateMap maps a container name to AggregateContainerState

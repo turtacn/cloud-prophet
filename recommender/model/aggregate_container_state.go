@@ -7,9 +7,6 @@ import (
 
 	"github.com/turtacn/cloud-prophet/recommender/util"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	//vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
-	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
 )
 
 // ContainerNameToAggregateStateMap maps a container name to AggregateContainerState
@@ -33,12 +30,6 @@ type ContainerStateAggregator interface {
 	// GetLastRecommendation returns last recommendation calculated for this
 	// aggregator.
 	GetLastRecommendation() corev1.ResourceList
-	// NeedsRecommendation returns true if this aggregator should have
-	// a recommendation calculated.
-	NeedsRecommendation() bool
-	// GetUpdateMode returns the update mode of VPA controlling this aggregator,
-	// nil if aggregator is not autoscaled.
-	GetUpdateMode() *vpa_types.UpdateMode
 }
 
 // AggregateContainerState holds input signals aggregated from a set of containers.
@@ -65,31 +56,12 @@ type AggregateContainerState struct {
 	// apply the recommendation to the pods).
 	LastRecommendation  corev1.ResourceList
 	IsUnderVPA          bool
-	UpdateMode          *vpa_types.UpdateMode
-	ScalingMode         *vpa_types.ContainerScalingMode
 	ControlledResources *[]ResourceName
 }
 
 // GetLastRecommendation returns last recorded recommendation.
 func (a *AggregateContainerState) GetLastRecommendation() corev1.ResourceList {
 	return a.LastRecommendation
-}
-
-// NeedsRecommendation returns true if the state should have recommendation calculated.
-func (a *AggregateContainerState) NeedsRecommendation() bool {
-	return a.IsUnderVPA && a.ScalingMode != nil && *a.ScalingMode != vpa_types.ContainerScalingModeOff
-}
-
-// GetUpdateMode returns the update mode of VPA controlling this aggregator,
-// nil if aggregator is not autoscaled.
-func (a *AggregateContainerState) GetUpdateMode() *vpa_types.UpdateMode {
-	return a.UpdateMode
-}
-
-// GetScalingMode returns the container scaling mode of the container
-// represented byt his aggregator, nil if aggregator is not autoscaled.
-func (a *AggregateContainerState) GetScalingMode() *vpa_types.ContainerScalingMode {
-	return a.ScalingMode
 }
 
 // GetControlledResources returns the list of resources controlled by VPA controlling this aggregator.
@@ -106,8 +78,6 @@ func (a *AggregateContainerState) GetControlledResources() []ResourceName {
 func (a *AggregateContainerState) MarkNotAutoscaled() {
 	a.IsUnderVPA = false
 	a.LastRecommendation = nil
-	a.UpdateMode = nil
-	a.ScalingMode = nil
 	a.ControlledResources = nil
 }
 
@@ -179,43 +149,6 @@ func (a *AggregateContainerState) addCPUSample(sample *ContainerUsageSample) {
 	a.TotalSamplesCount++
 }
 
-// SaveToCheckpoint serializes AggregateContainerState as VerticalPodAutoscalerCheckpointStatus.
-// The serialization may result in loss of precission of the histograms.
-func (a *AggregateContainerState) SaveToCheckpoint() (*vpa_types.VerticalPodAutoscalerCheckpointStatus, error) {
-	memory, err := a.AggregateMemoryPeaks.SaveToChekpoint()
-	if err != nil {
-		return nil, err
-	}
-	cpu, err := a.AggregateCPUUsage.SaveToChekpoint()
-	if err != nil {
-		return nil, err
-	}
-	return &vpa_types.VerticalPodAutoscalerCheckpointStatus{
-		FirstSampleStart:  metav1.NewTime(a.FirstSampleStart),
-		LastSampleStart:   metav1.NewTime(a.LastSampleStart),
-		TotalSamplesCount: a.TotalSamplesCount,
-		MemoryHistogram:   *memory,
-		CPUHistogram:      *cpu,
-	}, nil
-}
-
-// LoadFromCheckpoint deserializes data from VerticalPodAutoscalerCheckpointStatus
-// into the AggregateContainerState.
-func (a *AggregateContainerState) LoadFromCheckpoint(checkpoint *vpa_types.VerticalPodAutoscalerCheckpointStatus) error {
-	a.TotalSamplesCount = checkpoint.TotalSamplesCount
-	a.FirstSampleStart = checkpoint.FirstSampleStart.Time
-	a.LastSampleStart = checkpoint.LastSampleStart.Time
-	err := a.AggregateMemoryPeaks.LoadFromCheckpoint(&checkpoint.MemoryHistogram)
-	if err != nil {
-		return err
-	}
-	err = a.AggregateCPUUsage.LoadFromCheckpoint(&checkpoint.CPUHistogram)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (a *AggregateContainerState) isExpired(now time.Time) bool {
 	if a.isEmpty() {
 		return now.Sub(a.CreationTime) >= GetAggregationsConfig().GetMemoryAggregationWindowLength()
@@ -225,38 +158,6 @@ func (a *AggregateContainerState) isExpired(now time.Time) bool {
 
 func (a *AggregateContainerState) isEmpty() bool {
 	return a.TotalSamplesCount == 0
-}
-
-// UpdateFromPolicy updates container state scaling mode and controlled resources based on resource
-// policy of the VPA object.
-func (a *AggregateContainerState) UpdateFromPolicy(resourcePolicy *vpa_types.ContainerResourcePolicy) {
-	// ContainerScalingModeAuto is the default scaling mode
-	scalingModeAuto := vpa_types.ContainerScalingModeAuto
-	a.ScalingMode = &scalingModeAuto
-	if resourcePolicy != nil && resourcePolicy.Mode != nil {
-		a.ScalingMode = resourcePolicy.Mode
-	}
-	a.ControlledResources = &DefaultControlledResources
-	if resourcePolicy != nil && resourcePolicy.ControlledResources != nil {
-		a.ControlledResources = ResourceNamesApiToModel(*resourcePolicy.ControlledResources)
-	}
-}
-
-// AggregateStateByContainerName takes a set of AggregateContainerStates and merge them
-// grouping by the container name. The result is a map from the container name to the aggregation
-// from all input containers with the given name.
-func AggregateStateByContainerName(aggregateContainerStateMap aggregateContainerStatesMap) ContainerNameToAggregateStateMap {
-	containerNameToAggregateStateMap := make(ContainerNameToAggregateStateMap)
-	for aggregationKey, aggregation := range aggregateContainerStateMap {
-		containerName := aggregationKey.ContainerName()
-		aggregateContainerState, isInitialized := containerNameToAggregateStateMap[containerName]
-		if !isInitialized {
-			aggregateContainerState = NewAggregateContainerState()
-			containerNameToAggregateStateMap[containerName] = aggregateContainerState
-		}
-		aggregateContainerState.MergeContainerState(aggregation)
-	}
-	return containerNameToAggregateStateMap
 }
 
 // ContainerStateAggregatorProxy is a wrapper for ContainerStateAggregator
@@ -289,22 +190,4 @@ func (p *ContainerStateAggregatorProxy) SubtractSample(sample *ContainerUsageSam
 func (p *ContainerStateAggregatorProxy) GetLastRecommendation() corev1.ResourceList {
 	aggregator := p.cluster.findOrCreateAggregateContainerState(p.containerID)
 	return aggregator.GetLastRecommendation()
-}
-
-// NeedsRecommendation returns true if the aggregator should have recommendation calculated.
-func (p *ContainerStateAggregatorProxy) NeedsRecommendation() bool {
-	aggregator := p.cluster.findOrCreateAggregateContainerState(p.containerID)
-	return aggregator.NeedsRecommendation()
-}
-
-// GetUpdateMode returns update mode of VPA controlling the aggregator.
-func (p *ContainerStateAggregatorProxy) GetUpdateMode() *vpa_types.UpdateMode {
-	aggregator := p.cluster.findOrCreateAggregateContainerState(p.containerID)
-	return aggregator.GetUpdateMode()
-}
-
-// GetScalingMode returns scaling mode of container represented by the aggregator.
-func (p *ContainerStateAggregatorProxy) GetScalingMode() *vpa_types.ContainerScalingMode {
-	aggregator := p.cluster.findOrCreateAggregateContainerState(p.containerID)
-	return aggregator.GetScalingMode()
 }

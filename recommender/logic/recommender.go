@@ -2,18 +2,18 @@ package logic
 
 import (
 	"flag"
-
 	"github.com/turtacn/cloud-prophet/recommender/model"
 )
 
 var (
 	safetyMarginFraction = flag.Float64("recommendation-margin-fraction", 0.15, `预测的安全边缘余量，百分比`)
 	targetCpuPercentile  = flag.Float64("target-cpu-percentile", 0.9, `cpu预测采用的分位值，百分比`)
-	//targetMemPercentile          = flag.Float64("target-mem-percentile", 0.9, `cpu预测采用的分位值，百分比`)
+)
+var (
 	_podMinCPUMillicores float64 = 0.0
-	podMinCPUMillicores          = &_podMinCPUMillicores //flag.Float64("pod-recommendation-min-cpu-millicores", 0, `Minimum CPU recommendation for a pod`)
+	podMinCPUMillicores          = &_podMinCPUMillicores
 	_podMinMemoryMb      float64 = 0.0
-	podMinMemoryMb               = &_podMinMemoryMb //flag.Float64("pod-recommendation-min-memory-mb", 0, `Minimum memory recommendation for a pod`)
+	podMinMemoryMb               = &_podMinMemoryMb
 )
 
 // PodResourceRecommender computes resource recommendation for a Vpa object.

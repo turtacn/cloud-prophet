@@ -3,10 +3,6 @@ package model
 import (
 	"fmt"
 	"time"
-
-	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/klog"
 )
 
 const (
@@ -71,44 +67,9 @@ func (container *ContainerState) addCPUSample(sample *ContainerUsageSample) bool
 	if !sample.isValid(ResourceCPU) || !sample.MeasureStart.After(container.LastCPUSampleStart) {
 		return false // Discard invalid, duplicate or out-of-order samples.
 	}
-	container.observeQualityMetrics(sample.Usage, false, corev1.ResourceCPU)
 	container.aggregator.AddSample(sample)
 	container.LastCPUSampleStart = sample.MeasureStart
 	return true
-}
-
-func (container *ContainerState) observeQualityMetrics(usage ResourceAmount, isOOM bool, resource corev1.ResourceName) {
-	if !container.aggregator.NeedsRecommendation() {
-		return
-	}
-	updateMode := container.aggregator.GetUpdateMode()
-	var usageValue float64
-	switch resource {
-	case corev1.ResourceCPU:
-		usageValue = CoresFromCPUAmount(usage)
-	case corev1.ResourceMemory:
-		usageValue = BytesFromMemoryAmount(usage)
-	}
-	if container.aggregator.GetLastRecommendation() == nil {
-		return
-	}
-	recommendation := container.aggregator.GetLastRecommendation()[resource]
-	if recommendation.IsZero() {
-		return
-	}
-	var recommendationValue float64
-	switch resource {
-	case corev1.ResourceCPU:
-		recommendationValue = float64(recommendation.MilliValue()) / 1000.0
-	case corev1.ResourceMemory:
-		recommendationValue = float64(recommendation.Value())
-	default:
-		klog.Warningf("Unknown resource: %v", resource)
-		return
-	}
-	if usageValue > 0.0 || recommendationValue > 0.0 || *updateMode == vpa_types.UpdateModeAuto {
-
-	}
 }
 
 // GetMaxMemoryPeak returns maximum memory usage in the sample, possibly estimated from OOM
@@ -155,7 +116,6 @@ func (container *ContainerState) addMemorySample(sample *ContainerUsageSample, i
 		container.oomPeak = 0
 		addNewPeak = true
 	}
-	container.observeQualityMetrics(sample.Usage, isOOM, corev1.ResourceMemory)
 	if addNewPeak {
 		newPeak := ContainerUsageSample{
 			MeasureStart: container.WindowEnd,

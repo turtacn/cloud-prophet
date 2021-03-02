@@ -4,10 +4,6 @@ import (
 	"fmt"
 	"math"
 	"time"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	//vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
-	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
 )
 
 var (
@@ -101,24 +97,6 @@ func (h *decayingHistogram) decayFactor(timestamp time.Time) float64 {
 		h.shiftReferenceTimestamp(timestamp)
 	}
 	return math.Exp2(float64(timestamp.Sub(h.referenceTimestamp)) / float64(h.halfLife))
-}
-
-func (h *decayingHistogram) SaveToChekpoint() (*vpa_types.HistogramCheckpoint, error) {
-	checkpoint, err := h.histogram.SaveToChekpoint()
-	if err != nil {
-		return checkpoint, err
-	}
-	checkpoint.ReferenceTimestamp = metav1.NewTime(h.referenceTimestamp)
-	return checkpoint, nil
-}
-
-func (h *decayingHistogram) LoadFromCheckpoint(checkpoint *vpa_types.HistogramCheckpoint) error {
-	err := h.histogram.LoadFromCheckpoint(checkpoint)
-	if err != nil {
-		return err
-	}
-	h.referenceTimestamp = checkpoint.ReferenceTimestamp.Time
-	return nil
 }
 
 func round(x float64) int {

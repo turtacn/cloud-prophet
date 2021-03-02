@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/turtacn/cloud-prophet/recommender/logic"
 	"github.com/turtacn/cloud-prophet/recommender/model"
-	vpa_types "github.com/turtacn/cloud-prophet/recommender/types"
 	"k8s.io/klog"
 	"os"
 	"strconv"
@@ -124,9 +123,9 @@ func (r *recommender) RunOnce(element, csvfile string) {
 			timestamp = timestamp.Add(time.Duration(*sampleSecondInterval) * time.Second)
 
 			resources := r.podResourceRecommender.GetRecommendedPodResources(entityAggregateStateMap)
-			containerResources := make([]vpa_types.RecommendedContainerResources, 0, len(resources))
+			containerResources := make([]model.RecommendedContainerResources, 0, len(resources))
 			for containerName, res := range resources {
-				containerResources = append(containerResources, vpa_types.RecommendedContainerResources{
+				containerResources = append(containerResources, model.RecommendedContainerResources{
 					ContainerName:  containerName,
 					Target:         model.ResourcesAsResourceList(res.Target),
 					LowerBound:     model.ResourcesAsResourceList(res.LowerBound),
@@ -134,7 +133,7 @@ func (r *recommender) RunOnce(element, csvfile string) {
 					UncappedTarget: model.ResourcesAsResourceList(res.Target),
 				})
 			}
-			recommendation := &vpa_types.RecommendedPodResources{containerResources}
+			recommendation := &model.RecommendedPodResources{containerResources}
 
 			for _, recon := range recommendation.ContainerRecommendations {
 
@@ -146,11 +145,6 @@ func (r *recommender) RunOnce(element, csvfile string) {
 			}
 		}
 	}
-
-	// upodate vpa
-	// gc
-	// maintain checkpoint
-
 }
 
 func checkError(message string, err error) {
@@ -177,8 +171,6 @@ func (c RecommenderFactory) Make() Recommender {
 }
 
 // NewRecommender creates a new recommender instance.
-// Dependencies are created automatically.
-// Deprecated; use RecommenderFactory instead.
 func NewRecommender() Recommender {
 	return RecommenderFactory{
 		PodResourceRecommender: logic.CreatePodResourceRecommender(),

@@ -55,7 +55,6 @@ type AggregateContainerState struct {
 	// is present and if the automatic updates are on (are we able to
 	// apply the recommendation to the pods).
 	LastRecommendation  corev1.ResourceList
-	IsUnderVPA          bool
 	ControlledResources *[]ResourceName
 }
 
@@ -71,14 +70,6 @@ func (a *AggregateContainerState) GetControlledResources() []ResourceName {
 		return *a.ControlledResources
 	}
 	return DefaultControlledResources
-}
-
-// MarkNotAutoscaled registers that this container state is not controlled by
-// a VPA object.
-func (a *AggregateContainerState) MarkNotAutoscaled() {
-	a.IsUnderVPA = false
-	a.LastRecommendation = nil
-	a.ControlledResources = nil
 }
 
 // MergeContainerState merges two AggregateContainerStates.
@@ -158,36 +149,4 @@ func (a *AggregateContainerState) isExpired(now time.Time) bool {
 
 func (a *AggregateContainerState) isEmpty() bool {
 	return a.TotalSamplesCount == 0
-}
-
-// ContainerStateAggregatorProxy is a wrapper for ContainerStateAggregator
-// that creates ContainerStateAgregator for container if it is no longer
-// present in the cluster state.
-type ContainerStateAggregatorProxy struct {
-	containerID ContainerID
-	cluster     *ClusterState
-}
-
-// NewContainerStateAggregatorProxy creates a ContainerStateAggregatorProxy
-// pointing to the cluster state.
-func NewContainerStateAggregatorProxy(cluster *ClusterState, containerID ContainerID) ContainerStateAggregator {
-	return &ContainerStateAggregatorProxy{containerID, cluster}
-}
-
-// AddSample adds a container sample to the aggregator.
-func (p *ContainerStateAggregatorProxy) AddSample(sample *ContainerUsageSample) {
-	aggregator := p.cluster.findOrCreateAggregateContainerState(p.containerID)
-	aggregator.AddSample(sample)
-}
-
-// SubtractSample subtracts a container sample from the aggregator.
-func (p *ContainerStateAggregatorProxy) SubtractSample(sample *ContainerUsageSample) {
-	aggregator := p.cluster.findOrCreateAggregateContainerState(p.containerID)
-	aggregator.SubtractSample(sample)
-}
-
-// GetLastRecommendation returns last recorded recommendation.
-func (p *ContainerStateAggregatorProxy) GetLastRecommendation() corev1.ResourceList {
-	aggregator := p.cluster.findOrCreateAggregateContainerState(p.containerID)
-	return aggregator.GetLastRecommendation()
 }

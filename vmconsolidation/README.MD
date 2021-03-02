@@ -1,7 +1,7 @@
 # 虚机动态平衡
 
 ## 算法
-|||
+| 标签 | 文章|
 |--|--|
 |[SAT'17]|[Introducing Pareto Minimal Correction Subsets](https://link.springer.com/chapter/10.1007/978-3-319-66263-3_13)|
 |[AAAI'18]|[Enhancing Constraint-Based Multi-objective Conbinatorial Optimization](papers/Enhancing%20Constraint-Based.pdf)|

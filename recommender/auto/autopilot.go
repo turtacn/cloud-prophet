@@ -156,8 +156,7 @@ func checkError(message string, err error) {
 // RecommenderFactory makes instances of Recommender.
 type RecommenderFactory struct {
 	PodResourceRecommender logic.PodResourceRecommender
-	CheckpointsGCInterval  time.Duration
-	UseCheckpoints         bool
+	// 扩展其他的创建参数
 }
 
 // Make creates a new recommender instance,

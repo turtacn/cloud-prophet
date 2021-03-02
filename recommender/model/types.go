@@ -84,29 +84,6 @@ func ResourcesAsResourceList(resources Resources) apiv1.ResourceList {
 	return result
 }
 
-// ResourceNamesApiToModel converts an array of resource names expressed in API types into model types.
-func ResourceNamesApiToModel(resources []apiv1.ResourceName) *[]ResourceName {
-	result := make([]ResourceName, 0, len(resources))
-	for _, resource := range resources {
-		switch resource {
-		case apiv1.ResourceCPU:
-			result = append(result, ResourceCPU)
-		case apiv1.ResourceMemory:
-			result = append(result, ResourceMemory)
-		default:
-			klog.Errorf("Cannot translate %v resource name", resource)
-			continue
-		}
-	}
-	return &result
-}
-
-// RoundResourceAmount returns the given resource amount rounded down to the
-// whole multiple of another resource amount (unit).
-func RoundResourceAmount(amount, unit ResourceAmount) ResourceAmount {
-	return ResourceAmount(int64(amount) - int64(amount)%int64(unit))
-}
-
 // ResourceAmountMax returns the larger of two resource amounts.
 func ResourceAmountMax(amount1, amount2 ResourceAmount) ResourceAmount {
 	if amount1 > amount2 {

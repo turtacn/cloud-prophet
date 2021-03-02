@@ -1,4 +1,4 @@
-//
+// 基础类型
 package model
 
 import (

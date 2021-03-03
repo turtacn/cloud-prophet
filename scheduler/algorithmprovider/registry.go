@@ -5,7 +5,7 @@ package algorithmprovider
 import (
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/defaultbinder"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/imagelocality"
+	//"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/imagelocality"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/interpodaffinity"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeaffinity"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodename"
@@ -88,17 +88,17 @@ func getDefaultConfig() *schedulerapi.Plugins {
 		},
 		Score: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{
-				{Name: noderesources.BalancedAllocationName, Weight: 0},
-				{Name: imagelocality.Name, Weight: 0},
-				{Name: interpodaffinity.Name, Weight: 0},
-				{Name: noderesources.LeastAllocatedName, Weight: 0}, //  spread 模式 剩余资源多优先
-				{Name: noderesources.MostAllocatedName, Weight: 1},  //  binpack模式 剩余资源少优先
-				{Name: nodeaffinity.Name, Weight: 0},
+				//{Name: noderesources.BalancedAllocationName, Weight: 0},
+				//{Name: imagelocality.Name, Weight: 0},
+				//{Name: interpodaffinity.Name, Weight: 0},
+				//{Name: noderesources.LeastAllocatedName, Weight: 0}, //  spread 模式 剩余资源多优先
+				{Name: noderesources.MostAllocatedName, Weight: 1}, //  binpack模式 剩余资源少优先
+				//{Name: nodeaffinity.Name, Weight: 0},
 				// Weight is doubled because:
 				// - This is a score coming from user preference.
 				// - It makes its signal comparable to NodeResourcesLeastAllocated.
-				{Name: podtopologyspread.Name, Weight: 0},
-				{Name: tainttoleration.Name, Weight: 0},
+				//{Name: podtopologyspread.Name, Weight: 0},
+				//{Name: tainttoleration.Name, Weight: 0},
 			},
 		},
 		Reserve: &schedulerapi.PluginSet{},

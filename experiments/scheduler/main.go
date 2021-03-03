@@ -7,6 +7,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
+	"io/ioutil"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
@@ -24,7 +25,11 @@ var (
 type Option func(registry runtime.Registry) error
 
 func main() {
+	klog.InitFlags(flag.CommandLine)
 	flag.Parse()
+	flag.Set("logtostderr", "false")
+	flag.Set("alsologtostderr", "false")
+	klog.SetOutput(ioutil.Discard)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//create a fake client

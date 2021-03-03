@@ -109,7 +109,10 @@ func main() {
 			if e != nil {
 				klog.Errorf("scheduler get pod failed error %v", e)
 			}
-			scheduler.Cache().RemovePod(p)
+			if p != nil {
+				scheduler.Cache().RemovePod(p)
+				klog.Infof("scheduler cache remove pod %v", p)
+			}
 		}
 	}()
 	klog.Infof("begin to run scheduler")

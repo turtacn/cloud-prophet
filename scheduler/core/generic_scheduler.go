@@ -15,16 +15,13 @@ import (
 	"k8s.io/klog/v2"
 
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	podutil "github.com/turtacn/cloud-prophet/scheduler/helper/pod"
 	internalcache "github.com/turtacn/cloud-prophet/scheduler/internal/cache"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
-	"github.com/turtacn/cloud-prophet/scheduler/metrics"
 	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
 	"github.com/turtacn/cloud-prophet/scheduler/util"
-	corelisters "k8s.io/client-go/listers/core/v1"
 	utiltrace "k8s.io/utils/trace"
 )
 
@@ -79,7 +76,6 @@ func (f *FitError) Error() string {
 
 // ScheduleAlgorithm is an interface implemented by things that know how to schedule pods
 // onto machines.
-// TODO: Rename this type.
 type ScheduleAlgorithm interface {
 	Schedule(context.Context, *profile.Profile, *framework.CycleState, *v1.Pod) (scheduleResult ScheduleResult, err error)
 	// Extenders returns a slice of extender config. This is exposed for
@@ -102,7 +98,6 @@ type genericScheduler struct {
 	cache                    internalcache.Cache
 	extenders                []framework.Extender
 	nodeInfoSnapshot         *internalcache.Snapshot
-	pvcLister                corelisters.PersistentVolumeClaimLister
 	disablePreemption        bool
 	percentageOfNodesToScore int32
 	nextStartNodeIndex       int
@@ -122,18 +117,18 @@ func (g *genericScheduler) Schedule(ctx context.Context, prof *profile.Profile, 
 	trace := utiltrace.New("Scheduling", utiltrace.Field{Key: "namespace", Value: pod.Namespace}, utiltrace.Field{Key: "name", Value: pod.Name})
 	defer trace.LogIfLong(100 * time.Millisecond)
 
-	if err := podPassesBasicChecks(pod, g.pvcLister); err != nil {
+	if err := podPassesBasicChecks(pod); err != nil {
 		return result, err
 	}
 	trace.Step("Basic checks done")
-	klog.Infof("Basic checks done")
+	//klog.Infof("Basic checks done")
 
 	if err := g.snapshot(); err != nil {
 		klog.Errorf("snapshot from generic scheduler error %v", err)
 		return result, err
 	}
 	trace.Step("Snapshotting scheduler cache and node infos done")
-	klog.Infof("Snapshotting scheduler cache and node infos done")
+	//klog.Infof("Snapshotting scheduler cache and node infos done")
 
 	if g.nodeInfoSnapshot.NumNodes() == 0 {
 		klog.Errorf("node info snapshot error %v", ErrNoNodesAvailable)
@@ -146,8 +141,7 @@ func (g *genericScheduler) Schedule(ctx context.Context, prof *profile.Profile, 
 		klog.Errorf("find nodes fit pod error %v", err)
 		return result, err
 	}
-	trace.Step("Computing predicates done")
-	klog.Info("Computing predicates done")
+	trace.Step(fmt.Sprintf("Computing predicates done, time=%f", time.Now().Sub(startPredicateEvalTime).Seconds()))
 
 	if len(feasibleNodes) == 0 {
 		fitErr := &FitError{
@@ -158,14 +152,9 @@ func (g *genericScheduler) Schedule(ctx context.Context, prof *profile.Profile, 
 		klog.Errorf("feasible nodes not found error %v", fitErr)
 		return result, fitErr
 	}
-
-	metrics.DeprecatedSchedulingAlgorithmPredicateEvaluationSecondsDuration.Observe(metrics.SinceInSeconds(startPredicateEvalTime))
-	metrics.DeprecatedSchedulingDuration.WithLabelValues(metrics.PredicateEvaluation).Observe(metrics.SinceInSeconds(startPredicateEvalTime))
-
 	startPriorityEvalTime := time.Now()
-	// When only one node after predicate, just use it.
+	// 过滤出单个节点，直接调度返回
 	if len(feasibleNodes) == 1 {
-		metrics.DeprecatedSchedulingAlgorithmPriorityEvaluationSecondsDuration.Observe(metrics.SinceInSeconds(startPriorityEvalTime))
 		return ScheduleResult{
 			SuggestedHost:  feasibleNodes[0].Name,
 			EvaluatedNodes: 1 + len(filteredNodesStatuses),
@@ -178,12 +167,8 @@ func (g *genericScheduler) Schedule(ctx context.Context, prof *profile.Profile, 
 		return result, err
 	}
 
-	metrics.DeprecatedSchedulingAlgorithmPriorityEvaluationSecondsDuration.Observe(metrics.SinceInSeconds(startPriorityEvalTime))
-	metrics.DeprecatedSchedulingDuration.WithLabelValues(metrics.PriorityEvaluation).Observe(metrics.SinceInSeconds(startPriorityEvalTime))
-
 	host, err := g.selectHost(priorityList)
-	trace.Step("Prioritizing done")
-	klog.Info("Prioritizing done")
+	trace.Step(fmt.Sprintf("Prioritizing done, time=%f", time.Now().Sub(startPriorityEvalTime).Seconds()))
 
 	return ScheduleResult{
 		SuggestedHost:  host,
@@ -347,25 +332,15 @@ func (g *genericScheduler) findNodesThatPassFilters(ctx context.Context, prof *p
 			statusesLock.Unlock()
 		}
 	}
-
-	beginCheckNode := time.Now()
-	statusCode := framework.Success
-	defer func() {
-		// We record Filter extension point latency here instead of in framework.go because framework.RunFilterPlugins
-		// function is called for each node, whereas we want to have an overall latency for all nodes per scheduling cycle.
-		// Note that this latency also includes latency for `addNominatedPods`, which calls framework.RunPreFilterAddPod.
-		metrics.FrameworkExtensionPointDuration.WithLabelValues(runtime.Filter, statusCode.String(), prof.Name).Observe(metrics.SinceInSeconds(beginCheckNode))
-	}()
-
 	// Stops searching for more nodes once the configured number of feasible nodes
 	// are found.
+	// 并行检查所有候选节点
 	parallelize.Until(ctx, len(allNodes), checkNode)
 	processedNodes := int(feasibleNodesLen) + len(statuses)
 	g.nextStartNodeIndex = (g.nextStartNodeIndex + processedNodes) % len(allNodes)
 
 	feasibleNodes = feasibleNodes[:feasibleNodesLen]
 	if err := errCh.ReceiveError(); err != nil {
-		statusCode = framework.Error
 		return nil, err
 	}
 	return feasibleNodes, nil
@@ -554,9 +529,7 @@ func (g *genericScheduler) prioritizeNodes(
 			}
 			wg.Add(1)
 			go func(extIndex int) {
-				metrics.SchedulerGoroutines.WithLabelValues("prioritizing_extender").Inc()
 				defer func() {
-					metrics.SchedulerGoroutines.WithLabelValues("prioritizing_extender").Dec()
 					wg.Done()
 				}()
 				prioritizedList, weight, err := g.extenders[extIndex].Prioritize(pod, nodes)
@@ -593,7 +566,7 @@ func (g *genericScheduler) prioritizeNodes(
 }
 
 // podPassesBasicChecks makes sanity checks on the pod if it can be scheduled.
-func podPassesBasicChecks(pod *v1.Pod, pvcLister corelisters.PersistentVolumeClaimLister) error {
+func podPassesBasicChecks(pod *v1.Pod) error {
 	// Check PVCs used by the pod
 	namespace := pod.Namespace
 	manifest := &(pod.Spec)
@@ -610,14 +583,12 @@ func NewGenericScheduler(
 	cache internalcache.Cache,
 	nodeInfoSnapshot *internalcache.Snapshot,
 	extenders []framework.Extender,
-	pvcLister corelisters.PersistentVolumeClaimLister,
 	disablePreemption bool,
 	percentageOfNodesToScore int32) ScheduleAlgorithm {
 	return &genericScheduler{
 		cache:                    cache,
 		extenders:                extenders,
 		nodeInfoSnapshot:         nodeInfoSnapshot,
-		pvcLister:                pvcLister,
 		disablePreemption:        disablePreemption,
 		percentageOfNodesToScore: percentageOfNodesToScore,
 	}

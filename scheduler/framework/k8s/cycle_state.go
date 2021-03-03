@@ -30,8 +30,6 @@ type StateKey string
 type CycleState struct {
 	mx      sync.RWMutex
 	storage map[StateKey]StateData
-	// if recordPluginMetrics is true, PluginExecutionDuration will be recorded for this cycle.
-	recordPluginMetrics bool
 }
 
 // NewCycleState initializes a new CycleState and returns its pointer.
@@ -39,22 +37,6 @@ func NewCycleState() *CycleState {
 	return &CycleState{
 		storage: make(map[StateKey]StateData),
 	}
-}
-
-// ShouldRecordPluginMetrics returns whether PluginExecutionDuration metrics should be recorded.
-func (c *CycleState) ShouldRecordPluginMetrics() bool {
-	if c == nil {
-		return false
-	}
-	return c.recordPluginMetrics
-}
-
-// SetRecordPluginMetrics sets recordPluginMetrics to the given value.
-func (c *CycleState) SetRecordPluginMetrics(flag bool) {
-	if c == nil {
-		return
-	}
-	c.recordPluginMetrics = flag
 }
 
 // Clone creates a copy of CycleState and returns its pointer. Clone returns

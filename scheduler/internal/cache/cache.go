@@ -9,7 +9,6 @@ import (
 
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
-	"github.com/turtacn/cloud-prophet/scheduler/metrics"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
@@ -656,7 +655,6 @@ func (cache *schedulerCache) cleanupExpiredAssumedPods() {
 func (cache *schedulerCache) cleanupAssumedPods(now time.Time) {
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
-	defer cache.updateMetrics()
 
 	// The size of assumedPods should be small
 	for key := range cache.assumedPods {
@@ -685,11 +683,4 @@ func (cache *schedulerCache) expirePod(key string, ps *podState) error {
 	delete(cache.assumedPods, key)
 	delete(cache.podStates, key)
 	return nil
-}
-
-// updateMetrics updates cache size metric values for pods, assumed pods, and nodes
-func (cache *schedulerCache) updateMetrics() {
-	metrics.CacheSize.WithLabelValues("assumed_pods").Set(float64(len(cache.assumedPods)))
-	metrics.CacheSize.WithLabelValues("pods").Set(float64(len(cache.podStates)))
-	metrics.CacheSize.WithLabelValues("nodes").Set(float64(len(cache.nodes)))
 }

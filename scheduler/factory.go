@@ -162,7 +162,6 @@ func (c *Configurator) create() (*Scheduler, error) {
 		c.schedulerCache,
 		c.nodeInfoSnapshot,
 		extenders,
-		c.informerFactory.Core().V1().PersistentVolumeClaims().Lister(),
 		c.disablePreemption,
 		c.percentageOfNodesToScore,
 	)

@@ -5,7 +5,6 @@ package algorithmprovider
 import (
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/defaultbinder"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/defaultpreemption"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/imagelocality"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/interpodaffinity"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeaffinity"
@@ -17,6 +16,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/selectorspread"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/tainttoleration"
 	// 这里扩展调度插件扩展的引用
+	// 1. 抢占逻辑在k8s调度框架中为PostFilter, TODO
 	"k8s.io/klog/v2"
 	"sort"
 	"strings"
@@ -78,11 +78,7 @@ func getDefaultConfig() *schedulerapi.Plugins {
 				{Name: interpodaffinity.Name},
 			},
 		},
-		PostFilter: &schedulerapi.PluginSet{
-			Enabled: []schedulerapi.Plugin{
-				{Name: defaultpreemption.Name},
-			},
-		},
+		PostFilter: &schedulerapi.PluginSet{},
 		PreScore: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{
 				{Name: interpodaffinity.Name},

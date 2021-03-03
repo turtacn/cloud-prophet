@@ -9,8 +9,6 @@ package heap
 import (
 	"container/heap"
 	"fmt"
-
-	"github.com/turtacn/cloud-prophet/scheduler/metrics"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -114,9 +112,6 @@ type Heap struct {
 	// data stores objects and has a queue that keeps their ordering according
 	// to the heap invariant.
 	data *data
-	// metricRecorder updates the counter when elements of a heap get added or
-	// removed, and it does nothing if it's nil
-	metricRecorder metrics.MetricRecorder
 }
 
 // Add inserts an item, and puts it in the queue. The item is updated if it
@@ -131,9 +126,6 @@ func (h *Heap) Add(obj interface{}) error {
 		heap.Fix(h.data, h.data.items[key].index)
 	} else {
 		heap.Push(h.data, &itemKeyValue{key, obj})
-		if h.metricRecorder != nil {
-			h.metricRecorder.Inc()
-		}
 	}
 	return nil
 }
@@ -147,9 +139,6 @@ func (h *Heap) AddIfNotPresent(obj interface{}) error {
 	}
 	if _, exists := h.data.items[key]; !exists {
 		heap.Push(h.data, &itemKeyValue{key, obj})
-		if h.metricRecorder != nil {
-			h.metricRecorder.Inc()
-		}
 	}
 	return nil
 }
@@ -168,9 +157,6 @@ func (h *Heap) Delete(obj interface{}) error {
 	}
 	if item, ok := h.data.items[key]; ok {
 		heap.Remove(h.data, item.index)
-		if h.metricRecorder != nil {
-			h.metricRecorder.Dec()
-		}
 		return nil
 	}
 	return fmt.Errorf("object not found")
@@ -185,9 +171,6 @@ func (h *Heap) Peek() interface{} {
 func (h *Heap) Pop() (interface{}, error) {
 	obj := heap.Pop(h.data)
 	if obj != nil {
-		if h.metricRecorder != nil {
-			h.metricRecorder.Dec()
-		}
 		return obj, nil
 	}
 	return nil, fmt.Errorf("object was removed from heap data")
@@ -227,11 +210,6 @@ func (h *Heap) Len() int {
 
 // New returns a Heap which can be used to queue up items to process.
 func New(keyFn KeyFunc, lessFn lessFunc) *Heap {
-	return NewWithRecorder(keyFn, lessFn, nil)
-}
-
-// NewWithRecorder wraps an optional metricRecorder to compose a Heap object.
-func NewWithRecorder(keyFn KeyFunc, lessFn lessFunc, metricRecorder metrics.MetricRecorder) *Heap {
 	return &Heap{
 		data: &data{
 			items:    map[string]*heapItem{},
@@ -239,7 +217,6 @@ func NewWithRecorder(keyFn KeyFunc, lessFn lessFunc, metricRecorder metrics.Metr
 			keyFunc:  keyFn,
 			lessFunc: lessFn,
 		},
-		metricRecorder: metricRecorder,
 	}
 }
 

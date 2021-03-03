@@ -20,7 +20,6 @@ import (
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
 	metav1 "github.com/turtacn/cloud-prophet/scheduler/helper"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/heap"
-	"github.com/turtacn/cloud-prophet/scheduler/metrics"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/util"
 	ktypes "k8s.io/apimachinery/pkg/types"
@@ -213,12 +212,12 @@ func NewPriorityQueue(
 		stop:                      make(chan struct{}),
 		podInitialBackoffDuration: options.podInitialBackoffDuration,
 		podMaxBackoffDuration:     options.podMaxBackoffDuration,
-		activeQ:                   heap.NewWithRecorder(podInfoKeyFunc, comp, metrics.NewActivePodsRecorder()),
-		unschedulableQ:            newUnschedulablePodsMap(metrics.NewUnschedulablePodsRecorder()),
+		activeQ:                   heap.New(podInfoKeyFunc, comp),
+		unschedulableQ:            newUnschedulablePodsMap(),
 		moveRequestCycle:          -1,
 	}
 	pq.cond.L = &pq.lock
-	pq.podBackoffQ = heap.NewWithRecorder(podInfoKeyFunc, pq.podsCompareBackoffCompleted, metrics.NewBackoffPodsRecorder())
+	pq.podBackoffQ = heap.New(podInfoKeyFunc, pq.podsCompareBackoffCompleted)
 
 	return pq
 }
@@ -247,7 +246,6 @@ func (p *PriorityQueue) Add(pod *v1.Pod) error {
 	if err := p.podBackoffQ.Delete(pInfo); err == nil {
 		klog.Errorf("Error: pod %v is already in the podBackoff queue.", nsNameForPod(pod))
 	}
-	metrics.SchedulerQueueIncomingPods.WithLabelValues("active", PodAdd).Inc()
 	p.PodNominator.AddNominatedPod(pod, "")
 	p.cond.Broadcast()
 
@@ -303,10 +301,8 @@ func (p *PriorityQueue) AddUnschedulableIfNotPresent(pInfo *framework.QueuedPodI
 		if err := p.podBackoffQ.Add(pInfo); err != nil {
 			return fmt.Errorf("error adding pod %v to the backoff queue: %v", pod.Name, err)
 		}
-		metrics.SchedulerQueueIncomingPods.WithLabelValues("backoff", ScheduleAttemptFailure).Inc()
 	} else {
 		p.unschedulableQ.addOrUpdate(pInfo)
-		metrics.SchedulerQueueIncomingPods.WithLabelValues("unschedulable", ScheduleAttemptFailure).Inc()
 	}
 
 	p.PodNominator.AddNominatedPod(pod, "")
@@ -333,7 +329,6 @@ func (p *PriorityQueue) flushBackoffQCompleted() {
 			return
 		}
 		p.activeQ.Add(rawPodInfo)
-		metrics.SchedulerQueueIncomingPods.WithLabelValues("active", BackoffComplete).Inc()
 		defer p.cond.Broadcast()
 	}
 }
@@ -501,14 +496,12 @@ func (p *PriorityQueue) movePodsToActiveOrBackoffQueue(podInfoList []*framework.
 			if err := p.podBackoffQ.Add(pInfo); err != nil {
 				klog.Errorf("Error adding pod %v to the backoff queue: %v", pod.Name, err)
 			} else {
-				metrics.SchedulerQueueIncomingPods.WithLabelValues("backoff", event).Inc()
 				p.unschedulableQ.delete(pod)
 			}
 		} else {
 			if err := p.activeQ.Add(pInfo); err != nil {
 				klog.Errorf("Error adding pod %v to the scheduling queue: %v", pod.Name, err)
 			} else {
-				metrics.SchedulerQueueIncomingPods.WithLabelValues("active", event).Inc()
 				p.unschedulableQ.delete(pod)
 			}
 		}
@@ -654,24 +647,17 @@ type UnschedulablePodsMap struct {
 	keyFunc    func(*v1.Pod) string
 	// metricRecorder updates the counter when elements of an unschedulablePodsMap
 	// get added or removed, and it does nothing if it's nil
-	metricRecorder metrics.MetricRecorder
 }
 
 // Add adds a pod to the unschedulable podInfoMap.
 func (u *UnschedulablePodsMap) addOrUpdate(pInfo *framework.QueuedPodInfo) {
 	podID := u.keyFunc(pInfo.Pod)
-	if _, exists := u.podInfoMap[podID]; !exists && u.metricRecorder != nil {
-		u.metricRecorder.Inc()
-	}
 	u.podInfoMap[podID] = pInfo
 }
 
 // Delete deletes a pod from the unschedulable podInfoMap.
 func (u *UnschedulablePodsMap) delete(pod *v1.Pod) {
 	podID := u.keyFunc(pod)
-	if _, exists := u.podInfoMap[podID]; exists && u.metricRecorder != nil {
-		u.metricRecorder.Dec()
-	}
 	delete(u.podInfoMap, podID)
 }
 
@@ -688,17 +674,13 @@ func (u *UnschedulablePodsMap) get(pod *v1.Pod) *framework.QueuedPodInfo {
 // Clear removes all the entries from the unschedulable podInfoMap.
 func (u *UnschedulablePodsMap) clear() {
 	u.podInfoMap = make(map[string]*framework.QueuedPodInfo)
-	if u.metricRecorder != nil {
-		u.metricRecorder.Clear()
-	}
 }
 
 // newUnschedulablePodsMap initializes a new object of UnschedulablePodsMap.
-func newUnschedulablePodsMap(metricRecorder metrics.MetricRecorder) *UnschedulablePodsMap {
+func newUnschedulablePodsMap() *UnschedulablePodsMap {
 	return &UnschedulablePodsMap{
-		podInfoMap:     make(map[string]*framework.QueuedPodInfo),
-		keyFunc:        util.GetPodFullName,
-		metricRecorder: metricRecorder,
+		podInfoMap: make(map[string]*framework.QueuedPodInfo),
+		keyFunc:    util.GetPodFullName,
 	}
 }
 

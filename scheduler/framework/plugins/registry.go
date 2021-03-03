@@ -4,7 +4,6 @@ package plugins
 
 import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/defaultbinder"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/defaultpreemption"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/imagelocality"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/interpodaffinity"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeaffinity"
@@ -42,6 +41,5 @@ func NewInTreeRegistry() runtime.Registry {
 		queuesort.Name:                             queuesort.New,
 		defaultbinder.Name:                         defaultbinder.New,
 		defaultbinder.NameFakeAllocater:            defaultbinder.NewFA,
-		defaultpreemption.Name:                     defaultpreemption.New,
 	}
 }

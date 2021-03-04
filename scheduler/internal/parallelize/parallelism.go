@@ -4,9 +4,8 @@ package parallelize
 
 import (
 	"context"
-	"math"
-
 	"k8s.io/client-go/util/workqueue"
+	"math"
 )
 
 const parallelism = 16

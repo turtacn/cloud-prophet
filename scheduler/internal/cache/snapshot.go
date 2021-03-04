@@ -5,7 +5,7 @@ package cache
 import (
 	"fmt"
 
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 )

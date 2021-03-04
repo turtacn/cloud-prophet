@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	frameworkruntime "github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog"

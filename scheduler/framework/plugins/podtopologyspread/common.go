@@ -3,7 +3,7 @@
 package podtopologyspread
 
 import (
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/helper"
 	metav1 "github.com/turtacn/cloud-prophet/scheduler/helper"
 	labels "github.com/turtacn/cloud-prophet/scheduler/helper/label"

@@ -1,6 +1,6 @@
 //
 //
-package k8s
+package base
 
 // NodeInfoLister interface represents anything that can list/get NodeInfo objects from node name.
 type NodeInfoLister interface {

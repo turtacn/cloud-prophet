@@ -3,7 +3,7 @@
 package helper
 
 import (
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 )
 
 // DefaultNormalizeScore generates a Normalize Score function that can normalize the

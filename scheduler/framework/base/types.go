@@ -1,6 +1,6 @@
 //
 //
-package k8s
+package base
 
 import (
 	"errors"

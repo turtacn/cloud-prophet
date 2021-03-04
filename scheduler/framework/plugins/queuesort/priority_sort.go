@@ -3,7 +3,7 @@
 package queuesort
 
 import (
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	podutil "github.com/turtacn/cloud-prophet/scheduler/helper/pod"
 	"k8s.io/apimachinery/pkg/runtime"
 )

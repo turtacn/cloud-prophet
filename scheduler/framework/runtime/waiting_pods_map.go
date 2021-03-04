@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	k8s "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 )
 

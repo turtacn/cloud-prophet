@@ -5,7 +5,7 @@ package runtime
 import (
 	"fmt"
 
-	"github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	k8s "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
 	"sigs.k8s.io/yaml"

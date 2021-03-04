@@ -13,7 +13,7 @@ import (
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config/validation"
 	"github.com/turtacn/cloud-prophet/scheduler/core"
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	frameworkplugins "github.com/turtacn/cloud-prophet/scheduler/framework/plugins"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/defaultbinder"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/noderesources"

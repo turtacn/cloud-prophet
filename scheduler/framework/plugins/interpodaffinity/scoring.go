@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	schedutil "github.com/turtacn/cloud-prophet/scheduler/util"

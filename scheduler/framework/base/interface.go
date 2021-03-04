@@ -2,7 +2,7 @@
 //
 // This file defines the scheduling framework plugin interfaces.
 
-package k8s
+package base
 
 import (
 	"context"

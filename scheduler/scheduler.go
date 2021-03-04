@@ -12,7 +12,7 @@ import (
 
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/core"
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	frameworkplugins "github.com/turtacn/cloud-prophet/scheduler/framework/plugins"
 	frameworkruntime "github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	podutil "github.com/turtacn/cloud-prophet/scheduler/helper/pod"

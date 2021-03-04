@@ -11,7 +11,7 @@ import (
 	"time"
 
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"

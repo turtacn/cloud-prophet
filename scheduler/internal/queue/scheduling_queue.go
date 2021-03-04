@@ -17,7 +17,7 @@ import (
 
 	"k8s.io/klog/v2"
 
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	metav1 "github.com/turtacn/cloud-prophet/scheduler/helper"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/heap"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"

@@ -8,7 +8,7 @@ import (
 	"math"
 	"sync/atomic"
 
-	framework "github.com/turtacn/cloud-prophet/scheduler/framework/k8s"
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/helper"
 	labels "github.com/turtacn/cloud-prophet/scheduler/helper/label"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"

@@ -3,17 +3,11 @@
 package util
 
 import (
-	"encoding/json"
-	"fmt"
-	"time"
-
 	podutil "github.com/turtacn/cloud-prophet/scheduler/helper/pod"
 	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/apimachinery/pkg/util/strategicpatch"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
+	"time"
 )
 
 // GetPodFullName returns a name that uniquely identifies a pod.
@@ -96,53 +90,4 @@ func GetPodAntiAffinityTerms(affinity *v1.Affinity) (terms []v1.PodAffinityTerm)
 		//}
 	}
 	return terms
-}
-
-// PatchPod calculates the delta bytes change from <old> to <new>,
-// and then submit a request to API server to patch the pod changes.
-func PatchPod(cs kubernetes.Interface, old *v1.Pod, new *v1.Pod) error {
-	oldData, err := json.Marshal(old)
-	if err != nil {
-		return err
-	}
-
-	newData, err := json.Marshal(new)
-	if err != nil {
-		return err
-	}
-	patchBytes, err := strategicpatch.CreateTwoWayMergePatch(oldData, newData, &v1.Pod{})
-	if err != nil {
-		return fmt.Errorf("failed to create merge patch for pod %q/%q: %v", old.Namespace, old.Name, err)
-	}
-	if patchBytes == nil {
-		return nil
-	}
-	return err
-}
-
-// GetUpdatedPod returns the latest version of <pod> from API server.
-func GetUpdatedPod(cs kubernetes.Interface, pod *v1.Pod) (*v1.Pod, error) {
-	return pod, nil
-}
-
-// DeletePod deletes the given <pod> from API server
-func DeletePod(cs kubernetes.Interface, pod *v1.Pod) error {
-	return nil
-}
-
-// ClearNominatedNodeName internally submit a patch request to API server
-// to set each pods[*].Status.NominatedNodeName> to "".
-func ClearNominatedNodeName(cs kubernetes.Interface, pods ...*v1.Pod) utilerrors.Aggregate {
-	var errs []error
-	for _, p := range pods {
-		if len(p.Status.NominatedNodeName) == 0 {
-			continue
-		}
-		podCopy := p.DeepCopy()
-		podCopy.Status.NominatedNodeName = ""
-		if err := PatchPod(cs, p, podCopy); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	return utilerrors.NewAggregate(errs)
 }

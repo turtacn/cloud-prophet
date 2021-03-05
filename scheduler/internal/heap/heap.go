@@ -9,7 +9,6 @@ package heap
 import (
 	"container/heap"
 	"fmt"
-	"k8s.io/client-go/tools/cache"
 )
 
 // KeyFunc is a function type to get the key from an object.
@@ -119,7 +118,7 @@ type Heap struct {
 func (h *Heap) Add(obj interface{}) error {
 	key, err := h.data.keyFunc(obj)
 	if err != nil {
-		return cache.KeyError{Obj: obj, Err: err}
+		return KeyError{Obj: obj, Err: err}
 	}
 	if _, exists := h.data.items[key]; exists {
 		h.data.items[key].obj = obj
@@ -135,7 +134,7 @@ func (h *Heap) Add(obj interface{}) error {
 func (h *Heap) AddIfNotPresent(obj interface{}) error {
 	key, err := h.data.keyFunc(obj)
 	if err != nil {
-		return cache.KeyError{Obj: obj, Err: err}
+		return KeyError{Obj: obj, Err: err}
 	}
 	if _, exists := h.data.items[key]; !exists {
 		heap.Push(h.data, &itemKeyValue{key, obj})
@@ -153,7 +152,7 @@ func (h *Heap) Update(obj interface{}) error {
 func (h *Heap) Delete(obj interface{}) error {
 	key, err := h.data.keyFunc(obj)
 	if err != nil {
-		return cache.KeyError{Obj: obj, Err: err}
+		return KeyError{Obj: obj, Err: err}
 	}
 	if item, ok := h.data.items[key]; ok {
 		heap.Remove(h.data, item.index)
@@ -180,7 +179,7 @@ func (h *Heap) Pop() (interface{}, error) {
 func (h *Heap) Get(obj interface{}) (interface{}, bool, error) {
 	key, err := h.data.keyFunc(obj)
 	if err != nil {
-		return nil, false, cache.KeyError{Obj: obj, Err: err}
+		return nil, false, KeyError{Obj: obj, Err: err}
 	}
 	return h.GetByKey(key)
 }
@@ -223,3 +222,13 @@ func New(keyFn KeyFunc, lessFn lessFunc) *Heap {
 // lessFunc is a function that receives two items and returns true if the first
 // item should be placed before the second one when the list is sorted.
 type lessFunc = func(item1, item2 interface{}) bool
+
+type KeyError struct {
+	Obj interface{}
+	Err error
+}
+
+// Error gives a human-readable description of the error.
+func (k KeyError) Error() string {
+	return fmt.Sprintf("couldn't create key for object %+v: %v", k.Obj, k.Err)
+}

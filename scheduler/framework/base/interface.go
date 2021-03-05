@@ -13,7 +13,7 @@ import (
 
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	clientset "k8s.io/client-go/kubernetes"
+	//clientset "k8s.io/client-go/kubernetes"
 )
 
 // NodeScoreList declares a list of nodes and their scores.
@@ -495,7 +495,7 @@ type FrameworkHandle interface {
 	RejectWaitingPod(uid string)
 
 	// ClientSet returns a kubernetes clientSet.
-	ClientSet() clientset.Interface
+	ClientSet() ClientSet
 
 	// TODO: unroll the wrapped interfaces to FrameworkHandle.
 	PreemptHandle() PreemptHandle

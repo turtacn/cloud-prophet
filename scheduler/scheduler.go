@@ -20,10 +20,7 @@ import (
 	internalqueue "github.com/turtacn/cloud-prophet/scheduler/internal/queue"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
-	"github.com/turtacn/cloud-prophet/scheduler/util"
 	"k8s.io/apimachinery/pkg/util/wait"
-	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
 )
 
@@ -64,7 +61,7 @@ type Scheduler struct {
 
 	scheduledPodsHasSynced func() bool
 
-	client clientset.Interface
+	client framework.ClientSet
 }
 
 // Cache returns the cache in scheduler for test to check the data in scheduler.
@@ -162,7 +159,7 @@ var defaultSchedulerOptions = schedulerOptions{
 }
 
 // New returns a Scheduler
-func New(client clientset.Interface,
+func New(client framework.ClientSet,
 	informerFactory framework.SharedInformer,
 	podInformer framework.SharedInformer,
 	stopCh <-chan struct{},
@@ -270,16 +267,13 @@ func initPolicyFromFile(policyFile string, policy *schedulerapi.Policy) error {
 }
 
 // initPolicyFromConfigMap initialize policy from configMap
-func initPolicyFromConfigMap(client clientset.Interface, policyRef *schedulerapi.SchedulerPolicyConfigMapSource, policy *schedulerapi.Policy) error {
-
+func initPolicyFromConfigMap(client framework.ClientSet, policyRef *schedulerapi.SchedulerPolicyConfigMapSource, policy *schedulerapi.Policy) error {
 	return nil
 }
 
 // Run begins watching and scheduling. It waits for cache to be synced, then starts scheduling and blocked until the context is done.
 func (sched *Scheduler) Run(ctx context.Context) {
-	if false && !cache.WaitForCacheSync(ctx.Done(), sched.scheduledPodsHasSynced) {
-		return
-	}
+	// TODO  WaitForCacheSync(ctx.Done(), sched.scheduledPodsHasSynced) {
 	sched.SchedulingQueue.Run()
 	klog.Infof("scheduling queue was ready for in-coming pod.")
 	wait.UntilWithContext(ctx, sched.scheduleOne, 0)
@@ -311,7 +305,7 @@ func (sched *Scheduler) recordSchedulingFailure(prof *profile.Profile, podInfo *
 	}
 }
 
-func updatePod(client clientset.Interface, pod *v1.Pod, condition *v1.PodCondition, nominatedNode string) error {
+func updatePod(client framework.ClientSet, pod *v1.Pod, condition *v1.PodCondition, nominatedNode string) error {
 	klog.Infof("Updating pod condition for %s/%s to (%s==%s, Reason=%s)", pod.Namespace, pod.Name, condition.Type, condition.Status, condition.Reason)
 	podCopy := pod.DeepCopy()
 	// NominatedNodeName is updated only if we are trying to set it, and the value is
@@ -323,7 +317,7 @@ func updatePod(client clientset.Interface, pod *v1.Pod, condition *v1.PodConditi
 	if nominatedNode != "" {
 		podCopy.Status.NominatedNodeName = nominatedNode
 	}
-	return util.PatchPod(client, pod, podCopy)
+	return nil
 }
 
 // assume signals to the cache that a pod is already in the cache, so that binding can be asynchronous.

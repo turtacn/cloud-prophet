@@ -15,7 +15,6 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/runtime"
-	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 )
 
@@ -59,7 +58,7 @@ type frameworkImpl struct {
 	postBindPlugins       []framework.PostBindPlugin
 	permitPlugins         []framework.PermitPlugin
 
-	clientSet       clientset.Interface
+	clientSet       framework.ClientSet
 	informerFactory framework.SharedInformer
 
 	profileName string
@@ -99,7 +98,7 @@ func (f *frameworkImpl) getExtensionPoints(plugins *config.Plugins) []extensionP
 }
 
 type frameworkOptions struct {
-	clientSet            clientset.Interface
+	clientSet            framework.ClientSet
 	informerFactory      framework.SharedInformer
 	snapshotSharedLister framework.SharedLister
 	profileName          string
@@ -112,7 +111,7 @@ type frameworkOptions struct {
 type Option func(*frameworkOptions)
 
 // WithClientSet sets clientSet for the scheduling frameworkImpl.
-func WithClientSet(clientSet clientset.Interface) Option {
+func WithClientSet(clientSet framework.ClientSet) Option {
 	return func(o *frameworkOptions) {
 		o.clientSet = clientSet
 	}
@@ -829,7 +828,7 @@ func (f *frameworkImpl) ListPlugins() map[string][]config.Plugin {
 }
 
 // ClientSet returns a kubernetes clientset.
-func (f *frameworkImpl) ClientSet() clientset.Interface {
+func (f *frameworkImpl) ClientSet() framework.ClientSet {
 	return f.clientSet
 }
 

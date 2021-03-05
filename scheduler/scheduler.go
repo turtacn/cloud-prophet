@@ -22,8 +22,6 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
 	"github.com/turtacn/cloud-prophet/scheduler/util"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/informers"
-	coreinformers "k8s.io/client-go/informers/core/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
@@ -165,8 +163,8 @@ var defaultSchedulerOptions = schedulerOptions{
 
 // New returns a Scheduler
 func New(client clientset.Interface,
-	informerFactory informers.SharedInformerFactory,
-	podInformer coreinformers.PodInformer,
+	informerFactory framework.SharedInformer,
+	podInformer framework.SharedInformer,
 	stopCh <-chan struct{},
 	opts ...Option) (*Scheduler, error) {
 
@@ -193,8 +191,6 @@ func New(client clientset.Interface,
 
 	configurator := &Configurator{
 		client:                   client,
-		informerFactory:          informerFactory,
-		podInformer:              podInformer,
 		schedulerCache:           schedulerCache,
 		StopEverything:           stopEverything,
 		percentageOfNodesToScore: options.percentageOfNodesToScore,
@@ -205,6 +201,12 @@ func New(client clientset.Interface,
 		nodeInfoSnapshot:         snapshot,
 		extenders:                options.extenders,
 		frameworkCapturer:        options.frameworkCapturer,
+	}
+	if podInformer != nil {
+		configurator.podInformer = podInformer.PodLister()
+	}
+	if informerFactory != nil {
+		configurator.informerFactory = informerFactory
 	}
 
 	var sched *Scheduler
@@ -245,9 +247,11 @@ func New(client clientset.Interface,
 	// Additional tweaks to the config produced by the configurator.
 	sched.StopEverything = stopEverything
 	sched.client = client
-	sched.scheduledPodsHasSynced = podInformer.Informer().HasSynced
 
-	addAllEventHandlers(sched, informerFactory, podInformer)
+	if podInformer != nil || informerFactory != nil {
+		sched.scheduledPodsHasSynced = podInformer.HasSynced
+		addAllEventHandlers(sched, informerFactory, podInformer)
+	}
 	return sched, nil
 }
 

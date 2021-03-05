@@ -9,9 +9,6 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config/validation"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/informers"
-	appslisters "k8s.io/client-go/listers/apps/v1"
-	corelisters "k8s.io/client-go/listers/core/v1"
 )
 
 const (
@@ -23,12 +20,8 @@ const (
 
 // PodTopologySpread is a plugin that ensures pod's topologySpreadConstraints is satisfied.
 type PodTopologySpread struct {
-	args             config.PodTopologySpreadArgs
-	sharedLister     framework.SharedLister
-	services         corelisters.ServiceLister
-	replicationCtrls corelisters.ReplicationControllerLister
-	replicaSets      appslisters.ReplicaSetLister
-	statefulSets     appslisters.StatefulSetLister
+	args         config.PodTopologySpreadArgs
+	sharedLister framework.SharedLister
 }
 
 var _ framework.PreFilterPlugin = &PodTopologySpread{}
@@ -68,10 +61,6 @@ func New(plArgs runtime.Object, h framework.FrameworkHandle) (framework.Plugin, 
 		args:         args,
 	}
 	if len(pl.args.DefaultConstraints) != 0 {
-		if h.SharedInformerFactory() == nil {
-			return nil, fmt.Errorf("SharedInformerFactory is nil")
-		}
-		pl.setListers(h.SharedInformerFactory())
 	}
 	return pl, nil
 }
@@ -82,11 +71,4 @@ func getArgs(obj runtime.Object) (config.PodTopologySpreadArgs, error) {
 		return config.PodTopologySpreadArgs{}, fmt.Errorf("want args to be of type PodTopologySpreadArgs, got %T", obj)
 	}
 	return *ptr, nil
-}
-
-func (pl *PodTopologySpread) setListers(factory informers.SharedInformerFactory) {
-	pl.services = factory.Core().V1().Services().Lister()
-	pl.replicationCtrls = factory.Core().V1().ReplicationControllers().Lister()
-	pl.replicaSets = factory.Apps().V1().ReplicaSets().Lister()
-	pl.statefulSets = factory.Apps().V1().StatefulSets().Lister()
 }

@@ -12,17 +12,13 @@ import (
 	utilnode "github.com/turtacn/cloud-prophet/scheduler/helper/node"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/runtime"
-	appslisters "k8s.io/client-go/listers/apps/v1"
-	corelisters "k8s.io/client-go/listers/core/v1"
 )
 
 // SelectorSpread is a plugin that calculates selector spread priority.
 type SelectorSpread struct {
-	sharedLister           framework.SharedLister
-	services               corelisters.ServiceLister
-	replicationControllers corelisters.ReplicationControllerLister
-	replicaSets            appslisters.ReplicaSetLister
-	statefulSets           appslisters.StatefulSetLister
+	sharedLister framework.SharedLister
+	// 可扩展其他label维度的lister，进行调度限制
+	// TODO
 }
 
 var _ framework.PreScorePlugin = &SelectorSpread{}
@@ -170,10 +166,6 @@ func (pl *SelectorSpread) PreScore(ctx context.Context, cycleState *framework.Cy
 	var selector labels.Selector
 	selector = helper.DefaultSelector(
 		pod,
-		pl.services,
-		pl.replicationControllers,
-		pl.replicaSets,
-		pl.statefulSets,
 	)
 	state := &preScoreState{
 		selector: selector,
@@ -188,16 +180,8 @@ func New(_ runtime.Object, handle framework.FrameworkHandle) (framework.Plugin, 
 	if sharedLister == nil {
 		return nil, fmt.Errorf("SnapshotSharedLister is nil")
 	}
-	sharedInformerFactory := handle.SharedInformerFactory()
-	if sharedInformerFactory == nil {
-		return nil, fmt.Errorf("SharedInformerFactory is nil")
-	}
 	return &SelectorSpread{
-		sharedLister:           sharedLister,
-		services:               sharedInformerFactory.Core().V1().Services().Lister(),
-		replicationControllers: sharedInformerFactory.Core().V1().ReplicationControllers().Lister(),
-		replicaSets:            sharedInformerFactory.Apps().V1().ReplicaSets().Lister(),
-		statefulSets:           sharedInformerFactory.Apps().V1().StatefulSets().Lister(),
+		sharedLister: sharedLister,
 	}, nil
 }
 

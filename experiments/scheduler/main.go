@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/klog"
 	"time"
@@ -34,12 +33,9 @@ func main() {
 	defer cancel()
 	//create a fake client
 	client := fake.NewSimpleClientset()
-
-	clusterInformer := informers.NewSharedInformerFactory(client, 0)
-	podInformer := scheduler.NewPodInformer(client, 0)
 	scheduler, err := scheduler.New(client,
-		clusterInformer,
-		podInformer,
+		nil,
+		nil,
 		ctx.Done(),
 		scheduler.WithPodMaxBackoffSeconds(0),
 		scheduler.WithPercentageOfNodesToScore(0),

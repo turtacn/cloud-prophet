@@ -4,30 +4,14 @@ package scheduler
 
 import (
 	"fmt"
-	"reflect"
-
-	"k8s.io/klog/v2"
-
+	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/queue"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/informers"
-	coreinformers "k8s.io/client-go/informers/core/v1"
-	"k8s.io/client-go/tools/cache"
+	"k8s.io/klog/v2"
+	"reflect"
 )
-
-func (sched *Scheduler) onServiceAdd(obj interface{}) {
-	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.ServiceAdd)
-}
-
-func (sched *Scheduler) onServiceUpdate(oldObj interface{}, newObj interface{}) {
-	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.ServiceUpdate)
-}
-
-func (sched *Scheduler) onServiceDelete(obj interface{}) {
-	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.ServiceDelete)
-}
 
 func (sched *Scheduler) addNodeToScheduling(obj interface{}) {
 	node, ok := obj.(*v1.Node)
@@ -89,13 +73,6 @@ func (sched *Scheduler) deleteNodeFromCache(obj interface{}) {
 	switch t := obj.(type) {
 	case *v1.Node:
 		node = t
-	case cache.DeletedFinalStateUnknown:
-		var ok bool
-		node, ok = t.Obj.(*v1.Node)
-		if !ok {
-			klog.Errorf("cannot convert to *v1.Node: %v", t.Obj)
-			return
-		}
 	default:
 		klog.Errorf("cannot convert to *v1.Node: %v", t)
 		return
@@ -131,16 +108,9 @@ func (sched *Scheduler) updatePodInSchedulingQueue(oldObj, newObj interface{}) {
 
 func (sched *Scheduler) deletePodFromSchedulingQueue(obj interface{}) {
 	var pod *v1.Pod
-	switch t := obj.(type) {
+	switch obj.(type) {
 	case *v1.Pod:
 		pod = obj.(*v1.Pod)
-	case cache.DeletedFinalStateUnknown:
-		var ok bool
-		pod, ok = t.Obj.(*v1.Pod)
-		if !ok {
-			utilruntime.HandleError(fmt.Errorf("unable to convert object %T to *v1.Pod in %T", obj, sched))
-			return
-		}
 	default:
 		utilruntime.HandleError(fmt.Errorf("unable to handle object in %T: %T", sched, obj))
 		return
@@ -222,13 +192,6 @@ func (sched *Scheduler) deletePodFromCache(obj interface{}) {
 	switch t := obj.(type) {
 	case *v1.Pod:
 		pod = t
-	case cache.DeletedFinalStateUnknown:
-		var ok bool
-		pod, ok = t.Obj.(*v1.Pod)
-		if !ok {
-			klog.Errorf("cannot convert to *v1.Pod: %v", t.Obj)
-			return
-		}
 	default:
 		klog.Errorf("cannot convert to *v1.Pod: %v", t)
 		return
@@ -301,28 +264,22 @@ func (sched *Scheduler) skipPodUpdate(pod *v1.Pod) bool {
 // to add event handlers for various informers.
 func addAllEventHandlers(
 	sched *Scheduler,
-	informerFactory informers.SharedInformerFactory,
-	podInformer coreinformers.PodInformer,
+	informerFactory framework.SharedInformer, // 节点informer
+	podInformer framework.SharedInformer, // 实例informer
 ) {
 	// scheduled pod cache
-	podInformer.Informer().AddEventHandler(
-		cache.FilteringResourceEventHandler{
+	podInformer.AddEventHandler(
+		framework.FilteringResourceEventHandler{
 			FilterFunc: func(obj interface{}) bool {
 				switch t := obj.(type) {
 				case *v1.Pod:
 					return assignedPod(t)
-				case cache.DeletedFinalStateUnknown:
-					if pod, ok := t.Obj.(*v1.Pod); ok {
-						return assignedPod(pod)
-					}
-					utilruntime.HandleError(fmt.Errorf("unable to convert object %T to *v1.Pod in %T", obj, sched))
-					return false
 				default:
 					utilruntime.HandleError(fmt.Errorf("unable to handle object in %T: %T", sched, obj))
 					return false
 				}
 			},
-			Handler: cache.ResourceEventHandlerFuncs{
+			Handler: framework.ResourceEventHandlerFuncs{
 				AddFunc:    sched.addPodToCache,
 				UpdateFunc: sched.updatePodInCache,
 				DeleteFunc: sched.deletePodFromCache,
@@ -330,24 +287,18 @@ func addAllEventHandlers(
 		},
 	)
 	// unscheduled pod queue
-	podInformer.Informer().AddEventHandler(
-		cache.FilteringResourceEventHandler{
+	podInformer.AddEventHandler(
+		framework.FilteringResourceEventHandler{
 			FilterFunc: func(obj interface{}) bool {
 				switch t := obj.(type) {
 				case *v1.Pod:
 					return !assignedPod(t) && responsibleForPod(t, sched.Profiles)
-				case cache.DeletedFinalStateUnknown:
-					if pod, ok := t.Obj.(*v1.Pod); ok {
-						return !assignedPod(pod) && responsibleForPod(pod, sched.Profiles)
-					}
-					utilruntime.HandleError(fmt.Errorf("unable to convert object %T to *v1.Pod in %T", obj, sched))
-					return false
 				default:
 					utilruntime.HandleError(fmt.Errorf("unable to handle object in %T: %T", sched, obj))
 					return false
 				}
 			},
-			Handler: cache.ResourceEventHandlerFuncs{
+			Handler: framework.ResourceEventHandlerFuncs{
 				AddFunc:    sched.addPodToSchedulingQueue,
 				UpdateFunc: sched.updatePodInSchedulingQueue,
 				DeleteFunc: sched.deletePodFromSchedulingQueue,
@@ -355,25 +306,13 @@ func addAllEventHandlers(
 		},
 	)
 
-	informerFactory.Core().V1().Nodes().Informer().AddEventHandler(
-		cache.ResourceEventHandlerFuncs{
+	informerFactory.AddEventHandler(
+		framework.ResourceEventHandlerFuncs{
 			AddFunc:    sched.addNodeToCache,
 			UpdateFunc: sched.updateNodeInCache,
 			DeleteFunc: sched.deleteNodeFromCache,
 		},
 	)
-
-	// This is for ServiceAffinity: affected by the selector of the service is updated.
-	// Also, if new service is added, equivalence cache will also become invalid since
-	// existing pods may be "captured" by this service and change this predicate result.
-	informerFactory.Core().V1().Services().Informer().AddEventHandler(
-		cache.ResourceEventHandlerFuncs{
-			AddFunc:    sched.onServiceAdd,
-			UpdateFunc: sched.onServiceUpdate,
-			DeleteFunc: sched.onServiceDelete,
-		},
-	)
-
 }
 
 func nodeSchedulingPropertiesChange(newNode *v1.Node, oldNode *v1.Node) string {

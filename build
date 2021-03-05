@@ -1,5 +1,6 @@
 #!/bin/sh
-alias go="docker run --rm -t -i -v \$(pwd):\$(pwd)  -v \$(pwd)/vendor:\$(pwd)/v -w \$(pwd) -e GO111MODULE=on -e GOPROXY=https://goproxy.io --entrypoint /usr/local/go/bin/go golang:1.14-alpine"
+alias go="docker run --rm -t -i -v \$(pwd):\$(pwd) -w \$(pwd) -e GO111MODULE=on -e GOPROXY=https://goproxy.io --entrypoint /usr/local/go/bin/go golang:1.14-alpine"
+alias go="docker run --rm -t -i -v \$(pwd):\$(pwd) -w \$(pwd) -e GO111MODULE=on -e GOPROXY=https://goproxy.io --entrypoint /usr/local/go/bin/go golang:1.14"
 echo "*******************************************"
 echo "*"`go version`
 echo "*******************************************"
@@ -10,10 +11,5 @@ git pull
 #go mod tidy
 #go mod verify
 
-go build -v -o ./auto  experiments/autopilot/main.go
-go build -v -o ./sched  experiments/scheduler/main.go
-
-#go build -v -o ./${COMMIT}/cpu  app/ctl/mainCPU.go
-#go build -v -o ./${COMMIT}/nnet app/ctl/mainNeural.go
-#go build -v -o ./${COMMIT}/ql   app/ctl/mainQl.go
-#go build -v -o ./${COMMIT}/     app/ctl/neural.go
+go build -mod=mod -v -o ./auto  experiments/autopilot/main.go
+go build -mod=mod -v -o ./sched  experiments/scheduler/main.go

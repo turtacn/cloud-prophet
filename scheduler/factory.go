@@ -27,7 +27,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/informers"
 	coreinformers "k8s.io/client-go/informers/core/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
@@ -45,9 +44,9 @@ type Binder interface {
 type Configurator struct {
 	client clientset.Interface
 
-	informerFactory informers.SharedInformerFactory
+	informerFactory framework.SharedInformer
 
-	podInformer coreinformers.PodInformer
+	podInformer framework.SharedPodsLister
 
 	// Close this to stop all reflectors
 	StopEverything <-chan struct{}
@@ -171,7 +170,7 @@ func (c *Configurator) create() (*Scheduler, error) {
 		Algorithm:       algo,
 		Profiles:        profiles,
 		NextPod:         internalqueue.MakeNextPodFunc(podQueue),
-		Error:           MakeDefaultErrorFunc(c.client, c.informerFactory.Core().V1().Pods().Lister(), podQueue, c.schedulerCache),
+		Error:           MakeDefaultErrorFunc(c.client, c.podInformer, podQueue, c.schedulerCache),
 		StopEverything:  c.StopEverything,
 		SchedulingQueue: podQueue,
 	}, nil
@@ -414,7 +413,7 @@ func NewPodInformer(client clientset.Interface, resyncPeriod time.Duration) core
 }
 
 // MakeDefaultErrorFunc construct a function to handle pod scheduler error
-func MakeDefaultErrorFunc(client clientset.Interface, podLister corelisters.PodLister, podQueue internalqueue.SchedulingQueue, schedulerCache internalcache.Cache) func(*framework.QueuedPodInfo, error) {
+func MakeDefaultErrorFunc(client clientset.Interface, podInformer framework.SharedPodsLister, podQueue internalqueue.SchedulingQueue, schedulerCache internalcache.Cache) func(*framework.QueuedPodInfo, error) {
 	return func(podInfo *framework.QueuedPodInfo, err error) {
 		pod := podInfo.Pod
 		if err == core.ErrNoNodesAvailable {
@@ -442,7 +441,7 @@ func MakeDefaultErrorFunc(client clientset.Interface, podLister corelisters.PodL
 		}
 
 		// Check if the Pod exists in informer cache.
-		cachedPod, err := podLister.Pods(pod.Namespace).Get(pod.Name)
+		cachedPod, err := podInformer.PodInfos().Get(pod.Name)
 		if err != nil {
 			klog.Warningf("Pod %v/%v doesn't exist in informer cache: %v", pod.Namespace, pod.Name, err)
 			return

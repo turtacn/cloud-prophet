@@ -16,3 +16,12 @@ type NodeInfoLister interface {
 type SharedLister interface {
 	NodeInfos() NodeInfoLister
 }
+
+type SharedPodsLister interface {
+	PodInfos() PodInfoLister
+}
+
+type PodInfoLister interface {
+	List(string) ([]*PodInfo, error) // host has pods
+	Get(podName string) (*PodInfo, error)
+}

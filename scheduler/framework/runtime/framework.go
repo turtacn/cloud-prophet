@@ -15,7 +15,6 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 )
@@ -61,7 +60,7 @@ type frameworkImpl struct {
 	permitPlugins         []framework.PermitPlugin
 
 	clientSet       clientset.Interface
-	informerFactory informers.SharedInformerFactory
+	informerFactory framework.SharedInformer
 
 	profileName string
 
@@ -101,7 +100,7 @@ func (f *frameworkImpl) getExtensionPoints(plugins *config.Plugins) []extensionP
 
 type frameworkOptions struct {
 	clientSet            clientset.Interface
-	informerFactory      informers.SharedInformerFactory
+	informerFactory      framework.SharedInformer
 	snapshotSharedLister framework.SharedLister
 	profileName          string
 	podNominator         framework.PodNominator
@@ -120,7 +119,7 @@ func WithClientSet(clientSet clientset.Interface) Option {
 }
 
 // WithInformerFactory sets informer factory for the scheduling frameworkImpl.
-func WithInformerFactory(informerFactory informers.SharedInformerFactory) Option {
+func WithInformerFactory(informerFactory framework.SharedInformer) Option {
 	return func(o *frameworkOptions) {
 		o.informerFactory = informerFactory
 	}
@@ -835,7 +834,7 @@ func (f *frameworkImpl) ClientSet() clientset.Interface {
 }
 
 // SharedInformerFactory returns a shared informer factory.
-func (f *frameworkImpl) SharedInformerFactory() informers.SharedInformerFactory {
+func (f *frameworkImpl) SharedInformerFactory() framework.SharedInformer {
 	return f.informerFactory
 }
 

@@ -13,7 +13,6 @@ import (
 
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	"k8s.io/client-go/informers"
 	clientset "k8s.io/client-go/kubernetes"
 )
 
@@ -497,8 +496,6 @@ type FrameworkHandle interface {
 
 	// ClientSet returns a kubernetes clientSet.
 	ClientSet() clientset.Interface
-
-	SharedInformerFactory() informers.SharedInformerFactory
 
 	// TODO: unroll the wrapped interfaces to FrameworkHandle.
 	PreemptHandle() PreemptHandle

@@ -62,7 +62,7 @@ type PodTopologySpreadArgs struct {
 	// deduced the pods' membership to Services, Replication Controllers, Replica
 	// Sets or Stateful Sets.
 	// Empty by default.
-	DefaultConstraints []v1.TopologySpreadConstraint
+	DefaultConstraints []v1.TopologySpreadConstraint // 在label调度空间中指定分布限制
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

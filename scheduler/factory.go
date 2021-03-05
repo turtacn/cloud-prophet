@@ -11,13 +11,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/turtacn/cloud-prophet/scheduler/algorithmprovider"
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
-	"github.com/turtacn/cloud-prophet/scheduler/apis/config/validation"
 	"github.com/turtacn/cloud-prophet/scheduler/core"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
 	frameworkplugins "github.com/turtacn/cloud-prophet/scheduler/framework/plugins"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/defaultbinder"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/noderesources"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/queuesort"
 	frameworkruntime "github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	internalcache "github.com/turtacn/cloud-prophet/scheduler/internal/cache"
@@ -189,105 +186,6 @@ func (c *Configurator) createFromProvider(providerName string) (*Scheduler, erro
 		plugins.Apply(prof.Plugins)
 		prof.Plugins = plugins
 	}
-	return c.create()
-}
-
-// createFromConfig creates a scheduler from the configuration file
-// Only reachable when using v1alpha1 component config
-func (c *Configurator) createFromConfig(policy schedulerapi.Policy) (*Scheduler, error) {
-	lr := frameworkplugins.NewLegacyRegistry()
-	args := &frameworkplugins.ConfigProducerArgs{}
-
-	klog.Infof("Creating scheduler from configuration: %v", policy)
-
-	// validate the policy configuration
-	if err := validation.ValidatePolicy(policy); err != nil {
-		return nil, err
-	}
-
-	predicateKeys := sets.NewString()
-	if policy.Predicates == nil {
-		klog.Infof("Using predicates from algorithm provider '%v'", schedulerapi.SchedulerDefaultProviderName)
-		predicateKeys = lr.DefaultPredicates
-	} else {
-		for _, predicate := range policy.Predicates {
-			klog.Infof("Registering predicate: %s", predicate.Name)
-			predicateKeys.Insert(lr.ProcessPredicatePolicy(predicate, args))
-		}
-	}
-
-	priorityKeys := make(map[string]int64)
-	if policy.Priorities == nil {
-		klog.Infof("Using default priorities")
-		priorityKeys = lr.DefaultPriorities
-	} else {
-		for _, priority := range policy.Priorities {
-			if priority.Name == frameworkplugins.EqualPriority {
-				klog.Infof("Skip registering priority: %s", priority.Name)
-				continue
-			}
-			klog.Infof("Registering priority: %s", priority.Name)
-			priorityKeys[lr.ProcessPriorityPolicy(priority, args)] = priority.Weight
-		}
-	}
-
-	// HardPodAffinitySymmetricWeight in the policy config takes precedence over
-	// CLI configuration.
-	if policy.HardPodAffinitySymmetricWeight != 0 {
-		args.InterPodAffinityArgs = &schedulerapi.InterPodAffinityArgs{
-			HardPodAffinityWeight: policy.HardPodAffinitySymmetricWeight,
-		}
-	}
-
-	// When AlwaysCheckAllPredicates is set to true, scheduler checks all the configured
-	// predicates even after one or more of them fails.
-	if policy.AlwaysCheckAllPredicates {
-		c.alwaysCheckAllPredicates = policy.AlwaysCheckAllPredicates
-	}
-
-	klog.Infof("Creating scheduler with fit predicates '%v' and priority functions '%v'", predicateKeys, priorityKeys)
-
-	pluginsForPredicates, pluginConfigForPredicates, err := getPredicateConfigs(predicateKeys, lr, args)
-	if err != nil {
-		return nil, err
-	}
-
-	pluginsForPriorities, pluginConfigForPriorities, err := getPriorityConfigs(priorityKeys, lr, args)
-	if err != nil {
-		return nil, err
-	}
-	// Combine all framework configurations. If this results in any duplication, framework
-	// instantiation should fail.
-	var defPlugins schedulerapi.Plugins
-	// "PrioritySort" and "DefaultBinder" were neither predicates nor priorities
-	// before. We add them by default.
-	defPlugins.Append(&schedulerapi.Plugins{
-		QueueSort: &schedulerapi.PluginSet{
-			Enabled: []schedulerapi.Plugin{{Name: queuesort.Name}},
-		},
-		Bind: &schedulerapi.PluginSet{
-			Enabled: []schedulerapi.Plugin{{Name: defaultbinder.Name}},
-		},
-		PostBind: &schedulerapi.PluginSet{
-			Enabled: []schedulerapi.Plugin{{Name: defaultbinder.NameFakeAllocater}},
-		},
-	})
-	defPlugins.Append(pluginsForPredicates)
-	defPlugins.Append(pluginsForPriorities)
-	defPluginConfig, err := mergePluginConfigsFromPolicy(pluginConfigForPredicates, pluginConfigForPriorities)
-	if err != nil {
-		return nil, err
-	}
-	for i := range c.profiles {
-		prof := &c.profiles[i]
-		// Plugins are empty when using Policy.
-		prof.Plugins = &schedulerapi.Plugins{}
-		prof.Plugins.Append(&defPlugins)
-
-		// PluginConfig is ignored when using Policy.
-		prof.PluginConfig = defPluginConfig
-	}
-
 	return c.create()
 }
 

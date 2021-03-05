@@ -24,7 +24,6 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/util"
 	ktypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/tools/cache"
 )
 
 const (
@@ -786,10 +785,8 @@ func MakeNextPodFunc(queue SchedulingQueue) func() *framework.QueuedPodInfo {
 }
 
 func podInfoKeyFunc(obj interface{}) (string, error) {
-	ret, err := cache.MetaNamespaceKeyFunc(obj.(*framework.QueuedPodInfo).Pod)
-	if err != nil {
-		pod := obj.(*framework.QueuedPodInfo).Pod
-		return fmt.Sprintf("%s-%s-%s", pod.Namespace, pod.TypeMeta, pod.Name), nil
+	if obj == nil {
+		return "", nil
 	}
-	return ret, nil
+	return obj.(*framework.QueuedPodInfo).Pod.UID, nil
 }

@@ -38,7 +38,6 @@ func (b DefaultBinder) Bind(ctx context.Context, state *framework.CycleState, p 
 		Target:     v1.ObjectReference{Kind: "Node", Name: nodeName},
 	}
 	if binding == nil {
-
 	}
 	return nil
 }

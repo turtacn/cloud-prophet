@@ -99,8 +99,6 @@ type KubeSchedulerProfile struct {
 // SchedulerAlgorithmSource is the source of a scheduler algorithm. One source
 // field must be specified, and source fields are mutually exclusive.
 type SchedulerAlgorithmSource struct {
-	// Policy is a policy based algorithm source.
-	Policy *SchedulerPolicySource
 	// Provider is the name of a scheduling algorithm provider to use.
 	Provider *string
 }

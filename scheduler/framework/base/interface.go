@@ -13,7 +13,6 @@ import (
 
 	"github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	//clientset "k8s.io/client-go/kubernetes"
 )
 
 // NodeScoreList declares a list of nodes and their scores.

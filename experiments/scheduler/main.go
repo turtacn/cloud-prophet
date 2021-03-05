@@ -16,6 +16,7 @@ import (
 
 var (
 	hostInfoFile           = flag.String("host-info", "hosts.csv", `节点元信息csv文件（包含起始状态）`)
+	hostUtilityFile        = flag.String("host-util", "utility.csv", `节点CPU利用率csv文件，带时间戳`)
 	scheduleTraceFile      = flag.String("schedule-trace", "schedule.csv", `调度trace文件`)
 	scheduleIntervalSecond = flag.Int("pod-interval", 1, "pod资源请求间隔")
 )

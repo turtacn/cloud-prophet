@@ -33,7 +33,6 @@ func (la *LeastAllocated) Name() string {
 // Score invoked at the score extension point.
 func (la *LeastAllocated) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
 	nodeInfo, err := la.handle.SnapshotSharedLister().NodeInfos().Get(nodeName)
-	//klog.Infof("LeastAllocated Score by name get node %v", nodeInfo)
 	if err != nil {
 		return 0, framework.NewStatus(framework.Error, fmt.Sprintf("getting node %q from Snapshot: %v", nodeName, err))
 	}

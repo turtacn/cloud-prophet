@@ -5,19 +5,11 @@ package algorithmprovider
 import (
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/defaultbinder"
-	//"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/imagelocality"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/interpodaffinity"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeaffinity"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodename"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/noderesources"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/nodeunschedulable"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/podtopologyspread"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/queuesort"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/selectorspread"
-	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/tainttoleration"
 	// 这里扩展调度插件扩展的引用
-	// 1. 抢占逻辑在k8s调度框架中为PostFilter, TODO
-	"k8s.io/klog/v2"
 	"sort"
 	"strings"
 )
@@ -31,10 +23,7 @@ type Registry map[string]*schedulerapi.Plugins
 // NewRegistry returns an algorithm provider registry instance.
 func NewRegistry() Registry {
 	defaultConfig := getDefaultConfig()
-	applyFeatureGates(defaultConfig)
-
 	caConfig := getClusterAutoscalerConfig()
-	applyFeatureGates(caConfig)
 
 	return Registry{
 		schedulerapi.SchedulerDefaultProviderName: defaultConfig,
@@ -69,11 +58,7 @@ func getDefaultConfig() *schedulerapi.Plugins {
 		},
 		Filter: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{
-				{Name: nodeunschedulable.Name},
 				{Name: noderesources.FitName},
-				{Name: nodename.Name},
-				{Name: nodeaffinity.Name},
-				{Name: tainttoleration.Name},
 				{Name: podtopologyspread.Name},
 				{Name: interpodaffinity.Name},
 			},
@@ -83,7 +68,6 @@ func getDefaultConfig() *schedulerapi.Plugins {
 			Enabled: []schedulerapi.Plugin{
 				{Name: interpodaffinity.Name},
 				{Name: podtopologyspread.Name},
-				{Name: tainttoleration.Name},
 			},
 		},
 		Score: &schedulerapi.PluginSet{
@@ -125,14 +109,4 @@ func getClusterAutoscalerConfig() *schedulerapi.Plugins {
 		}
 	}
 	return caConfig
-}
-
-func applyFeatureGates(config *schedulerapi.Plugins) {
-	// When feature is enabled, the default spreading is done by
-	// PodTopologySpread plugin, which is enabled by default.
-	klog.Infof("Registering SelectorSpread plugin")
-	s := schedulerapi.Plugin{Name: selectorspread.Name}
-	config.PreScore.Enabled = append(config.PreScore.Enabled, s)
-	s.Weight = 1
-	config.Score.Enabled = append(config.Score.Enabled, s)
 }

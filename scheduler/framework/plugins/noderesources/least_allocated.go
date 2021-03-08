@@ -77,8 +77,8 @@ func NewLeastAllocated(laArgs runtime.Object, h framework.FrameworkHandle) (fram
 	}, nil
 }
 
-func leastResourceScorer(resToWeightMap resourceToWeightMap) func(resourceToValueMap, resourceToValueMap, bool, int, int) int64 {
-	return func(requested, allocable resourceToValueMap, includeVolumes bool, requestedVolumes int, allocatableVolumes int) int64 {
+func leastResourceScorer(resToWeightMap resourceToWeightMap) func(resourceToValueMap, resourceToValueMap) int64 {
+	return func(requested, allocable resourceToValueMap) int64 {
 		var nodeScore, weightSum int64
 		klog.Infof("leastResourceScorer find resource to weight map size is %d", len(resToWeightMap))
 		if len(resToWeightMap) == 0 {

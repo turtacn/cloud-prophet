@@ -16,9 +16,10 @@ type resourceToWeightMap map[v1.ResourceName]int64
 var defaultRequestedRatioResources = resourceToWeightMap{v1.ResourceMemory: 1, v1.ResourceCPU: 1}
 
 // resourceAllocationScorer contains information to calculate resource allocation score.
+// 扩展支持volume资源
 type resourceAllocationScorer struct {
 	Name                string
-	scorer              func(requested, allocable resourceToValueMap, includeVolumes bool, requestedVolumes int, allocatableVolumes int) int64
+	scorer              func(requested, allocable resourceToValueMap) int64
 	resourceToWeightMap resourceToWeightMap
 }
 
@@ -46,16 +47,15 @@ func (r *resourceAllocationScorer) score(
 	var score int64
 
 	// 打分，将一般资源和扩展资源分开处理
-	score = r.scorer(requested, allocatable, false, 0, 0)
+	score = r.scorer(requested, allocatable)
 
-	if true {
-
+	// 每个节点输出打分
+	if false {
 		klog.Infof(
 			"%v -> %v: %v, map of allocatable resources %v, map of requested resources %v ,score %d,",
 			pod.Name, node.Name, r.Name,
 			allocatable, requested, score,
 		)
-
 	}
 
 	return score, nil

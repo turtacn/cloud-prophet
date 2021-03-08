@@ -285,6 +285,7 @@ type PreScorePlugin interface {
 	PreScore(ctx context.Context, state *CycleState, pod *v1.Pod, nodes []*v1.Node) *Status
 }
 
+// 打分规格化处理
 // ScoreExtensions is an interface for Score extended functionality.
 type ScoreExtensions interface {
 	// NormalizeScore is called for all node scores produced by the same plugin's "Score"

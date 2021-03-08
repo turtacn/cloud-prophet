@@ -75,8 +75,8 @@ func NewMostAllocated(maArgs runtime.Object, h framework.FrameworkHandle) (frame
 	}, nil
 }
 
-func mostResourceScorer(resToWeightMap resourceToWeightMap) func(requested, allocable resourceToValueMap, includeVolumes bool, requestedVolumes int, allocatableVolumes int) int64 {
-	return func(requested, allocable resourceToValueMap, includeVolumes bool, requestedVolumes int, allocatableVolumes int) int64 {
+func mostResourceScorer(resToWeightMap resourceToWeightMap) func(requested, allocable resourceToValueMap) int64 {
+	return func(requested, allocable resourceToValueMap) int64 {
 		var nodeScore, weightSum int64
 		klog.Infof("mostResourceScorer find resource to weight map size is %d", len(resToWeightMap))
 		if len(resToWeightMap) == 0 {

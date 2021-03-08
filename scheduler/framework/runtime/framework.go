@@ -162,6 +162,7 @@ func WithExtenders(extenders []framework.Extender) Option {
 
 var defaultFrameworkOptions = frameworkOptions{}
 
+// 抢占调度
 var _ framework.PreemptHandle = &preemptHandle{}
 
 type preemptHandle struct {
@@ -346,7 +347,7 @@ func (f *frameworkImpl) RunPreFilterPlugins(ctx context.Context, state *framewor
 	klog.Infof("To run %d prefilter plugin", len(f.preFilterPlugins))
 	for _, pl := range f.preFilterPlugins {
 		status = f.runPreFilterPlugin(ctx, pl, state, pod)
-		klog.Infof("Run prefilter plugin %s success[%t]", pl.Name(), status.IsSuccess())
+		//klog.Infof("Run prefilter plugin %s success[%t]", pl.Name(), status.IsSuccess())
 		if !status.IsSuccess() {
 			if status.IsUnschedulable() {
 				return status

@@ -7,6 +7,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/interpodaffinity"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/noderesources"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/podtopologyspread"
+	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/selectorspread"
 	//  调度插件扩展在这里追加
 	//  ...
 	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
@@ -23,8 +24,6 @@ const (
 	// SelectorSpreadPriority defines the name of prioritizer function that spreads pods by minimizing
 	// the number of pods (belonging to the same service or replication controller) on the same node.
 	SelectorSpreadPriority = "SelectorSpreadPriority"
-	// ServiceSpreadingPriority is largely replaced by "SelectorSpreadPriority".
-	ServiceSpreadingPriority = "ServiceSpreadingPriority"
 	// InterPodAffinityPriority defines the name of prioritizer function that decides which pods should or
 	// should not be placed in the same topological domain as some other pods.
 	InterPodAffinityPriority = "InterPodAffinityPriority"
@@ -76,22 +75,6 @@ const (
 	CheckNodeLabelPresencePred = "CheckNodeLabelPresence"
 	// CheckServiceAffinityPred defines the name of predicate checkServiceAffinity.
 	CheckServiceAffinityPred = "CheckServiceAffinity"
-	// MaxEBSVolumeCountPred defines the name of predicate MaxEBSVolumeCount.
-	// DEPRECATED
-	// All cloudprovider specific predicates are deprecated in favour of MaxCSIVolumeCountPred.
-	MaxEBSVolumeCountPred = "MaxEBSVolumeCount"
-	// MaxGCEPDVolumeCountPred defines the name of predicate MaxGCEPDVolumeCount.
-	// DEPRECATED
-	// All cloudprovider specific predicates are deprecated in favour of MaxCSIVolumeCountPred.
-	MaxGCEPDVolumeCountPred = "MaxGCEPDVolumeCount"
-	// MaxAzureDiskVolumeCountPred defines the name of predicate MaxAzureDiskVolumeCount.
-	// DEPRECATED
-	// All cloudprovider specific predicates are deprecated in favour of MaxCSIVolumeCountPred.
-	MaxAzureDiskVolumeCountPred = "MaxAzureDiskVolumeCount"
-	// MaxCinderVolumeCountPred defines the name of predicate MaxCinderDiskVolumeCount.
-	// DEPRECATED
-	// All cloudprovider specific predicates are deprecated in favour of MaxCSIVolumeCountPred.
-	MaxCinderVolumeCountPred = "MaxCinderVolumeCount"
 	// MaxCSIVolumeCountPred defines the predicate that decides how many CSI volumes should be attached.
 	MaxCSIVolumeCountPred = "MaxCSIVolumeCountPred"
 	// NoVolumeZoneConflictPred defines the name of predicate NoVolumeZoneConflict.
@@ -106,8 +89,8 @@ func PredicateOrdering() []string {
 		GeneralPred, HostNamePred, PodFitsHostPortsPred,
 		MatchNodeSelectorPred, PodFitsResourcesPred, NoDiskConflictPred,
 		PodToleratesNodeTaintsPred, CheckNodeLabelPresencePred,
-		CheckServiceAffinityPred, MaxEBSVolumeCountPred, MaxGCEPDVolumeCountPred, MaxCSIVolumeCountPred,
-		MaxAzureDiskVolumeCountPred, MaxCinderVolumeCountPred, CheckVolumeBindingPred, NoVolumeZoneConflictPred,
+		CheckServiceAffinityPred, MaxCSIVolumeCountPred,
+		CheckVolumeBindingPred, NoVolumeZoneConflictPred,
 		EvenPodsSpreadPred, MatchInterPodAffinityPred}
 }
 
@@ -159,9 +142,6 @@ func NewLegacyRegistry() *LegacyRegistry {
 		// Used as the default set of predicates if Policy was specified, but predicates was nil.
 		DefaultPredicates: sets.NewString(
 			NoVolumeZoneConflictPred,
-			MaxEBSVolumeCountPred,
-			MaxGCEPDVolumeCountPred,
-			MaxAzureDiskVolumeCountPred,
 			MaxCSIVolumeCountPred,
 			MatchInterPodAffinityPred,
 			NoDiskConflictPred,
@@ -228,9 +208,20 @@ func NewLegacyRegistry() *LegacyRegistry {
 			}
 			return
 		})
+	registry.registerPriorityConfigProducer(SelectorSpreadPriority,
+		func(args ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
+			plugins.PreScore = appendToPluginSet(plugins.PreScore, selectorspread.Name, nil)
+			plugins.Score = appendToPluginSet(plugins.Score, selectorspread.Name, &args.Weight)
+			return
+		})
 	registry.registerPriorityConfigProducer(MostRequestedPriority,
 		func(args ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
 			plugins.Score = appendToPluginSet(plugins.Score, noderesources.MostAllocatedName, &args.Weight)
+			return
+		})
+	registry.registerPriorityConfigProducer(RequestedToCapacityRatioPriority,
+		func(args ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
+			plugins.Score = appendToPluginSet(plugins.Score, noderesources.RequestedToCapacityRatioName, &args.Weight)
 			return
 		})
 	registry.registerPriorityConfigProducer(BalancedResourceAllocation,
@@ -357,21 +348,6 @@ func validatePredicateOrDie(predicate config.PredicatePolicy) {
 		}
 		if numArgs != 1 {
 			klog.Fatalf("Exactly 1 predicate argument is required, numArgs: %v, Predicate: %s", numArgs, predicate.Name)
-		}
-	}
-}
-
-func validatePriorityOrDie(priority config.PriorityPolicy) {
-	if priority.Argument != nil {
-		numArgs := 0
-		if priority.Argument.LabelPreference != nil {
-			numArgs++
-		}
-		if priority.Argument.RequestedToCapacityRatioArguments != nil {
-			numArgs++
-		}
-		if numArgs != 1 {
-			klog.Fatalf("Exactly 1 priority argument is required, numArgs: %v, Priority: %s", numArgs, priority.Name)
 		}
 	}
 }

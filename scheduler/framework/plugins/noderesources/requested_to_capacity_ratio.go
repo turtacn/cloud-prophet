@@ -107,7 +107,7 @@ func (pl *RequestedToCapacityRatio) ScoreExtensions() framework.ScoreExtensions 
 	return nil
 }
 
-func buildRequestedToCapacityRatioScorerFunction(scoringFunctionShape functionShape, resourceToWeightMap resourceToWeightMap) func(resourceToValueMap, resourceToValueMap, bool, int, int) int64 {
+func buildRequestedToCapacityRatioScorerFunction(scoringFunctionShape functionShape, resourceToWeightMap resourceToWeightMap) func(resourceToValueMap, resourceToValueMap) int64 {
 	rawScoringFunction := buildBrokenLinearFunction(scoringFunctionShape)
 	resourceScoringFunction := func(requested, capacity int64) int64 {
 		if capacity == 0 || requested > capacity {
@@ -116,7 +116,7 @@ func buildRequestedToCapacityRatioScorerFunction(scoringFunctionShape functionSh
 
 		return rawScoringFunction(maxUtilization - (capacity-requested)*maxUtilization/capacity)
 	}
-	return func(requested, allocable resourceToValueMap, includeVolumes bool, requestedVolumes int, allocatableVolumes int) int64 {
+	return func(requested, allocable resourceToValueMap) int64 {
 		var nodeScore, weightSum int64
 		for resource, weight := range resourceToWeightMap {
 			resourceScore := resourceScoringFunction(requested[resource], allocable[resource])

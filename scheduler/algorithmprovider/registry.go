@@ -63,30 +63,28 @@ func getDefaultConfig() *schedulerapi.Plugins {
 				{Name: interpodaffinity.Name},
 			},
 		},
-		PostFilter: &schedulerapi.PluginSet{},
+		PostFilter: &schedulerapi.PluginSet{}, // 扩展支持抢占
 		PreScore: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{
 				{Name: interpodaffinity.Name},
 				{Name: podtopologyspread.Name},
 			},
 		},
+		// 核心打分算法
 		Score: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{
-				//{Name: noderesources.BalancedAllocationName, Weight: 0},
-				//{Name: imagelocality.Name, Weight: 0},
-				//{Name: interpodaffinity.Name, Weight: 0},
-				//{Name: noderesources.LeastAllocatedName, Weight: 0}, //  spread 模式 剩余资源多优先
-				{Name: noderesources.MostAllocatedName, Weight: 1}, //  binpack模式 剩余资源少优先
-				//{Name: nodeaffinity.Name, Weight: 0},
+				{Name: noderesources.RequestedToCapacityRatioName, Weight: 0}, // 资源请求面向节点可用资源成比例优先
+				{Name: noderesources.BalancedAllocationName, Weight: 1},       // 资源请求面向平衡
+				//{Name: noderesources.LeastAllocatedName, Weight: 0},             // spread 模式 剩余资源多优先
+				{Name: noderesources.MostAllocatedName, Weight: 1}, // binpack模式 剩余资源少优先
 				// Weight is doubled because:
 				// - This is a score coming from user preference.
 				// - It makes its signal comparable to NodeResourcesLeastAllocated.
-				//{Name: podtopologyspread.Name, Weight: 0},
-				//{Name: tainttoleration.Name, Weight: 0},
+				{Name: podtopologyspread.Name, Weight: 2},
 			},
 		},
-		Reserve: &schedulerapi.PluginSet{},
-		PreBind: &schedulerapi.PluginSet{},
+		Reserve: &schedulerapi.PluginSet{}, // volume, port binding 阶段
+		PreBind: &schedulerapi.PluginSet{}, // volume, port binding 阶段
 		Bind: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{
 				{Name: defaultbinder.Name},

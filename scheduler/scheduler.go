@@ -74,6 +74,8 @@ type schedulerOptions struct {
 	percentageOfNodesToScore int32
 	podInitialBackoffSeconds int64
 	podMaxBackoffSeconds     int64
+	printHostScore           bool
+
 	// Contains out-of-tree plugins to be merged with the in-tree registry.
 	frameworkOutOfTreeRegistry frameworkruntime.Registry
 	profiles                   []schedulerapi.KubeSchedulerProfile
@@ -96,6 +98,12 @@ func WithProfiles(p ...schedulerapi.KubeSchedulerProfile) Option {
 func WithAlgorithmSource(source schedulerapi.SchedulerAlgorithmSource) Option {
 	return func(o *schedulerOptions) {
 		o.schedulerAlgorithmSource = source
+	}
+}
+
+func WithPrintHostScheduleDetail(printHostScore bool) Option {
+	return func(o *schedulerOptions) {
+		o.printHostScore = printHostScore
 	}
 }
 
@@ -193,6 +201,7 @@ func New(client framework.ClientSet,
 		percentageOfNodesToScore: options.percentageOfNodesToScore,
 		podInitialBackoffSeconds: options.podInitialBackoffSeconds,
 		podMaxBackoffSeconds:     options.podMaxBackoffSeconds,
+		hostPrintedScheduleTrace: options.printHostScore,
 		profiles:                 append([]schedulerapi.KubeSchedulerProfile(nil), options.profiles...),
 		registry:                 registry,
 		nodeInfoSnapshot:         snapshot,
@@ -370,7 +379,6 @@ func (sched *Scheduler) finishBinding(prof *profile.Profile, assumed *v1.Pod, ta
 func (sched *Scheduler) scheduleOne(ctx context.Context) {
 	klog.Infof("prepare next pod for scheduler")
 	podInfo := sched.NextPod()
-	klog.Infof("watch resource allocate pod request=%v, next pod was called.", podInfo)
 	// pod could be nil when schedulerQueue is closed
 	if podInfo == nil || podInfo.Pod == nil {
 		return
@@ -534,10 +542,9 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 			newNode.Status.Allocatable.CpuSub(schedRequest.Cpu())
 			newNode.Status.Allocatable.MemSub(schedRequest.Memory())
 			pc, _ := sched.SchedulerCache.PodCount()
-			klog.Infof("[===]node %s cpu %d memory %d; total pods count %d", newNode.Name, newNode.Status.Allocatable.Cpu().MilliValue(), newNode.Status.Allocatable.Memory().Value(), pc)
 			newNodeInfo.AddPod(assumedPod)
 			sched.updateNodeInCache(targetNode.Node(), newNode)
-
+			klog.Infof("Node %s cpu %d memory %d; has pods %d/%d", newNode.Name, newNode.Status.Allocatable.Cpu().MilliValue(), newNode.Status.Allocatable.Memory().Value(), len(newNodeInfo.Pods), pc)
 		}
 	}()
 	// 以上完成调度的全过程

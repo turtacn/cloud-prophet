@@ -7,7 +7,7 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
-	"io/ioutil"
+	//"io/ioutil"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
@@ -19,16 +19,18 @@ var (
 	hostUtilityFile        = flag.String("host-util", "utility.csv", `节点CPU利用率csv文件，带时间戳`)
 	scheduleTraceFile      = flag.String("schedule-trace", "schedule.csv", `调度trace文件`)
 	scheduleIntervalSecond = flag.Int("pod-interval", 1, "pod资源请求间隔")
+	printableHostFlag      = flag.Bool("print-host", false, "是否打印出候选节点的调度详情（默认false）")
 )
 
 type Option func(registry runtime.Registry) error
 
 func main() {
-	klog.InitFlags(flag.CommandLine)
+	//  增加、去掉 log 相关的命令行参数
+	//klog.InitFlags(flag.CommandLine)
 	flag.Parse()
-	flag.Set("logtostderr", "false")
-	flag.Set("alsologtostderr", "false")
-	klog.SetOutput(ioutil.Discard)
+	//flag.Set("logtostderr", "false")
+	//flag.Set("alsologtostderr", "false")
+	//klog.SetOutput(ioutil.Discard)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	//create a fake client
@@ -37,7 +39,7 @@ func main() {
 		nil,
 		ctx.Done(),
 		scheduler.WithPodMaxBackoffSeconds(0),
-		scheduler.WithPercentageOfNodesToScore(0),
+		scheduler.WithPercentageOfNodesToScore(100),
 	)
 
 	if err != nil {

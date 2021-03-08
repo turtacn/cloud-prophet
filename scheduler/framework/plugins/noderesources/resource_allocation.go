@@ -1,4 +1,4 @@
-//
+// 资源分配打分的基座
 //
 package noderesources
 
@@ -21,6 +21,7 @@ type resourceAllocationScorer struct {
 	Name                string
 	scorer              func(requested, allocable resourceToValueMap) int64
 	resourceToWeightMap resourceToWeightMap
+	printHostFlag       bool
 }
 
 // resourceToValueMap contains resource name and score.
@@ -50,7 +51,7 @@ func (r *resourceAllocationScorer) score(
 	score = r.scorer(requested, allocatable)
 
 	// 每个节点输出打分
-	if false {
+	if r.printHostFlag {
 		klog.Infof(
 			"%v -> %v: %v, map of allocatable resources %v, map of requested resources %v ,score %d,",
 			pod.Name, node.Name, r.Name,

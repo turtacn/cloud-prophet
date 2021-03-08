@@ -45,9 +45,6 @@ type Configurator struct {
 
 	schedulerCache internalcache.Cache
 
-	// Disable pod preemption or not.
-	disablePreemption bool
-
 	// Always check all predicates even if the middle of one predicate fails.
 	alwaysCheckAllPredicates bool
 
@@ -57,6 +54,8 @@ type Configurator struct {
 	podInitialBackoffSeconds int64
 
 	podMaxBackoffSeconds int64
+
+	hostPrintedScheduleTrace bool
 
 	profiles          []schedulerapi.KubeSchedulerProfile
 	registry          frameworkruntime.Registry
@@ -144,8 +143,8 @@ func (c *Configurator) create() (*Scheduler, error) {
 	lessFn := profiles[c.profiles[0].SchedulerName].Framework.QueueSortFunc()
 	podQueue := internalqueue.NewSchedulingQueue(
 		lessFn,
-		internalqueue.WithPodInitialBackoffDuration(time.Duration(c.podInitialBackoffSeconds)*time.Second),
-		internalqueue.WithPodMaxBackoffDuration(time.Duration(c.podMaxBackoffSeconds)*time.Second),
+		internalqueue.WithPodInitialBackoffDuration(time.Duration(c.podInitialBackoffSeconds)*time.Second), // pod 初始化补偿时间间隔
+		internalqueue.WithPodMaxBackoffDuration(time.Duration(c.podMaxBackoffSeconds)*time.Second),         // pod 最大补偿时间间隔
 		internalqueue.WithPodNominator(nominator),
 	)
 
@@ -153,7 +152,6 @@ func (c *Configurator) create() (*Scheduler, error) {
 		c.schedulerCache,
 		c.nodeInfoSnapshot,
 		extenders,
-		c.disablePreemption,
 		c.percentageOfNodesToScore,
 	)
 

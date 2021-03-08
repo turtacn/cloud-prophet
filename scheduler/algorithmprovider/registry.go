@@ -1,4 +1,4 @@
-// 调度算法的组成,包含哪些Plugin; 打分的Plugin的静态权重
+// 调度算法的组成,包含哪些Plugin; 打分的Plugin及其静态权重
 //
 package algorithmprovider
 
@@ -73,14 +73,17 @@ func getDefaultConfig() *schedulerapi.Plugins {
 		// 核心打分算法
 		Score: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{
-				{Name: noderesources.RequestedToCapacityRatioName, Weight: 0}, // 资源请求面向节点可用资源成比例优先
-				{Name: noderesources.BalancedAllocationName, Weight: 1},       // 资源请求面向平衡
+				// {Name: noderesources.RequestedToCapacityRatioName, Weight: 1},   // 资源请求面向节点可用资源成比例优先
+				// {Name: noderesources.BalancedAllocationName, Weight: 0},         // 资源请求面向平衡
+
+				//  以下二选一
 				//{Name: noderesources.LeastAllocatedName, Weight: 0},             // spread 模式 剩余资源多优先
 				{Name: noderesources.MostAllocatedName, Weight: 1}, // binpack模式 剩余资源少优先
+
 				// Weight is doubled because:
 				// - This is a score coming from user preference.
 				// - It makes its signal comparable to NodeResourcesLeastAllocated.
-				{Name: podtopologyspread.Name, Weight: 2},
+				//{Name: podtopologyspread.Name, Weight: 2},                      // 根据业务标签将Pod聚类， 同类的Pod对节点计数， Spread 策略
 			},
 		},
 		Reserve: &schedulerapi.PluginSet{}, // volume, port binding 阶段

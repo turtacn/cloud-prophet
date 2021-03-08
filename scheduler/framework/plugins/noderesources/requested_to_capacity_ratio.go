@@ -67,6 +67,7 @@ func NewRequestedToCapacityRatio(plArgs runtime.Object, handle framework.Framewo
 			RequestedToCapacityRatioName,
 			buildRequestedToCapacityRatioScorerFunction(shape, resourceToWeightMap),
 			resourceToWeightMap,
+			false,
 		},
 	}, nil
 }

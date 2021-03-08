@@ -237,8 +237,6 @@ func (g *genericScheduler) findNodesThatFitPod(ctx context.Context, prof *profil
 
 	// Run "prefilter" plugins.
 	s := prof.RunPreFilterPlugins(ctx, state, pod)
-	klog.Infof("Run prefilter plugins status %v", s)
-
 	if !s.IsSuccess() {
 		if !s.IsUnschedulable() {
 			klog.Errorf("unschedulable reason error %v", s.AsError())
@@ -414,7 +412,6 @@ func addNominatedPods(ctx context.Context, ph framework.PreemptHandle, pod *v1.P
 // and add the nominated pods. Removal of the victims is done by
 // SelectVictimsOnNode(). Preempt removes victims from PreFilter state and
 // NodeInfo before calling this function.
-// TODO: move this out so that plugins don't need to depend on <core> pkg.
 func PodPassesFiltersOnNode(
 	ctx context.Context,
 	ph framework.PreemptHandle,
@@ -583,13 +580,11 @@ func NewGenericScheduler(
 	cache internalcache.Cache,
 	nodeInfoSnapshot *internalcache.Snapshot,
 	extenders []framework.Extender,
-	disablePreemption bool,
 	percentageOfNodesToScore int32) ScheduleAlgorithm {
 	return &genericScheduler{
 		cache:                    cache,
 		extenders:                extenders,
 		nodeInfoSnapshot:         nodeInfoSnapshot,
-		disablePreemption:        disablePreemption,
 		percentageOfNodesToScore: percentageOfNodesToScore,
 	}
 }

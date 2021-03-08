@@ -101,6 +101,8 @@ type NodeResourcesMostAllocatedArgs struct {
 	// The default resource set includes "cpu" and "memory" with an equal weight.
 	// Allowed weights go from 1 to 100.
 	Resources []ResourceSpec
+
+	PrintHostTrace bool
 }
 
 // UtilizationShapePoint represents a single point of a priority function shape.

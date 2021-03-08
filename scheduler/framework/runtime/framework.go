@@ -643,7 +643,6 @@ func (f *frameworkImpl) runBindPlugin(ctx context.Context, bp framework.BindPlug
 // RunPostBindPlugins runs the set of configured postbind plugins.
 func (f *frameworkImpl) RunPostBindPlugins(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) {
 	for _, pl := range f.postBindPlugins {
-		klog.Infof("plugins => RunPostBindPlugins step[%s] for node %s pod %s", pl.Name(), nodeName, pod.Name)
 		f.runPostBindPlugin(ctx, pl, state, pod, nodeName)
 	}
 }

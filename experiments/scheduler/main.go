@@ -18,20 +18,13 @@ var (
 	hostInfoFile           = flag.String("host-info", "hosts-info.csv", `节点元信息csv文件（包含起始状态）`)
 	hostUtilityFile        = flag.String("host-util", "utility.csv", `节点CPU利用率csv文件，带时间戳`)
 	scheduleTraceFile      = flag.String("schedule-trace", "schedule.csv", `调度trace文件`)
-	scheduleIntervalSecond = flag.Int("pod-interval", 1, "pod资源请求间隔")
+	scheduleIntervalSecond = flag.Int("pod-interval", 100, "pod资源请求间隔")
 	printableHostFlag      = flag.Bool("print-host", false, "是否打印出候选节点的调度详情（默认false）")
 )
 
 type Option func(registry runtime.Registry) error
 
 func main() {
-
-	//  增加、去掉 log 相关的命令行参数
-	//klog.InitFlags(flag.CommandLine)
-	//flag.Set("logtostderr", "false")
-	//flag.Set("alsologtostderr", "false")
-	//klog.SetOutput(ioutil.Discard)
-
 	flag.Parse()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -58,7 +51,8 @@ func main() {
 		klog.Infof("Node %s cpu %f memory %f", h.HostIp, h.AvailableCpu(), h.AvailableMemory())
 		scheduler.AddNode(makeNode(h.HostIp, int64(h.AvailableCpu()), int64(h.AvailableMemory())))
 	}
-	//test.FillTrace("trace.csv","instance.csv","schedule.csv")
+	// 生成Trace
+	// test.FillTrace("trace.csv","instance.csv","schedule.csv")
 	go func() {
 		for i, jvirt := range test.LoadIntanceOpsTrace(*scheduleTraceFile) {
 			pod := &v1.Pod{
@@ -91,36 +85,11 @@ func main() {
 			scheduler.AddPod(pod)
 			sleepInterval := *scheduleIntervalSecond
 			if sleepInterval != 0 {
-				time.Sleep(time.Duration(sleepInterval) * time.Second)
+				time.Sleep(time.Duration(sleepInterval) * time.Millisecond)
 			}
 		}
 
 	}()
-
-	/*	go func() {
-		for i := 1; true; i++ {
-			sleepInterval := *scheduleIntervalSecond
-			time.Sleep(time.Duration(5*sleepInterval) * time.Second)
-			pod := &v1.Pod{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "Pod",
-					APIVersion: "v1",
-				},
-				ObjectMeta: v1.ObjectMeta{
-					Name:      fmt.Sprintf("pod-%d", i),
-					Namespace: "test",
-					UID:       fmt.Sprintf("test-%s", fmt.Sprintf("pod-%d", i)),
-				}}
-			p, e := scheduler.SchedulerCache.GetPod(pod)
-			if e != nil {
-				klog.Errorf("scheduler get pod failed error %v", e)
-			}
-			if p != nil {
-				scheduler.Cache().RemovePod(p)
-				klog.Infof("scheduler cache remove pod %v", p)
-			}
-		}
-	}()*/
 	klog.Infof("begin to run scheduler")
 	scheduler.Run(ctx)
 }
@@ -138,7 +107,7 @@ func makeNode(node string, milliCPU, memory int64) *v1.Node {
 			Capacity: v1.ResourceList{
 				v1.ResourceCPU:    *resource.NewMilliQuantity(milliCPU, resource.DecimalSI),
 				v1.ResourceMemory: *resource.NewQuantity(memory, resource.BinarySI),
-				v1.ResourcePods:   *resource.NewQuantity(200, resource.BinarySI),
+				v1.ResourcePods:   *resource.NewQuantity(200, resource.BinarySI), // 线上最大120个实例
 				//v1.ResourceEphemeralStorage: *resource.NewQuantity(10000, resource.BinarySI),
 				//v1.ResourceStorage:          *resource.NewQuantity(100000, resource.BinarySI),
 			},

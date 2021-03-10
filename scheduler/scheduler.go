@@ -330,7 +330,6 @@ func (sched *Scheduler) bind(ctx context.Context, prof *profile.Profile, assumed
 	return fmt.Errorf("bind status: %s, %v", bindStatus.Code().String(), bindStatus.Message())
 }
 
-// TODO(#87159): Move this to a Plugin.
 func (sched *Scheduler) extendersBinding(pod *v1.Pod, node string) (bool, error) {
 	for _, extender := range sched.Algorithm.Extenders() {
 		if !extender.IsBinder() || !extender.IsInterested(pod) {

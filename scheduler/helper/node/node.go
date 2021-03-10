@@ -8,5 +8,5 @@ import (
 
 // topologies key for bloom filter
 func GetZoneKey(node *v1.Node) string {
-	return ""
+	return node.Namespace
 }

@@ -74,10 +74,10 @@ func getDefaultConfig() *schedulerapi.Plugins {
 		Score: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{
 				// {Name: noderesources.RequestedToCapacityRatioName, Weight: 1},   // 资源请求面向节点可用资源成比例优先
-				// {Name: noderesources.BalancedAllocationName, Weight: 0},         // 资源请求面向平衡
+				{Name: noderesources.BalancedAllocationName, Weight: 1}, // 资源请求面向平衡
 
 				//  以下二选一
-				//{Name: noderesources.LeastAllocatedName, Weight: 0},             // spread 模式 剩余资源多优先
+				//{Name: noderesources.LeastAllocatedName, Weight: 1},             // spread 模式 剩余资源多优先
 				{Name: noderesources.MostAllocatedName, Weight: 1}, // binpack模式 剩余资源少优先
 
 				// Weight is doubled because:

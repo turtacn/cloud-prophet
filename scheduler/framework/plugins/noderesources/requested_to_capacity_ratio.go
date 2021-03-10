@@ -17,8 +17,8 @@ import (
 const (
 	// RequestedToCapacityRatioName is the name of this plugin.
 	RequestedToCapacityRatioName = "RequestedToCapacityRatio"
-	minUtilization               = 0
-	maxUtilization               = 100
+	//minUtilization               = 0
+	maxUtilization = 100
 )
 
 type functionShape []functionShapePoint

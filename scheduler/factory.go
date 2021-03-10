@@ -5,25 +5,19 @@ package scheduler
 import (
 	"errors"
 	"fmt"
-	"sort"
-	"time"
-
-	"github.com/google/go-cmp/cmp"
 	"github.com/turtacn/cloud-prophet/scheduler/algorithmprovider"
 	schedulerapi "github.com/turtacn/cloud-prophet/scheduler/apis/config"
 	"github.com/turtacn/cloud-prophet/scheduler/core"
 	framework "github.com/turtacn/cloud-prophet/scheduler/framework/base"
-	frameworkplugins "github.com/turtacn/cloud-prophet/scheduler/framework/plugins"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/noderesources"
 	frameworkruntime "github.com/turtacn/cloud-prophet/scheduler/framework/runtime"
-	"github.com/turtacn/cloud-prophet/scheduler/helper/sets"
 	internalcache "github.com/turtacn/cloud-prophet/scheduler/internal/cache"
 	internalqueue "github.com/turtacn/cloud-prophet/scheduler/internal/queue"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
+	"time"
 )
 
 // Binder knows how to write a binding.
@@ -187,99 +181,6 @@ func (c *Configurator) createFromProvider(providerName string) (*Scheduler, erro
 	return c.create()
 }
 
-// mergePluginConfigsFromPolicy merges the giving plugin configs ensuring that,
-// if a plugin name is repeated, the arguments are the same.
-func mergePluginConfigsFromPolicy(pc1, pc2 []schedulerapi.PluginConfig) ([]schedulerapi.PluginConfig, error) {
-	args := make(map[string]runtime.Object)
-	for _, c := range pc1 {
-		args[c.Name] = c.Args
-	}
-	for _, c := range pc2 {
-		if v, ok := args[c.Name]; ok && !cmp.Equal(v, c.Args) {
-			// This should be unreachable.
-			return nil, fmt.Errorf("inconsistent configuration produced for plugin %s", c.Name)
-		}
-		args[c.Name] = c.Args
-	}
-	pc := make([]schedulerapi.PluginConfig, 0, len(args))
-	for k, v := range args {
-		pc = append(pc, schedulerapi.PluginConfig{
-			Name: k,
-			Args: v,
-		})
-	}
-	return pc, nil
-}
-
-// getPriorityConfigs returns priorities configuration: ones that will run as priorities and ones that will run
-// as framework plugins. Specifically, a priority will run as a framework plugin if a plugin config producer was
-// registered for that priority.
-func getPriorityConfigs(keys map[string]int64, lr *frameworkplugins.LegacyRegistry, args *frameworkplugins.ConfigProducerArgs) (*schedulerapi.Plugins, []schedulerapi.PluginConfig, error) {
-	var plugins schedulerapi.Plugins
-	var pluginConfig []schedulerapi.PluginConfig
-
-	// Sort the keys so that it is easier for unit tests to do compare.
-	var sortedKeys []string
-	for k := range keys {
-		sortedKeys = append(sortedKeys, k)
-	}
-	sort.Strings(sortedKeys)
-
-	for _, priority := range sortedKeys {
-		weight := keys[priority]
-		producer, exist := lr.PriorityToConfigProducer[priority]
-		if !exist {
-			return nil, nil, fmt.Errorf("no config producer registered for %q", priority)
-		}
-		a := *args
-		a.Weight = int32(weight)
-		pl, plc := producer(a)
-		plugins.Append(&pl)
-		pluginConfig = append(pluginConfig, plc...)
-	}
-	return &plugins, pluginConfig, nil
-}
-
-// getPredicateConfigs returns predicates configuration: ones that will run as fitPredicates and ones that will run
-// as framework plugins. Specifically, a predicate will run as a framework plugin if a plugin config producer was
-// registered for that predicate.
-// Note that the framework executes plugins according to their order in the Plugins list, and so predicates run as plugins
-// are added to the Plugins list according to the order specified in predicates.Ordering().
-func getPredicateConfigs(keys sets.String, lr *frameworkplugins.LegacyRegistry, args *frameworkplugins.ConfigProducerArgs) (*schedulerapi.Plugins, []schedulerapi.PluginConfig, error) {
-	allPredicates := keys.Union(lr.MandatoryPredicates)
-
-	// Create the framework plugin configurations, and place them in the order
-	// that the corresponding predicates were supposed to run.
-	var plugins schedulerapi.Plugins
-	var pluginConfig []schedulerapi.PluginConfig
-
-	for _, predicateKey := range frameworkplugins.PredicateOrdering() {
-		if allPredicates.Has(predicateKey) {
-			producer, exist := lr.PredicateToConfigProducer[predicateKey]
-			if !exist {
-				return nil, nil, fmt.Errorf("no framework config producer registered for %q", predicateKey)
-			}
-			pl, plc := producer(*args)
-			plugins.Append(&pl)
-			pluginConfig = append(pluginConfig, plc...)
-			allPredicates.Delete(predicateKey)
-		}
-	}
-
-	// Third, add the rest in no specific order.
-	for predicateKey := range allPredicates {
-		producer, exist := lr.PredicateToConfigProducer[predicateKey]
-		if !exist {
-			return nil, nil, fmt.Errorf("no framework config producer registered for %q", predicateKey)
-		}
-		pl, plc := producer(*args)
-		plugins.Append(&pl)
-		pluginConfig = append(pluginConfig, plc...)
-	}
-
-	return &plugins, pluginConfig, nil
-}
-
 // MakeDefaultErrorFunc construct a function to handle pod scheduler error
 func MakeDefaultErrorFunc(client framework.ClientSet, podInformer framework.SharedPodsLister, podQueue internalqueue.SchedulingQueue, schedulerCache internalcache.Cache) func(*framework.QueuedPodInfo, error) {
 	return func(podInfo *framework.QueuedPodInfo, err error) {
@@ -308,16 +209,18 @@ func MakeDefaultErrorFunc(client framework.ClientSet, podInformer framework.Shar
 			klog.ErrorS(err, "Error scheduling pod; retrying", "pod", pod)
 		}
 
-		// Check if the Pod exists in informer cache.
-		cachedPod, err := podInformer.PodInfos().Get(pod.Name)
-		if err != nil {
-			klog.Warningf("Pod %v/%v doesn't exist in informer cache: %v", pod.Namespace, pod.Name, err)
-			return
-		}
-		// As <cachedPod> is from SharedInformer, we need to do a DeepCopy() here.
-		if cachedPod == nil {
-			podInfo.Pod = nil
+		if podInformer != nil {
+			// Check if the Pod exists in informer cache.
+			cachedPod, err := podInformer.PodInfos().Get(pod.Name)
+			if err != nil {
+				klog.Warningf("Pod %v/%v doesn't exist in informer cache: %v", pod.Namespace, pod.Name, err)
+				return
+			}
+			// As <cachedPod> is from SharedInformer, we need to do a DeepCopy() here.
+			if cachedPod == nil {
+				podInfo.Pod = nil
 
+			}
 		}
 		if err := podQueue.AddUnschedulableIfNotPresent(podInfo, podQueue.SchedulingCycle()); err != nil {
 			klog.Error(err)

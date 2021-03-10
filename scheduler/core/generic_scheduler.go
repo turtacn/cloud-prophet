@@ -263,7 +263,6 @@ func (g *genericScheduler) findNodesThatFitPod(ctx context.Context, prof *profil
 		return nil, nil, err
 	}
 
-	//klog.Infof("RunPreFilterPlugins success to findNodesThatPassExtenders, feasibleNodes-size %d cyclestate %v pod %v status-size %d", len(feasibleNodes), state, pod, len(filteredNodesStatuses))
 	for k, v := range filteredNodesStatuses {
 		klog.Infof("node %s status %v", k, v.Reasons())
 		break
@@ -564,14 +563,6 @@ func (g *genericScheduler) prioritizeNodes(
 
 // podPassesBasicChecks makes sanity checks on the pod if it can be scheduled.
 func podPassesBasicChecks(pod *v1.Pod) error {
-	// Check PVCs used by the pod
-	namespace := pod.Namespace
-	manifest := &(pod.Spec)
-	if manifest == nil || namespace == "" {
-
-	}
-
-	// 检查volume
 	return nil
 }
 

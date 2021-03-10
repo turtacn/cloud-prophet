@@ -643,10 +643,12 @@ func (cache *schedulerCache) removeNodeImageStates(node *v1.Node) {
 }
 
 func (cache *schedulerCache) run() {
+	klog.Info("Scheduler cache cleanup expired assumed pods started")
 	go wait.Until(cache.cleanupExpiredAssumedPods, cache.period, cache.stop)
 }
 
 func (cache *schedulerCache) cleanupExpiredAssumedPods() {
+	// 删除过期的未调度的Pod
 	cache.cleanupAssumedPods(time.Now())
 }
 

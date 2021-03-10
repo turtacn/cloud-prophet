@@ -5,8 +5,6 @@ package scheduler
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"strconv"
 	"time"
 
@@ -239,28 +237,9 @@ func New(client framework.ClientSet,
 	return sched, nil
 }
 
-// initPolicyFromFile initialize policy from file
-func initPolicyFromFile(policyFile string, policy *schedulerapi.Policy) error {
-	// Use a policy serialized in a file.
-	_, err := os.Stat(policyFile)
-	if err != nil {
-		return fmt.Errorf("missing policy config file %s", policyFile)
-	}
-	data, err := ioutil.ReadFile(policyFile)
-	if err != nil || data == nil {
-		return fmt.Errorf("couldn't read policy config: %v", err)
-	}
-	return fmt.Errorf("init policy from file not supported: %v", err)
-}
-
-// initPolicyFromConfigMap initialize policy from configMap
-func initPolicyFromConfigMap(client framework.ClientSet, policyRef *schedulerapi.SchedulerPolicyConfigMapSource, policy *schedulerapi.Policy) error {
-	return nil
-}
-
 // Run begins watching and scheduling. It waits for cache to be synced, then starts scheduling and blocked until the context is done.
 func (sched *Scheduler) Run(ctx context.Context) {
-	// TODO  WaitForCacheSync(ctx.Done(), sched.scheduledPodsHasSynced) {
+	// TODO 首先需要本地 cache 完成同步
 	sched.SchedulingQueue.Run()
 	klog.Infof("scheduling queue was ready for in-coming pod.")
 	wait.UntilWithContext(ctx, sched.scheduleOne, 0)
@@ -523,15 +502,11 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 			}
 			sched.recordSchedulingFailure(prof, assumedPodInfo, fmt.Errorf("Binding rejected: %v", err), SchedulerError, "")
 		} else {
-			// Calculating nodeResourceString can be heavy. Avoid it if klog verbosity is below 2.
-			//if klog.V(2).Enabled()
 			if true {
 				klog.InfoS("Successfully bound pod to node", "pod", pod.Name, "node", scheduleResult.SuggestedHost, "evaluatedNodes", scheduleResult.EvaluatedNodes, "feasibleNodes", scheduleResult.FeasibleNodes)
 			}
 
 			// Run "postbind" plugins.
-			klog.Infof("Step begin at postbindplugins")
-
 			prof.RunPostBindPlugins(bindingCycleCtx, state, assumedPod, scheduleResult.SuggestedHost)
 
 			// 数据更新
@@ -544,7 +519,8 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 			pc, _ := sched.SchedulerCache.PodCount()
 			newNodeInfo.AddPod(assumedPod)
 			sched.updateNodeInCache(targetNode.Node(), newNode)
-			klog.Infof("Node %s cpu %d memory %d; has pods %d/%d", newNode.Name, newNode.Status.Allocatable.Cpu().MilliValue(), newNode.Status.Allocatable.Memory().Value(), len(newNodeInfo.Pods), pc)
+			klog.Infof("Node %s; has pods %d/%d", newNode.Name, len(newNodeInfo.Pods), pc)
+
 		}
 	}()
 	// 以上完成调度的全过程

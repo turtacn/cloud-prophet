@@ -29,31 +29,6 @@ func ValidateHardPodAffinityWeight(path *field.Path, w int32) error {
 	return nil
 }
 
-// ValidateNodeLabelArgs validates that NodeLabelArgs are correct.
-func ValidateNodeLabelArgs(args config.NodeLabelArgs) error {
-	if err := validateNoConflict(args.PresentLabels, args.AbsentLabels); err != nil {
-		return err
-	}
-	if err := validateNoConflict(args.PresentLabelsPreference, args.AbsentLabelsPreference); err != nil {
-		return err
-	}
-	return nil
-}
-
-// validateNoConflict validates that presentLabels and absentLabels do not conflict.
-func validateNoConflict(presentLabels []string, absentLabels []string) error {
-	m := make(map[string]struct{}, len(presentLabels))
-	for _, l := range presentLabels {
-		m[l] = struct{}{}
-	}
-	for _, l := range absentLabels {
-		if _, ok := m[l]; ok {
-			return fmt.Errorf("detecting at least one label (e.g., %q) that exist in both the present(%+v) and absent(%+v) label list", l, presentLabels, absentLabels)
-		}
-	}
-	return nil
-}
-
 // ValidatePodTopologySpreadArgs validates that PodTopologySpreadArgs are correct.
 // It replicates the validation from pkg/apis/core/validation.validateTopologySpreadConstraints
 // with an additional check for .labelSelector to be nil.
@@ -144,7 +119,6 @@ func validateFunctionShape(shape []config.UtilizationShapePoint) error {
 	return nil
 }
 
-// TODO potentially replace with validateResources
 func validateResourcesNoMax(resources []config.ResourceSpec) error {
 	for _, r := range resources {
 		if r.Weight < 1 {

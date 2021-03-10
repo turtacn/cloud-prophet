@@ -7,8 +7,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // InterPodAffinityArgs holds arguments used to configure the InterPodAffinity plugin.
 type InterPodAffinityArgs struct {
 	metav1.TypeMeta
@@ -17,24 +15,6 @@ type InterPodAffinityArgs struct {
 	// matching hard affinity to the incoming pod.
 	HardPodAffinityWeight int32
 }
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// NodeLabelArgs holds arguments used to configure the NodeLabel plugin.
-type NodeLabelArgs struct {
-	metav1.TypeMeta
-
-	// PresentLabels should be present for the node to be considered a fit for hosting the pod
-	PresentLabels []string
-	// AbsentLabels should be absent for the node to be considered a fit for hosting the pod
-	AbsentLabels []string
-	// Nodes that have labels in the list will get a higher score.
-	PresentLabelsPreference []string
-	// Nodes that don't have labels in the list will get a higher score.
-	AbsentLabelsPreference []string
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // NodeResourcesFitArgs holds arguments used to configure the NodeResourcesFit plugin.
 type NodeResourcesFitArgs struct {
@@ -50,8 +30,6 @@ type NodeResourcesFitArgs struct {
 	IgnoredResourceGroups []string
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // PodTopologySpreadArgs holds arguments used to configure the PodTopologySpread plugin.
 type PodTopologySpreadArgs struct {
 	metav1.TypeMeta
@@ -65,8 +43,6 @@ type PodTopologySpreadArgs struct {
 	DefaultConstraints []v1.TopologySpreadConstraint // 在label调度空间中指定分布限制
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // RequestedToCapacityRatioArgs holds arguments used to configure RequestedToCapacityRatio plugin.
 type RequestedToCapacityRatioArgs struct {
 	metav1.TypeMeta
@@ -79,8 +55,6 @@ type RequestedToCapacityRatioArgs struct {
 	Resources []ResourceSpec
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // NodeResourcesLeastAllocatedArgs holds arguments used to configure NodeResourcesLeastAllocated plugin.
 type NodeResourcesLeastAllocatedArgs struct {
 	metav1.TypeMeta
@@ -90,8 +64,6 @@ type NodeResourcesLeastAllocatedArgs struct {
 	// Allowed weights go from 1 to 100.
 	Resources []ResourceSpec
 }
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // NodeResourcesMostAllocatedArgs holds arguments used to configure NodeResourcesMostAllocated plugin.
 type NodeResourcesMostAllocatedArgs struct {
@@ -121,31 +93,6 @@ type ResourceSpec struct {
 	Weight int64
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// ServiceAffinityArgs holds arguments used to configure the ServiceAffinity plugin.
-type ServiceAffinityArgs struct {
-	metav1.TypeMeta
-
-	// AffinityLabels are homogeneous for pods that are scheduled to a node.
-	// (i.e. it returns true IFF this pod can be added to this node such that all other pods in
-	// the same service are running on nodes with the exact same values for Labels).
-	AffinityLabels []string
-	// AntiAffinityLabelsPreference are the labels to consider for service anti affinity scoring.
-	AntiAffinityLabelsPreference []string
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// VolumeBindingArgs holds arguments used to configure the VolumeBinding plugin.
-type VolumeBindingArgs struct {
-	metav1.TypeMeta
-
-	// BindTimeoutSeconds is the timeout in seconds in volume binding operation.
-	// Value must be non-negative integer. The value zero indicates no waiting.
-	// If this value is nil, the default value will be used.
-	BindTimeoutSeconds int64
-}
 type NodeUnschedulableArgs struct {
 	metav1.TypeMeta
 	Name string

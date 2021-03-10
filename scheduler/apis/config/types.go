@@ -32,7 +32,6 @@ type KubeSchedulerConfiguration struct {
 	metav1.TypeMeta
 
 	// AlgorithmSource specifies the scheduler algorithm source.
-	// TODO(#87526): Remove AlgorithmSource from this package
 	// DEPRECATED: AlgorithmSource is removed in the v1beta1 ComponentConfig
 	AlgorithmSource SchedulerAlgorithmSource
 	// HealthzBindAddress is the IP address and port for the health check server to serve on,
@@ -101,31 +100,6 @@ type KubeSchedulerProfile struct {
 type SchedulerAlgorithmSource struct {
 	// Provider is the name of a scheduling algorithm provider to use.
 	Provider *string
-}
-
-// SchedulerPolicySource configures a means to obtain a scheduler Policy. One
-// source field must be specified, and source fields are mutually exclusive.
-type SchedulerPolicySource struct {
-	// File is a file policy source.
-	File *SchedulerPolicyFileSource
-	// ConfigMap is a config map policy source.
-	ConfigMap *SchedulerPolicyConfigMapSource
-}
-
-// SchedulerPolicyFileSource is a policy serialized to disk and accessed via
-// path.
-type SchedulerPolicyFileSource struct {
-	// Path is the location of a serialized policy.
-	Path string
-}
-
-// SchedulerPolicyConfigMapSource is a policy serialized into a config map value
-// under the SchedulerPolicyConfigMapKey key.
-type SchedulerPolicyConfigMapSource struct {
-	// Namespace is the namespace of the policy config map.
-	Namespace string
-	// Name is the name of the policy config map.
-	Name string
 }
 
 // Plugins include multiple extension points. When specified, the list of plugins for

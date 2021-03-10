@@ -15,7 +15,7 @@ import (
 )
 
 // ClusterAutoscalerProvider defines the default autoscaler provider
-const ClusterAutoscalerProvider = "ClusterAutoscalerProvider"
+const ClusterK8sProvider = "ClusterK8sProvider"
 
 // Registry is a collection of all available algorithm providers.
 type Registry map[string]*schedulerapi.Plugins
@@ -27,7 +27,7 @@ func NewRegistry() Registry {
 
 	return Registry{
 		schedulerapi.SchedulerDefaultProviderName: defaultConfig,
-		ClusterAutoscalerProvider:                 caConfig,
+		ClusterK8sProvider:                        caConfig,
 	}
 }
 

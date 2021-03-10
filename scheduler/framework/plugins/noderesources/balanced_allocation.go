@@ -58,7 +58,7 @@ func NewBalancedAllocation(_ runtime.Object, h framework.FrameworkHandle) (frame
 			BalancedAllocationName,
 			balancedResourceScorer,
 			defaultRequestedRatioResources,
-			true,
+			false,
 		},
 	}, nil
 }

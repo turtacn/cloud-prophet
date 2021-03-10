@@ -54,7 +54,6 @@ type Configurator struct {
 	profiles          []schedulerapi.KubeSchedulerProfile
 	registry          frameworkruntime.Registry
 	nodeInfoSnapshot  *internalcache.Snapshot
-	extenders         []schedulerapi.Extender
 	frameworkCapturer FrameworkCapturer
 }
 
@@ -80,34 +79,6 @@ func (c *Configurator) buildFramework(p schedulerapi.KubeSchedulerProfile, opts 
 func (c *Configurator) create() (*Scheduler, error) {
 	var extenders []framework.Extender
 	var ignoredExtendedResources []string
-	if len(c.extenders) != 0 {
-		var ignorableExtenders []framework.Extender
-		for ii := range c.extenders {
-			klog.Infof("Creating extender with config %+v", c.extenders[ii])
-			extender, err := core.NewHTTPExtender(&c.extenders[ii])
-			if err != nil {
-				return nil, err
-			}
-			if !extender.IsIgnorable() {
-				extenders = append(extenders, extender)
-			} else {
-				ignorableExtenders = append(ignorableExtenders, extender)
-			}
-			for _, r := range c.extenders[ii].ManagedResources {
-				if r.IgnoredByScheduler {
-					ignoredExtendedResources = append(ignoredExtendedResources, r.Name)
-				}
-			}
-		}
-		// place ignorable extenders to the tail of extenders
-		extenders = append(extenders, ignorableExtenders...)
-	}
-
-	// If there are any extended resources found from the Extenders, append them to the pluginConfig for each profile.
-	// This should only have an effect on ComponentConfig v1beta1, where it is possible to configure Extenders and
-	// plugin args (and in which case the extender ignored resources take precedence).
-	// For earlier versions, using both policy and custom plugin config is disallowed, so this should be the only
-	// plugin config for this plugin.
 	if len(ignoredExtendedResources) > 0 {
 		for i := range c.profiles {
 			prof := &c.profiles[i]

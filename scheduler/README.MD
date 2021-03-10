@@ -115,4 +115,24 @@ https://github.com/pingcap/tidb-binlog
 ``` 
 
 
+## 代码依赖
+
+```text
+"k8s.io/apimachinery/pkg/api/errors"
+"k8s.io/apimachinery/pkg/api/resource"
+"k8s.io/apimachinery/pkg/apis/meta/v1"
+"k8s.io/apimachinery/pkg/runtime"
+"k8s.io/apimachinery/pkg/runtime/schema"
+"k8s.io/apimachinery/pkg/types"
+"k8s.io/apimachinery/pkg/util/json"
+"k8s.io/apimachinery/pkg/util/runtime"
+"k8s.io/apimachinery/pkg/util/validation"
+"k8s.io/apimachinery/pkg/util/validation/field"
+"k8s.io/apimachinery/pkg/util/wait"
+"k8s.io/client-go/util/workqueue"
+"k8s.io/klog"
+"k8s.io/klog/v2"
+"k8s.io/utils/trace"
+```
+
 

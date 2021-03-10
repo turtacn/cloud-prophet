@@ -25,8 +25,6 @@ import (
 const (
 	// SchedulerError is the reason recorded for events when an error occurs during scheduling a pod.
 	SchedulerError = "SchedulerError"
-	// Percentage of plugin metrics to be sampled.
-	pluginMetricsSamplePercent = 10
 )
 
 // Scheduler watches for new unscheduled pods. It attempts to find
@@ -203,7 +201,6 @@ func New(client framework.ClientSet,
 		profiles:                 append([]schedulerapi.KubeSchedulerProfile(nil), options.profiles...),
 		registry:                 registry,
 		nodeInfoSnapshot:         snapshot,
-		extenders:                options.extenders,
 		frameworkCapturer:        options.frameworkCapturer,
 	}
 	if podInformer != nil {

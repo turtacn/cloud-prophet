@@ -92,8 +92,3 @@ type ResourceSpec struct {
 	// Weight of the resource.
 	Weight int64
 }
-
-type NodeUnschedulableArgs struct {
-	metav1.TypeMeta
-	Name string
-}

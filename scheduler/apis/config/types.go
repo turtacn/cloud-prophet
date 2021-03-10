@@ -25,53 +25,6 @@ const (
 	SchedulerDefaultProviderName = "DefaultProvider"
 )
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// KubeSchedulerConfiguration configures a scheduler
-type KubeSchedulerConfiguration struct {
-	metav1.TypeMeta
-
-	// AlgorithmSource specifies the scheduler algorithm source.
-	// DEPRECATED: AlgorithmSource is removed in the v1beta1 ComponentConfig
-	AlgorithmSource SchedulerAlgorithmSource
-	// HealthzBindAddress is the IP address and port for the health check server to serve on,
-	// defaulting to 0.0.0.0:10251
-	HealthzBindAddress string
-	// MetricsBindAddress is the IP address and port for the metrics server to
-	// serve on, defaulting to 0.0.0.0:10251.
-	MetricsBindAddress string
-
-	// PercentageOfNodesToScore is the percentage of all nodes that once found feasible
-	// for running a pod, the scheduler stops its search for more feasible nodes in
-	// the cluster. This helps improve scheduler's performance. Scheduler always tries to find
-	// at least "minFeasibleNodesToFind" feasible nodes no matter what the value of this flag is.
-	// Example: if the cluster size is 500 nodes and the value of this flag is 30,
-	// then scheduler stops finding further feasible nodes once it finds 150 feasible ones.
-	// When the value is 0, default percentage (5%--50% based on the size of the cluster) of the
-	// nodes will be scored.
-	PercentageOfNodesToScore int32
-
-	// PodInitialBackoffSeconds is the initial backoff for unschedulable pods.
-	// If specified, it must be greater than 0. If this value is null, the default value (1s)
-	// will be used.
-	PodInitialBackoffSeconds int64
-
-	// PodMaxBackoffSeconds is the max backoff for unschedulable pods.
-	// If specified, it must be greater than or equal to podInitialBackoffSeconds. If this value is null,
-	// the default value (10s) will be used.
-	PodMaxBackoffSeconds int64
-
-	// Profiles are scheduling profiles that kube-scheduler supports. Pods can
-	// choose to be scheduled under a particular profile by setting its associated
-	// scheduler name. Pods that don't specify any scheduler name are scheduled
-	// with the "default-scheduler" profile, if present here.
-	Profiles []KubeSchedulerProfile
-
-	// Extenders are the list of scheduler extenders, each holding the values of how to communicate
-	// with the extender. These extenders are shared by all scheduler profiles.
-	Extenders []Extender
-}
-
 // KubeSchedulerProfile is a scheduling profile.
 type KubeSchedulerProfile struct {
 	// SchedulerName is the name of the scheduler associated to this profile.

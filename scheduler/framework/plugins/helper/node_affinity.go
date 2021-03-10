@@ -35,14 +35,6 @@ func PodMatchesNodeSelectorAndAffinityTerms(pod *v1.Pod, node *v1.Node) bool {
 			return true
 		}
 
-		// Match node selector for requiredDuringSchedulingRequiredDuringExecution.
-		// TODO: Uncomment this block when implement RequiredDuringSchedulingRequiredDuringExecution.
-		// if nodeAffinity.RequiredDuringSchedulingRequiredDuringExecution != nil {
-		// 	nodeSelectorTerms := nodeAffinity.RequiredDuringSchedulingRequiredDuringExecution.NodeSelectorTerms
-		// 	klog.V(10).Infof("Match for RequiredDuringSchedulingRequiredDuringExecution node selector terms %+v", nodeSelectorTerms)
-		// 	nodeAffinityMatches = nodeMatchesNodeSelectorTerms(node, nodeSelectorTerms)
-		// }
-
 		// Match node selector for requiredDuringSchedulingIgnoredDuringExecution.
 		if nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
 			nodeSelectorTerms := nodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms

@@ -497,7 +497,6 @@ type FrameworkHandle interface {
 	// ClientSet returns a kubernetes clientSet.
 	ClientSet() ClientSet
 
-	// TODO: unroll the wrapped interfaces to FrameworkHandle.
 	PreemptHandle() PreemptHandle
 }
 

@@ -273,7 +273,6 @@ type PostFilterResult struct {
 type PreemptHandle interface {
 	PodNominator
 	PluginsRunner
-	Extenders() []Extender
 }
 
 type PodNominator interface {

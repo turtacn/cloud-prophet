@@ -16,10 +16,8 @@ import (
 	podutil "github.com/turtacn/cloud-prophet/scheduler/helper/pod"
 	internalcache "github.com/turtacn/cloud-prophet/scheduler/internal/cache"
 	"github.com/turtacn/cloud-prophet/scheduler/internal/parallelize"
-	extenderv1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 	"github.com/turtacn/cloud-prophet/scheduler/profile"
-	"github.com/turtacn/cloud-prophet/scheduler/util"
 	utiltrace "k8s.io/utils/trace"
 )
 
@@ -62,7 +60,6 @@ func (f *FitError) Error() string {
 
 type ScheduleAlgorithm interface {
 	Schedule(context.Context, *profile.Profile, *framework.CycleState, *v1.Pod) (scheduleResult ScheduleResult, err error)
-	Extenders() []framework.Extender
 }
 
 type ScheduleResult struct {
@@ -73,7 +70,6 @@ type ScheduleResult struct {
 
 type genericScheduler struct {
 	cache                    internalcache.Cache
-	extenders                []framework.Extender
 	nodeInfoSnapshot         *internalcache.Snapshot
 	disablePreemption        bool
 	percentageOfNodesToScore int32
@@ -143,10 +139,6 @@ func (g *genericScheduler) Schedule(ctx context.Context, prof *profile.Profile, 
 		EvaluatedNodes: len(feasibleNodes) + len(filteredNodesStatuses),
 		FeasibleNodes:  len(feasibleNodes),
 	}, err
-}
-
-func (g *genericScheduler) Extenders() []framework.Extender {
-	return g.extenders
 }
 
 func (g *genericScheduler) selectHost(nodeScoreList framework.NodeScoreList) (string, error) {
@@ -225,11 +217,6 @@ func (g *genericScheduler) findNodesThatFitPod(ctx context.Context, prof *profil
 		break
 	}
 
-	feasibleNodes, err = g.findNodesThatPassExtenders(pod, feasibleNodes, filteredNodesStatuses)
-	if err != nil {
-		klog.Errorf("findNodesThatPassExtenders error %v", err)
-		return nil, nil, err
-	}
 	return feasibleNodes, filteredNodesStatuses, nil
 }
 
@@ -288,36 +275,6 @@ func (g *genericScheduler) findNodesThatPassFilters(ctx context.Context, prof *p
 	feasibleNodes = feasibleNodes[:feasibleNodesLen]
 	if err := errCh.ReceiveError(); err != nil {
 		return nil, err
-	}
-	return feasibleNodes, nil
-}
-
-func (g *genericScheduler) findNodesThatPassExtenders(pod *v1.Pod, feasibleNodes []*v1.Node, statuses framework.NodeToStatusMap) ([]*v1.Node, error) {
-	for _, extender := range g.extenders {
-		if len(feasibleNodes) == 0 {
-			break
-		}
-		if !extender.IsInterested(pod) {
-			continue
-		}
-		feasibleList, failedMap, err := extender.Filter(pod, feasibleNodes)
-		if err != nil {
-			if extender.IsIgnorable() {
-				klog.Warningf("Skipping extender %v as it returned error %v and has ignorable flag set",
-					extender, err)
-				continue
-			}
-			return nil, err
-		}
-
-		for failedNodeName, failedMsg := range failedMap {
-			if _, found := statuses[failedNodeName]; !found {
-				statuses[failedNodeName] = framework.NewStatus(framework.Unschedulable, failedMsg)
-			} else {
-				statuses[failedNodeName].AppendReason(failedMsg)
-			}
-		}
-		feasibleNodes = feasibleList
 	}
 	return feasibleNodes, nil
 }
@@ -386,7 +343,7 @@ func (g *genericScheduler) prioritizeNodes(
 	pod *v1.Pod,
 	nodes []*v1.Node,
 ) (framework.NodeScoreList, error) {
-	if len(g.extenders) == 0 && !prof.HasScorePlugins() {
+	if !prof.HasScorePlugins() {
 		result := make(framework.NodeScoreList, 0, len(nodes))
 		for i := range nodes {
 			result = append(result, framework.NodeScore{
@@ -422,41 +379,7 @@ func (g *genericScheduler) prioritizeNodes(
 		}
 	}
 
-	if len(g.extenders) != 0 && nodes != nil {
-		var mu sync.Mutex
-		var wg sync.WaitGroup
-		combinedScores := make(map[string]int64, len(nodes))
-		for i := range g.extenders {
-			if !g.extenders[i].IsInterested(pod) {
-				continue
-			}
-			wg.Add(1)
-			go func(extIndex int) {
-				defer func() {
-					wg.Done()
-				}()
-				prioritizedList, weight, err := g.extenders[extIndex].Prioritize(pod, nodes)
-				if err != nil {
-					return
-				}
-				mu.Lock()
-				for i := range *prioritizedList {
-					host, score := (*prioritizedList)[i].Host, (*prioritizedList)[i].Score
-					if klog.V(10).Enabled() {
-						klog.Infof("%v -> %v: %v, Score: (%d)", util.GetPodFullName(pod), host, g.extenders[extIndex].Name(), score)
-					}
-					combinedScores[host] += score * weight
-				}
-				mu.Unlock()
-			}(i)
-		}
-		wg.Wait()
-		for i := range result {
-			result[i].Score += combinedScores[result[i].Name] * (framework.MaxNodeScore / extenderv1.MaxExtenderPriority)
-		}
-	}
-
-	if klog.V(10).Enabled() {
+	if false {
 		for i := range result {
 			klog.Infof("Host %s => Score %d", result[i].Name, result[i].Score)
 		}
@@ -471,11 +394,9 @@ func podPassesBasicChecks(pod *v1.Pod) error {
 func NewGenericScheduler(
 	cache internalcache.Cache,
 	nodeInfoSnapshot *internalcache.Snapshot,
-	extenders []framework.Extender,
 	percentageOfNodesToScore int32) ScheduleAlgorithm {
 	return &genericScheduler{
 		cache:                    cache,
-		extenders:                extenders,
 		nodeInfoSnapshot:         nodeInfoSnapshot,
 		percentageOfNodesToScore: percentageOfNodesToScore,
 	}

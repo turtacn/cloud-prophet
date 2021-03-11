@@ -11,12 +11,6 @@ const (
 	AssignedPodUpdate      = "AssignedPodUpdate"
 	AssignedPodDelete      = "AssignedPodDelete"
 
-	ServiceAdd    = "ServiceAdd"
-	ServiceUpdate = "ServiceUpdate"
-	ServiceDelete = "ServiceDelete"
-
-	GPUNodeAdd = "GPUNodeAdd"
-
 	NodeSpecUnschedulableChange = "NodeSpecUnschedulableChange"
 	NodeAllocatableChange       = "NodeAllocatableChange"
 	NodeLabelChange             = "NodeLabelChange"

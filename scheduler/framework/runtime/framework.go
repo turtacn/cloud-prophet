@@ -88,7 +88,6 @@ type frameworkOptions struct {
 	snapshotSharedLister framework.SharedLister
 	profileName          string
 	podNominator         framework.PodNominator
-	extenders            []framework.Extender
 	runAllFilters        bool
 }
 
@@ -130,24 +129,13 @@ func WithPodNominator(nominator framework.PodNominator) Option {
 	}
 }
 
-func WithExtenders(extenders []framework.Extender) Option {
-	return func(o *frameworkOptions) {
-		o.extenders = extenders
-	}
-}
-
 var defaultFrameworkOptions = frameworkOptions{}
 
 var _ framework.PreemptHandle = &preemptHandle{}
 
 type preemptHandle struct {
-	extenders []framework.Extender
 	framework.PodNominator
 	framework.PluginsRunner
-}
-
-func (ph *preemptHandle) Extenders() []framework.Extender {
-	return ph.extenders
 }
 
 var _ framework.Framework = &frameworkImpl{}
@@ -169,7 +157,6 @@ func NewFramework(r Registry, plugins *config.Plugins, args []config.PluginConfi
 		runAllFilters:         options.runAllFilters,
 	}
 	f.preemptHandle = &preemptHandle{
-		extenders:     options.extenders,
 		PodNominator:  options.podNominator,
 		PluginsRunner: f,
 	}

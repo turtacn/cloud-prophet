@@ -68,7 +68,6 @@ func (c *Configurator) buildFramework(p schedulerapi.KubeSchedulerProfile, opts 
 }
 
 func (c *Configurator) create() (*Scheduler, error) {
-	var extenders []framework.Extender
 	var ignoredExtendedResources []string
 	if len(ignoredExtendedResources) > 0 {
 		for i := range c.profiles {
@@ -105,7 +104,6 @@ func (c *Configurator) create() (*Scheduler, error) {
 	algo := core.NewGenericScheduler(
 		c.schedulerCache,
 		c.nodeInfoSnapshot,
-		extenders,
 		c.percentageOfNodesToScore,
 	)
 

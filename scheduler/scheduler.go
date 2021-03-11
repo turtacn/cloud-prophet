@@ -258,10 +258,6 @@ func (sched *Scheduler) bind(ctx context.Context, prof *profile.Profile, assumed
 		sched.finishBinding(prof, assumed, targetNode, start, err)
 	}()
 
-	bound, err := sched.extendersBinding(assumed, targetNode)
-	if bound {
-		return err
-	}
 	bindStatus := prof.RunBindPlugins(ctx, state, assumed, targetNode)
 	if bindStatus.IsSuccess() {
 		return nil
@@ -270,19 +266,6 @@ func (sched *Scheduler) bind(ctx context.Context, prof *profile.Profile, assumed
 		return bindStatus.AsError()
 	}
 	return fmt.Errorf("bind status: %s, %v", bindStatus.Code().String(), bindStatus.Message())
-}
-
-func (sched *Scheduler) extendersBinding(pod *v1.Pod, node string) (bool, error) {
-	for _, extender := range sched.Algorithm.Extenders() {
-		if !extender.IsBinder() || !extender.IsInterested(pod) {
-			continue
-		}
-		return true, extender.Bind(&v1.Binding{
-			ObjectMeta: v1.ObjectMeta{Namespace: pod.Namespace, Name: pod.Name, UID: pod.UID},
-			Target:     v1.ObjectReference{Kind: "Node", Name: node},
-		})
-	}
-	return false, nil
 }
 
 func (sched *Scheduler) finishBinding(prof *profile.Profile, assumed *v1.Pod, targetNode string, start time.Time, err error) {

@@ -554,7 +554,7 @@ func (cache *schedulerCache) run() {
 }
 
 func (cache *schedulerCache) cleanupExpiredAssumedPods() {
-	cache.cleanupAssumedPods(time.Now())
+	//cache.cleanupAssumedPods(time.Now())
 }
 
 func (cache *schedulerCache) cleanupAssumedPods(now time.Time) {

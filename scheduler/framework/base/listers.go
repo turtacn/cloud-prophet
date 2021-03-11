@@ -1,3 +1,4 @@
+//
 package base
 
 type NodeInfoLister interface {

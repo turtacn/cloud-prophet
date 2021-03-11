@@ -1,3 +1,4 @@
+//
 package noderesources
 
 import (
@@ -48,6 +49,7 @@ func NewBalancedAllocation(_ runtime.Object, h framework.FrameworkHandle) (frame
 	}, nil
 }
 
+// 资源请求与可用的倾斜度，倾斜度越小优先
 func balancedResourceScorer(requested, allocable resourceToValueMap) int64 {
 	cpuFraction := fractionOfCapacity(requested[v1.ResourceCPU], allocable[v1.ResourceCPU])
 	memoryFraction := fractionOfCapacity(requested[v1.ResourceMemory], allocable[v1.ResourceMemory])

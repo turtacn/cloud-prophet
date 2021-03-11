@@ -1,3 +1,4 @@
+// 在给定标签下的默认 spread 策略，分级分享权重
 package selectorspread
 
 import (

@@ -62,8 +62,8 @@ func main() {
 				},
 				ObjectMeta: v1.ObjectMeta{
 					Name:      jvirt.InstanceId,
-					Namespace: "test",
-					UID:       fmt.Sprintf("test-%s", fmt.Sprintf("pod-%d", i)),
+					Namespace: "jvirt/bj02/general",
+					UID:       fmt.Sprintf("jvirt/bj02/general/%s", fmt.Sprintf("pod-%d", i)),
 				},
 				Spec: v1.PodSpec{
 					SchedulerName: v1.DefaultSchedulerName,

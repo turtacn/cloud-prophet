@@ -1,3 +1,4 @@
+//
 package core
 
 import (
@@ -71,7 +72,6 @@ type ScheduleResult struct {
 type genericScheduler struct {
 	cache                    internalcache.Cache
 	nodeInfoSnapshot         *internalcache.Snapshot
-	disablePreemption        bool
 	percentageOfNodesToScore int32
 	nextStartNodeIndex       int
 }

@@ -1,3 +1,4 @@
+//
 package label
 
 import (

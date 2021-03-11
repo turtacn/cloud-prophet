@@ -31,44 +31,6 @@
 
 ![architecuture](../docs/img/architecture.png)
 
-```text 
-type WaitingPod interface {}
-type Plugin interface {}
-type QueueSortPlugin interface {}
-type PreFilterExtensions interface {}
-type PreFilterPlugin interface {}
-type FilterPlugin interface {}
-type PostFilterPlugin interface {}
-type PreScorePlugin interface {}
-type ScoreExtensions interface {}
-type ScorePlugin interface {}
-type ReservePlugin interface {}
-type PreBindPlugin interface {}
-type PostBindPlugin interface {}
-type PermitPlugin interface {}
-type BindPlugin interface {}
-type Framework interface {}
-type FrameworkHandle interface {}
-type PreemptHandle interface {}
-type PodNominator interface {}
-type PluginsRunner interface {}
-type Extender interface {}
-type ScheduleAlgorithm interface{}
-type Binder interface {}
-type Candidate interface {}
-type StateData interface {}
-type Framework interface {}
-type FrameworkHandle interface {}
-type PreemptHandle interface {}
-type PodNominator interface {}
-type PluginsRunner interface {}
-type NodeInformLister interface {}
-type SharedLister interface {}
-type Cache interface {}
-type SchedulingQueue interface {}
-```
-
-
 ### 扩展
 
 `Extender`可以替换接管上面步骤中的任何默认插件，支持外部二进制(IPC)的方式影响、扩展资源调度器本身，根据配置旁路默认插件过程。
@@ -104,6 +66,7 @@ type SchedulingQueue interface {}
 ## 更新所有代码
 ```shell
  find  . -name  '*.go'  -type f  -exec   sed  -i  '1i\\/\/'   {}  \;
+ find  . -name  '*.go'  -exec   sed -i  '/^\s\+\/\//d' {} \;
 ```
 
 

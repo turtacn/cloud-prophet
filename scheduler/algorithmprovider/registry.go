@@ -1,3 +1,4 @@
+//
 package algorithmprovider
 
 import (
@@ -11,7 +12,7 @@ import (
 	"strings"
 )
 
-const ClusterK8sProvider = "ClusterK8sProvider"
+const ClusterK8sGeneralForJvirt = "ClusterK8sGeneralForJvirt"
 
 type Registry map[string]*schedulerapi.Plugins
 
@@ -21,7 +22,7 @@ func NewRegistry() Registry {
 
 	return Registry{
 		schedulerapi.SchedulerDefaultProviderName: defaultConfig,
-		ClusterK8sProvider:                        caConfig,
+		ClusterK8sGeneralForJvirt:                 caConfig,
 	}
 }
 
@@ -63,12 +64,13 @@ func getDefaultConfig() *schedulerapi.Plugins {
 				{Name: podtopologyspread.Name},
 			},
 		},
-		Score: &schedulerapi.PluginSet{
+		Score: &schedulerapi.PluginSet{ // 核心打分逻辑
 			Enabled: []schedulerapi.Plugin{
+				{Name: noderesources.RequestedToCapacityRatioName, Weight: 1},
 				{Name: noderesources.BalancedAllocationName, Weight: 1}, // 资源请求面向平衡
-
+				//// 以下二选一， binpacking and spread strategies
 				{Name: noderesources.MostAllocatedName, Weight: 1}, // binpack模式 剩余资源少优先
-
+				//{Name: noderesources.LeastAllocatedName, Weight: 1},
 			},
 		},
 		Reserve: &schedulerapi.PluginSet{}, // volume, port binding 阶段

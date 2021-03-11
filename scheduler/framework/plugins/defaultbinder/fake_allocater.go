@@ -1,3 +1,4 @@
+// 调度pipeline的最后的一个环节
 package defaultbinder
 
 import (

@@ -1,3 +1,4 @@
+//
 package noderesources
 
 import (
@@ -19,6 +20,7 @@ const (
 
 type functionShape []functionShapePoint
 
+// 利用率为多少的时候 给多少打分
 type functionShapePoint struct {
 	utilization int64
 	score       int64
@@ -117,6 +119,7 @@ func buildRequestedToCapacityRatioScorerFunction(scoringFunctionShape functionSh
 	}
 }
 
+// 离散爆破线拟合出得分
 func buildBrokenLinearFunction(shape functionShape) func(int64) int64 {
 	return func(p int64) int64 {
 		for i := 0; i < len(shape); i++ {

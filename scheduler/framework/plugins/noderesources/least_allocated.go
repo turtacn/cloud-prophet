@@ -1,3 +1,4 @@
+//
 package noderesources
 
 import (
@@ -63,6 +64,7 @@ func NewLeastAllocated(laArgs runtime.Object, h framework.FrameworkHandle) (fram
 	}, nil
 }
 
+// 剩余资源越多则越优先 加入各个维度的权重
 func leastResourceScorer(resToWeightMap resourceToWeightMap) func(resourceToValueMap, resourceToValueMap) int64 {
 	return func(requested, allocable resourceToValueMap) int64 {
 		var nodeScore, weightSum int64

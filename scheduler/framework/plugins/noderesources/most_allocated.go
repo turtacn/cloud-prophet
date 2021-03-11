@@ -1,3 +1,4 @@
+//
 package noderesources
 
 import (
@@ -64,6 +65,7 @@ func NewMostAllocated(maArgs runtime.Object, h framework.FrameworkHandle) (frame
 	}, nil
 }
 
+// 剩余资源越少则优先，考虑多维度的权重
 func mostResourceScorer(resToWeightMap resourceToWeightMap) func(requested, allocable resourceToValueMap) int64 {
 	return func(requested, allocable resourceToValueMap) int64 {
 		var nodeScore, weightSum int64

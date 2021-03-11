@@ -1,3 +1,4 @@
+//
 package label
 
 type Operator string

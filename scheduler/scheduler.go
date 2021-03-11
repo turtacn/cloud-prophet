@@ -1,3 +1,4 @@
+//
 package scheduler
 
 import (
@@ -102,12 +103,6 @@ func WithPodInitialBackoffSeconds(podInitialBackoffSeconds int64) Option {
 func WithPodMaxBackoffSeconds(podMaxBackoffSeconds int64) Option {
 	return func(o *schedulerOptions) {
 		o.podMaxBackoffSeconds = podMaxBackoffSeconds
-	}
-}
-
-func WithExtenders(e ...schedulerapi.Extender) Option {
-	return func(o *schedulerOptions) {
-		o.extenders = e
 	}
 }
 

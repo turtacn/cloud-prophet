@@ -1,5 +1,3 @@
-//
-//
 package scheduler
 
 import (
@@ -20,13 +18,10 @@ import (
 	"time"
 )
 
-// Binder knows how to write a binding.
 type Binder interface {
 	Bind(binding *v1.Binding) error
 }
 
-// Configurator defines I/O, caching, and other functionality needed to
-// construct a new scheduler.
 type Configurator struct {
 	client framework.ClientSet
 
@@ -34,15 +29,12 @@ type Configurator struct {
 
 	podInformer framework.SharedPodsLister
 
-	// Close this to stop all reflectors
 	StopEverything <-chan struct{}
 
 	schedulerCache internalcache.Cache
 
-	// Always check all predicates even if the middle of one predicate fails.
 	alwaysCheckAllPredicates bool
 
-	// percentageOfNodesToScore specifies percentage of all nodes to score in each scheduling cycle.
 	percentageOfNodesToScore int32
 
 	podInitialBackoffSeconds int64
@@ -75,7 +67,6 @@ func (c *Configurator) buildFramework(p schedulerapi.KubeSchedulerProfile, opts 
 	)
 }
 
-// create a scheduler from a set of registered plugins.
 func (c *Configurator) create() (*Scheduler, error) {
 	var extenders []framework.Extender
 	var ignoredExtendedResources []string
@@ -92,7 +83,6 @@ func (c *Configurator) create() (*Scheduler, error) {
 		}
 	}
 
-	// The nominator will be passed all the way to framework instantiation.
 	nominator := internalqueue.NewPodNominator()
 	profiles, err := profile.NewMap(c.profiles, c.buildFramework,
 		frameworkruntime.WithPodNominator(nominator))
@@ -104,7 +94,6 @@ func (c *Configurator) create() (*Scheduler, error) {
 		klog.Errorf("at least one profile is required")
 		return nil, errors.New("at least one profile is required")
 	}
-	// Profiles are required to have equivalent queue sort plugins.
 	lessFn := profiles[c.profiles[0].SchedulerName].Framework.QueueSortFunc()
 	podQueue := internalqueue.NewSchedulingQueue(
 		lessFn,
@@ -131,7 +120,6 @@ func (c *Configurator) create() (*Scheduler, error) {
 	}, nil
 }
 
-// createFromProvider creates a scheduler from the name of a registered algorithm provider.
 func (c *Configurator) createFromProvider(providerName string) (*Scheduler, error) {
 	klog.Infof("Creating scheduler from algorithm provider '%v'", providerName)
 	r := algorithmprovider.NewRegistry()
@@ -152,7 +140,6 @@ func (c *Configurator) createFromProvider(providerName string) (*Scheduler, erro
 	return c.create()
 }
 
-// MakeDefaultErrorFunc construct a function to handle pod scheduler error
 func MakeDefaultErrorFunc(client framework.ClientSet, podInformer framework.SharedPodsLister, podQueue internalqueue.SchedulingQueue, schedulerCache internalcache.Cache) func(*framework.QueuedPodInfo, error) {
 	return func(podInfo *framework.QueuedPodInfo, err error) {
 		pod := podInfo.Pod
@@ -164,8 +151,6 @@ func MakeDefaultErrorFunc(client framework.ClientSet, podInformer framework.Shar
 			klog.Infof("Unable to schedule %v/%v: possibly due to node not found: %v; waiting", pod.Namespace, pod.Name, err)
 			if errStatus, ok := err.(apierrors.APIStatus); ok && errStatus.Status().Details.Kind == "node" {
 				nodeName := errStatus.Status().Details.Name
-				// when node is not found, We do not remove the node right away. Trying again to get
-				// the node and if the node is still not found, then remove it from the scheduler cache.
 				if client == nil {
 
 				}
@@ -181,13 +166,11 @@ func MakeDefaultErrorFunc(client framework.ClientSet, podInformer framework.Shar
 		}
 
 		if podInformer != nil {
-			// Check if the Pod exists in informer cache.
 			cachedPod, err := podInformer.PodInfos().Get(pod.Name)
 			if err != nil {
 				klog.Warningf("Pod %v/%v doesn't exist in informer cache: %v", pod.Namespace, pod.Name, err)
 				return
 			}
-			// As <cachedPod> is from SharedInformer, we need to do a DeepCopy() here.
 			if cachedPod == nil {
 				podInfo.Pod = nil
 

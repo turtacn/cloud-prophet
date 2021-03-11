@@ -70,7 +70,6 @@ type JvirtHost struct {
 	BmemoryRatio       string `json:"bmemory_ratio"`        //57
 }
 
-// 1568258678,alloc,i-wxw6mcj79k,1,4096
 type JvirtInstanceTrace struct {
 	OpTime       string `json:"op_time"`
 	OpAction     string `json:"op_action"`

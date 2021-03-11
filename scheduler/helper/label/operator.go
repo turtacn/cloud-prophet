@@ -1,8 +1,5 @@
-//
 package label
 
-// Operator represents a key/field's relationship to value(s).
-// See labels.Requirement and fields.Requirement for more details.
 type Operator string
 
 const (

@@ -1,6 +1,3 @@
-//
-//
-// Package profile holds the definition of a scheduling Profile.
 package profile
 
 import (
@@ -15,16 +12,13 @@ import (
 	"k8s.io/klog"
 )
 
-// FrameworkFactory builds a Framework for a given profile configuration.
 type FrameworkFactory func(config.KubeSchedulerProfile, ...frameworkruntime.Option) (framework.Framework, error)
 
-// Profile is a scheduling profile.
 type Profile struct {
 	framework.Framework
 	Name string
 }
 
-// NewProfile builds a Profile for the given configuration.
 func NewProfile(cfg config.KubeSchedulerProfile, frameworkFact FrameworkFactory,
 	opts ...frameworkruntime.Option) (*Profile, error) {
 	opts = append(opts, frameworkruntime.WithProfileName(cfg.SchedulerName))
@@ -39,10 +33,8 @@ func NewProfile(cfg config.KubeSchedulerProfile, frameworkFact FrameworkFactory,
 	}, nil
 }
 
-// Map holds profiles indexed by scheduler name.
 type Map map[string]*Profile
 
-// NewMap builds the profiles given by the configuration, indexed by name.
 func NewMap(cfgs []config.KubeSchedulerProfile, frameworkFact FrameworkFactory,
 	opts ...frameworkruntime.Option) (Map, error) {
 	m := make(Map)
@@ -63,7 +55,6 @@ func NewMap(cfgs []config.KubeSchedulerProfile, frameworkFact FrameworkFactory,
 	return m, nil
 }
 
-// HandlesSchedulerName returns whether a profile handles the given scheduler name.
 func (m Map) HandlesSchedulerName(name string) bool {
 	_, ok := m[name]
 	return ok

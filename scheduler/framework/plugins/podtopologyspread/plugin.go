@@ -1,5 +1,3 @@
-// 维护各种维度到实例的Lister操作映射
-//
 package podtopologyspread
 
 import (
@@ -12,13 +10,10 @@ import (
 )
 
 const (
-	// ErrReasonConstraintsNotMatch is used for PodTopologySpread filter error.
 	ErrReasonConstraintsNotMatch = "node(s) didn't match pod topology spread constraints"
-	// ErrReasonNodeLabelNotMatch is used when the node doesn't hold the required label.
-	ErrReasonNodeLabelNotMatch = ErrReasonConstraintsNotMatch + " (missing required label)"
+	ErrReasonNodeLabelNotMatch   = ErrReasonConstraintsNotMatch + " (missing required label)"
 )
 
-// PodTopologySpread is a plugin that ensures pod's topologySpreadConstraints is satisfied.
 type PodTopologySpread struct {
 	args         config.PodTopologySpreadArgs
 	sharedLister framework.SharedLister
@@ -30,21 +25,17 @@ var _ framework.PreScorePlugin = &PodTopologySpread{}
 var _ framework.ScorePlugin = &PodTopologySpread{}
 
 const (
-	// Name is the name of the plugin used in the plugin registry and configurations.
 	Name = "PodTopologySpread"
 )
 
-// Name returns name of the plugin. It is used in logs, etc.
 func (pl *PodTopologySpread) Name() string {
 	return Name
 }
 
-// BuildArgs returns the arguments used to build the plugin.
 func (pl *PodTopologySpread) BuildArgs() interface{} {
 	return pl.args
 }
 
-// New initializes a new plugin and returns it.
 func New(plArgs runtime.Object, h framework.FrameworkHandle) (framework.Plugin, error) {
 	if h.SnapshotSharedLister() == nil {
 		return nil, fmt.Errorf("SnapshotSharedlister is nil")

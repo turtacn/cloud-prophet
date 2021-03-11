@@ -1,5 +1,3 @@
-//
-//
 package defaultbinder
 
 import (
@@ -10,27 +8,22 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// Name of the plugin used in the plugin registry and configurations.
 const Name = "DefaultBinder"
 
-// DefaultBinder binds pods to nodes using a k8s client.
 type DefaultBinder struct {
 	handle framework.FrameworkHandle
 }
 
 var _ framework.BindPlugin = &DefaultBinder{}
 
-// New creates a DefaultBinder.
 func New(_ runtime.Object, handle framework.FrameworkHandle) (framework.Plugin, error) {
 	return &DefaultBinder{handle: handle}, nil
 }
 
-// Name returns the name of the plugin.
 func (b DefaultBinder) Name() string {
 	return Name
 }
 
-// Bind binds pods to nodes using the k8s/jvirt client.
 func (b DefaultBinder) Bind(ctx context.Context, state *framework.CycleState, p *v1.Pod, nodeName string) *framework.Status {
 	klog.Infof("Attempting to bind %v/%v to %v", p.Namespace, p.Name, nodeName)
 	binding := &v1.Binding{

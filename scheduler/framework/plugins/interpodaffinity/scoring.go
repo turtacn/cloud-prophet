@@ -1,5 +1,3 @@
-//
-//
 package interpodaffinity
 
 import (
@@ -13,19 +11,15 @@ import (
 	schedutil "github.com/turtacn/cloud-prophet/scheduler/util"
 )
 
-// preScoreStateKey is the key in CycleState to InterPodAffinity pre-computed data for Scoring.
 const preScoreStateKey = "PreScore" + Name
 
 type scoreMap map[string]map[string]int64
 
-// preScoreState computed at PreScore and used at Score.
 type preScoreState struct {
 	topologyScore scoreMap
 	podInfo       *framework.PodInfo
 }
 
-// Clone implements the mandatory Clone interface. We don't really copy the data since
-// there is no need for that.
 func (s *preScoreState) Clone() framework.StateData {
 	return s
 }
@@ -79,19 +73,10 @@ func (pl *InterPodAffinity) processExistingPod(
 ) {
 	existingPodNode := existingPodNodeInfo.Node()
 
-	// For every soft pod affinity term of <pod>, if <existingPod> matches the term,
-	// increment <p.counts> for every node in the cluster with the same <term.TopologyKey>
-	// value as that of <existingPods>`s node by the term`s weight.
 	topoScore.processTerms(state.podInfo.PreferredAffinityTerms, existingPod.Pod, existingPodNode, 1)
 
-	// For every soft pod anti-affinity term of <pod>, if <existingPod> matches the term,
-	// decrement <p.counts> for every node in the cluster with the same <term.TopologyKey>
-	// value as that of <existingPod>`s node by the term`s weight.
 	topoScore.processTerms(state.podInfo.PreferredAntiAffinityTerms, existingPod.Pod, existingPodNode, -1)
 
-	// For every hard pod affinity term of <existingPod>, if <pod> matches the term,
-	// increment <p.counts> for every node in the cluster with the same <term.TopologyKey>
-	// value as that of <existingPod>'s node by the constant <args.hardPodAffinityWeight>
 	if pl.args.HardPodAffinityWeight > 0 {
 		for _, term := range existingPod.RequiredAffinityTerms {
 			t := framework.WeightedAffinityTerm{AffinityTerm: term, Weight: pl.args.HardPodAffinityWeight}
@@ -99,18 +84,11 @@ func (pl *InterPodAffinity) processExistingPod(
 		}
 	}
 
-	// For every soft pod affinity term of <existingPod>, if <pod> matches the term,
-	// increment <p.counts> for every node in the cluster with the same <term.TopologyKey>
-	// value as that of <existingPod>'s node by the term's weight.
 	topoScore.processTerms(existingPod.PreferredAffinityTerms, incomingPod, existingPodNode, 1)
 
-	// For every soft pod anti-affinity term of <existingPod>, if <pod> matches the term,
-	// decrement <pm.counts> for every node in the cluster with the same <term.TopologyKey>
-	// value as that of <existingPod>'s node by the term's weight.
 	topoScore.processTerms(existingPod.PreferredAntiAffinityTerms, incomingPod, existingPodNode, -1)
 }
 
-// PreScore builds and writes cycle state used by Score and NormalizeScore.
 func (pl *InterPodAffinity) PreScore(
 	pCtx context.Context,
 	cycleState *framework.CycleState,
@@ -118,7 +96,6 @@ func (pl *InterPodAffinity) PreScore(
 	nodes []*v1.Node,
 ) *framework.Status {
 	if len(nodes) == 0 {
-		// No nodes to score.
 		return nil
 	}
 
@@ -130,8 +107,6 @@ func (pl *InterPodAffinity) PreScore(
 	hasAffinityConstraints := affinity != nil && affinity.PodAffinity != nil
 	hasAntiAffinityConstraints := affinity != nil && affinity.PodAntiAffinity != nil
 
-	// Unless the pod being scheduled has affinity terms, we only
-	// need to process nodes hosting pods with affinity.
 	var allNodes []*framework.NodeInfo
 	var err error
 	if hasAffinityConstraints || hasAntiAffinityConstraints {
@@ -148,7 +123,6 @@ func (pl *InterPodAffinity) PreScore(
 
 	podInfo := framework.NewPodInfo(pod)
 	if podInfo.ParseError != nil {
-		// Ideally we never reach here, because errors will be caught by PreFilter
 		return framework.NewStatus(framework.Error, fmt.Sprintf("parsing pod: %+v", podInfo.ParseError))
 	}
 
@@ -164,11 +138,8 @@ func (pl *InterPodAffinity) PreScore(
 		if nodeInfo.Node() == nil {
 			return
 		}
-		// Unless the pod being scheduled has affinity terms, we only
-		// need to process pods with affinity in the node.
 		podsToProcess := nodeInfo.PodsWithAffinity
 		if hasAffinityConstraints || hasAntiAffinityConstraints {
-			// We need to process all the pods.
 			podsToProcess = nodeInfo.Pods
 		}
 
@@ -203,10 +174,6 @@ func getPreScoreState(cycleState *framework.CycleState) (*preScoreState, error) 
 	return s, nil
 }
 
-// Score invoked at the Score extension point.
-// The "score" returned in this function is the sum of weights got from cycleState which have its topologyKey matching with the node's labels.
-// it is normalized later.
-// Note: the returned "score" is positive for pod-affinity, and negative for pod-antiaffinity.
 func (pl *InterPodAffinity) Score(ctx context.Context, cycleState *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
 	nodeInfo, err := pl.sharedLister.NodeInfos().Get(nodeName)
 	if err != nil || nodeInfo.Node() == nil {
@@ -228,7 +195,6 @@ func (pl *InterPodAffinity) Score(ctx context.Context, cycleState *framework.Cyc
 	return score, nil
 }
 
-// NormalizeScore normalizes the score for each filteredNode.
 func (pl *InterPodAffinity) NormalizeScore(ctx context.Context, cycleState *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
 	s, err := getPreScoreState(cycleState)
 	if err != nil {
@@ -262,7 +228,6 @@ func (pl *InterPodAffinity) NormalizeScore(ctx context.Context, cycleState *fram
 	return nil
 }
 
-// ScoreExtensions of the Score plugin.
 func (pl *InterPodAffinity) ScoreExtensions() framework.ScoreExtensions {
 	return pl
 }

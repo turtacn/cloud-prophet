@@ -1,5 +1,3 @@
-//
-//
 package noderesources
 
 import (
@@ -14,7 +12,6 @@ import (
 	"k8s.io/klog"
 )
 
-// MostAllocated is a score plugin that favors nodes with high allocation based on requested resources.
 type MostAllocated struct {
 	handle framework.FrameworkHandle
 	resourceAllocationScorer
@@ -22,34 +19,25 @@ type MostAllocated struct {
 
 var _ = framework.ScorePlugin(&MostAllocated{})
 
-// MostAllocatedName is the name of the plugin used in the plugin registry and configurations.
 const MostAllocatedName = "NodeResourcesMostAllocated"
 
-// Name returns name of the plugin. It is used in logs, etc.
 func (ma *MostAllocated) Name() string {
 	return MostAllocatedName
 }
 
-// Score invoked at the Score extension point.
 func (ma *MostAllocated) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
 	nodeInfo, err := ma.handle.SnapshotSharedLister().NodeInfos().Get(nodeName)
 	if err != nil || nodeInfo.Node() == nil {
 		return 0, framework.NewStatus(framework.Error, fmt.Sprintf("getting node %q from Snapshot: %v, node is nil: %v", nodeName, err, nodeInfo.Node() == nil))
 	}
 
-	// ma.score favors nodes with most requested resources.
-	// It calculates the percentage of memory and CPU requested by pods scheduled on the node, and prioritizes
-	// based on the maximum of the average of the fraction of requested to capacity.
-	// Details: (cpu(MaxNodeScore * sum(requested) / capacity) + memory(MaxNodeScore * sum(requested) / capacity)) / weightSum
 	return ma.score(pod, nodeInfo)
 }
 
-// ScoreExtensions of the Score plugin.
 func (ma *MostAllocated) ScoreExtensions() framework.ScoreExtensions {
 	return nil
 }
 
-// NewMostAllocated initializes a new plugin and returns it.
 func NewMostAllocated(maArgs runtime.Object, h framework.FrameworkHandle) (framework.Plugin, error) {
 	args, ok := maArgs.(*config.NodeResourcesMostAllocatedArgs)
 	if !ok {
@@ -92,11 +80,6 @@ func mostResourceScorer(resToWeightMap resourceToWeightMap) func(requested, allo
 	}
 }
 
-// The used capacity is calculated on a scale of 0-MaxNodeScore (MaxNodeScore is
-// constant with value set to 100).
-// 0 being the lowest priority and 100 being the highest.
-// The more resources are used the higher the score is. This function
-// is almost a reversed version of noderesources.leastRequestedScore.
 func mostRequestedScore(requested, capacity int64) int64 {
 	if capacity == 0 {
 		return 0

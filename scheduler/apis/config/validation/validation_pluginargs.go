@@ -1,5 +1,3 @@
-//
-//
 package validation
 
 import (
@@ -10,12 +8,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-// ValidateInterPodAffinityArgs validates that InterPodAffinityArgs are correct.
 func ValidateInterPodAffinityArgs(args config.InterPodAffinityArgs) error {
 	return ValidateHardPodAffinityWeight(field.NewPath("hardPodAffinityWeight"), args.HardPodAffinityWeight)
 }
 
-// ValidateHardPodAffinityWeight validates that weight is within allowed range.
 func ValidateHardPodAffinityWeight(path *field.Path, w int32) error {
 	const (
 		minHardPodAffinityWeight = 0
@@ -29,9 +25,6 @@ func ValidateHardPodAffinityWeight(path *field.Path, w int32) error {
 	return nil
 }
 
-// ValidatePodTopologySpreadArgs validates that PodTopologySpreadArgs are correct.
-// It replicates the validation from pkg/apis/core/validation.validateTopologySpreadConstraints
-// with an additional check for .labelSelector to be nil.
 func ValidatePodTopologySpreadArgs(args *config.PodTopologySpreadArgs) error {
 	var allErrs field.ErrorList
 	path := field.NewPath("defaultConstraints")
@@ -72,7 +65,6 @@ func validateConstraintNotRepeat(path *field.Path, constraints []v1.TopologySpre
 	return nil
 }
 
-// ValidateRequestedToCapacityRatioArgs validates that RequestedToCapacityRatioArgs are correct.
 func ValidateRequestedToCapacityRatioArgs(args config.RequestedToCapacityRatioArgs) error {
 	if err := validateFunctionShape(args.Shape); err != nil {
 		return err
@@ -128,12 +120,10 @@ func validateResourcesNoMax(resources []config.ResourceSpec) error {
 	return nil
 }
 
-// ValidateNodeResourcesLeastAllocatedArgs validates that NodeResourcesLeastAllocatedArgs are correct.
 func ValidateNodeResourcesLeastAllocatedArgs(args *config.NodeResourcesLeastAllocatedArgs) error {
 	return validateResources(args.Resources)
 }
 
-// ValidateNodeResourcesMostAllocatedArgs validates that NodeResourcesMostAllocatedArgs are correct.
 func ValidateNodeResourcesMostAllocatedArgs(args *config.NodeResourcesMostAllocatedArgs) error {
 	return validateResources(args.Resources)
 }

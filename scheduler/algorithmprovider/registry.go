@@ -1,5 +1,3 @@
-// 调度算法的组成,包含哪些Plugin; 打分的Plugin及其静态权重
-//
 package algorithmprovider
 
 import (
@@ -9,18 +7,14 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/noderesources"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/podtopologyspread"
 	"github.com/turtacn/cloud-prophet/scheduler/framework/plugins/queuesort"
-	// 这里扩展调度插件扩展的引用
 	"sort"
 	"strings"
 )
 
-// ClusterAutoscalerProvider defines the default autoscaler provider
 const ClusterK8sProvider = "ClusterK8sProvider"
 
-// Registry is a collection of all available algorithm providers.
 type Registry map[string]*schedulerapi.Plugins
 
-// NewRegistry returns an algorithm provider registry instance.
 func NewRegistry() Registry {
 	defaultConfig := getDefaultConfig()
 	caConfig := getClusterAutoscalerConfig()
@@ -31,7 +25,6 @@ func NewRegistry() Registry {
 	}
 }
 
-// ListAlgorithmProviders lists registered algorithm providers.
 func ListAlgorithmProviders() string {
 	r := NewRegistry()
 	var providers []string
@@ -70,20 +63,12 @@ func getDefaultConfig() *schedulerapi.Plugins {
 				{Name: podtopologyspread.Name},
 			},
 		},
-		// 核心打分算法
 		Score: &schedulerapi.PluginSet{
 			Enabled: []schedulerapi.Plugin{
-				// {Name: noderesources.RequestedToCapacityRatioName, Weight: 1},   // 资源请求面向节点可用资源成比例优先
 				{Name: noderesources.BalancedAllocationName, Weight: 1}, // 资源请求面向平衡
 
-				//  以下二选一
-				//{Name: noderesources.LeastAllocatedName, Weight: 1},             // spread 模式 剩余资源多优先
 				{Name: noderesources.MostAllocatedName, Weight: 1}, // binpack模式 剩余资源少优先
 
-				// Weight is doubled because:
-				// - This is a score coming from user preference.
-				// - It makes its signal comparable to NodeResourcesLeastAllocated.
-				//{Name: podtopologyspread.Name, Weight: 2},                      // 根据业务标签将Pod聚类， 同类的Pod对节点计数， Spread 策略
 			},
 		},
 		Reserve: &schedulerapi.PluginSet{}, // volume, port binding 阶段
@@ -103,7 +88,6 @@ func getDefaultConfig() *schedulerapi.Plugins {
 
 func getClusterAutoscalerConfig() *schedulerapi.Plugins {
 	caConfig := getDefaultConfig()
-	// Replace least with most requested.
 	for i := range caConfig.Score.Enabled {
 		if caConfig.Score.Enabled[i].Name == noderesources.LeastAllocatedName {
 			caConfig.Score.Enabled[i].Name = noderesources.MostAllocatedName

@@ -1,5 +1,3 @@
-//
-//
 package scheduler
 
 import (
@@ -56,11 +54,6 @@ func (sched *Scheduler) updateNodeInCache(oldObj, newObj interface{}) {
 		klog.Errorf("scheduler cache UpdateNode failed: %v", err)
 	}
 
-	// Only activate unschedulable pods if the node became more schedulable.
-	// We skip the node property comparison when there is no unschedulable pods in the queue
-	// to save processing cycles. We still trigger a move to active queue to cover the case
-	// that a pod being processed by the scheduler is determined unschedulable. We want this
-	// pod to be reevaluated when a change in the cluster happens.
 	if sched.SchedulingQueue.NumUnschedulablePods() == 0 {
 		sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.Unknown)
 	} else if event := nodeSchedulingPropertiesChange(newNode, oldNode); event != "" {
@@ -78,11 +71,6 @@ func (sched *Scheduler) deleteNodeFromCache(obj interface{}) {
 		return
 	}
 	klog.Infof("delete event for node %q", node.Name)
-	// NOTE: Updates must be written to scheduler cache before invalidating
-	// equivalence cache, because we could snapshot equivalence cache after the
-	// invalidation and then snapshot the cache itself. If the cache is
-	// snapshotted before updates are written, we would update equivalence
-	// cache with stale information which is based on snapshot of old cache.
 	if err := sched.SchedulerCache.RemoveNode(node); err != nil {
 		klog.Errorf("scheduler cache RemoveNode failed: %v", err)
 	}
@@ -121,8 +109,6 @@ func (sched *Scheduler) deletePodFromSchedulingQueue(obj interface{}) {
 	}
 	prof, err := sched.profileForPod(pod)
 	if err != nil {
-		// This shouldn't happen, because we only accept for scheduling the pods
-		// which specify a scheduler name that matches one of the profiles.
 		klog.Error(err)
 		return
 	}
@@ -166,20 +152,12 @@ func (sched *Scheduler) updatePodInCache(oldObj, newObj interface{}) {
 		return
 	}
 
-	// A Pod delete event followed by an immediate Pod add event may be merged
-	// into a Pod update event. In this case, we should invalidate the old Pod, and
-	// then add the new Pod.
 	if oldPod.UID != newPod.UID {
 		sched.deletePodFromCache(oldObj)
 		sched.addPodToCache(newObj)
 		return
 	}
 
-	// NOTE: Updates must be written to scheduler cache before invalidating
-	// equivalence cache, because we could snapshot equivalence cache after the
-	// invalidation and then snapshot the cache itself. If the cache is
-	// snapshotted before updates are written, we would update equivalence
-	// cache with stale information which is based on snapshot of old cache.
 	if err := sched.SchedulerCache.UpdatePod(oldPod, newPod); err != nil {
 		klog.Errorf("scheduler cache UpdatePod failed: %v", err)
 	}
@@ -197,11 +175,6 @@ func (sched *Scheduler) deletePodFromCache(obj interface{}) {
 		return
 	}
 	klog.Infof("delete event for scheduled pod %s/%s ", pod.Namespace, pod.Name)
-	// NOTE: Updates must be written to scheduler cache before invalidating
-	// equivalence cache, because we could snapshot equivalence cache after the
-	// invalidation and then snapshot the cache itself. If the cache is
-	// snapshotted before updates are written, we would update equivalence
-	// cache with stale information which is based on snapshot of old cache.
 	if err := sched.SchedulerCache.RemovePod(pod); err != nil {
 		klog.Errorf("scheduler cache RemovePod failed: %v", err)
 	}
@@ -209,23 +182,15 @@ func (sched *Scheduler) deletePodFromCache(obj interface{}) {
 	sched.SchedulingQueue.MoveAllToActiveOrBackoffQueue(queue.AssignedPodDelete)
 }
 
-// assignedPod selects pods that are assigned (scheduled and running).
 func assignedPod(pod *v1.Pod) bool {
 	return len(pod.Spec.NodeName) != 0
 }
 
-// responsibleForPod returns true if the pod has asked to be scheduled by the given scheduler.
 func responsibleForPod(pod *v1.Pod, profiles profile.Map) bool {
 	return profiles.HandlesSchedulerName(pod.Spec.SchedulerName)
 }
 
-// skipPodUpdate checks whether the specified pod update should be ignored.
-// This function will return true if
-//   - The pod has already been assumed, AND
-//   - The pod has only its ResourceVersion, Spec.NodeName, Annotations,
-//     ManagedFields, Finalizers and/or Conditions updated.
 func (sched *Scheduler) skipPodUpdate(pod *v1.Pod) bool {
-	// Non-assumed pods should never be skipped.
 	isAssumed, err := sched.SchedulerCache.IsAssumedPod(pod)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("failed to check whether pod %s/%s is assumed: %v", pod.Namespace, pod.Name, err))
@@ -235,20 +200,14 @@ func (sched *Scheduler) skipPodUpdate(pod *v1.Pod) bool {
 		return false
 	}
 
-	// Gets the assumed pod from the cache.
 	assumedPod, err := sched.SchedulerCache.GetPod(pod)
 	if err != nil {
 		utilruntime.HandleError(fmt.Errorf("failed to get assumed pod %s/%s from cache: %v", pod.Namespace, pod.Name, err))
 		return false
 	}
 
-	// Compares the assumed pod in the cache with the pod update. If they are
-	// equal (with certain fields excluded), this pod update will be skipped.
 	f := func(pod *v1.Pod) *v1.Pod {
 		p := pod.DeepCopy()
-		// Spec.NodeName must be excluded because the pod assumed in the cache
-		// is expected to have a node assigned while the pod update may nor may
-		// not have this field set.
 		p.Spec.NodeName = ""
 		return p
 	}
@@ -260,14 +219,11 @@ func (sched *Scheduler) skipPodUpdate(pod *v1.Pod) bool {
 	return true
 }
 
-// addAllEventHandlers is a helper function used in tests and in Scheduler
-// to add event handlers for various informers.
 func addAllEventHandlers(
 	sched *Scheduler,
 	informerFactory framework.SharedInformer, // 节点informer
 	podInformer framework.SharedInformer, // 实例informer
 ) {
-	// scheduled pod cache
 	podInformer.AddEventHandler(
 		framework.FilteringResourceEventHandler{
 			FilterFunc: func(obj interface{}) bool {
@@ -286,7 +242,6 @@ func addAllEventHandlers(
 			},
 		},
 	)
-	// unscheduled pod queue
 	podInformer.AddEventHandler(
 		framework.FilteringResourceEventHandler{
 			FilterFunc: func(obj interface{}) bool {

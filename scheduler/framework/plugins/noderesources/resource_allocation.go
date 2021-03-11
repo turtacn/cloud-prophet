@@ -1,5 +1,3 @@
-// 资源分配打分的基座
-//
 package noderesources
 
 import (
@@ -9,14 +7,10 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// resourceToWeightMap contains resource name and weight.
 type resourceToWeightMap map[v1.ResourceName]int64
 
-// defaultRequestedRatioResources is used to set default requestToWeight map for CPU and memory
 var defaultRequestedRatioResources = resourceToWeightMap{v1.ResourceMemory: 1, v1.ResourceCPU: 1}
 
-// resourceAllocationScorer contains information to calculate resource allocation score.
-// 扩展支持volume资源
 type resourceAllocationScorer struct {
 	Name                string
 	scorer              func(requested, allocable resourceToValueMap) int64
@@ -24,10 +18,8 @@ type resourceAllocationScorer struct {
 	printHostFlag       bool
 }
 
-// resourceToValueMap contains resource name and score.
 type resourceToValueMap map[v1.ResourceName]int64
 
-// score will use `scorer` function to calculate the score.
 func (r *resourceAllocationScorer) score(
 	pod *v1.Pod,
 	nodeInfo *framework.NodeInfo) (int64, *framework.Status) {
@@ -47,10 +39,8 @@ func (r *resourceAllocationScorer) score(
 	}
 	var score int64
 
-	// 打分，将一般资源和扩展资源分开处理
 	score = r.scorer(requested, allocatable)
 
-	// 每个节点输出打分
 	if r.printHostFlag {
 		klog.Infof(
 			"%v -> %v: %v, map of allocatable resources %v, map of requested resources %v ,score %d,",
@@ -62,10 +52,8 @@ func (r *resourceAllocationScorer) score(
 	return score, nil
 }
 
-// calculateResourceAllocatableRequest returns resources Allocatable and Requested values
 func calculateResourceAllocatableRequest(nodeInfo *framework.NodeInfo, pod *v1.Pod, resource v1.ResourceName) (int64, int64) {
 	podRequest := calculatePodResourceRequest(pod, resource)
-	//klog.Infof("calculatePodResourceRequest pod %v resource %v => podRequest %v", pod, resource, podRequest)
 	switch resource {
 	case v1.ResourceCPU:
 		return nodeInfo.Allocatable.MilliCPU, (nodeInfo.NonZeroRequested.MilliCPU + podRequest)
@@ -74,7 +62,6 @@ func calculateResourceAllocatableRequest(nodeInfo *framework.NodeInfo, pod *v1.P
 	case v1.ResourceEphemeralStorage:
 		return nodeInfo.Allocatable.EphemeralStorage, (nodeInfo.Requested.EphemeralStorage + podRequest)
 	default:
-		// 默认支持超卖
 		return nodeInfo.Allocatable.ScalarResources[resource], (nodeInfo.Requested.ScalarResources[resource] + podRequest)
 	}
 	if true {
@@ -85,9 +72,6 @@ func calculateResourceAllocatableRequest(nodeInfo *framework.NodeInfo, pod *v1.P
 	return 0, 0
 }
 
-// calculatePodResourceRequest returns the total non-zero requests. If Overhead is defined for the pod and the
-// PodOverhead feature is enabled, the Overhead is added to the result.
-// podResourceRequest = max(sum(podSpec.Containers), podSpec.InitContainers) + overHead
 func calculatePodResourceRequest(pod *v1.Pod, resource v1.ResourceName) int64 {
 	var podRequest int64
 	for i := range pod.Spec.Containers {
@@ -95,7 +79,6 @@ func calculatePodResourceRequest(pod *v1.Pod, resource v1.ResourceName) int64 {
 		value := schedutil.GetNonzeroRequestForResource(resource, &container.Resources.Requests)
 		podRequest += value
 	}
-	// If Overhead is being utilized, add to the total requests for the pod
 	if pod.Spec.Overhead != nil {
 		if quantity, found := pod.Spec.Overhead[resource]; found {
 			podRequest += quantity.Value()

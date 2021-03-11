@@ -1,5 +1,3 @@
-// 实例归属上层概念集合的分布情况
-//
 package selectorspread
 
 import (
@@ -14,56 +12,36 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// host在各个层次维度的打分权重
-// kubernetes: zone => hosts
-// jvirt: cluster => az => pool => ag => hg => rack => hosts
-
 type SelectorSpread struct {
 	sharedLister framework.SharedLister
-	// appid 维度的lister
-	// az 维度的lister
-	// hg 维度的lister
 }
 
 var _ framework.PreScorePlugin = &SelectorSpread{}
 var _ framework.ScorePlugin = &SelectorSpread{}
 
 const (
-	// Name is the name of the plugin used in the plugin registry and configurations.
-	Name = "SelectorSpread"
-	// preScoreStateKey is the key in CycleState to SelectorSpread pre-computed data for Scoring.
+	Name             = "SelectorSpread"
 	preScoreStateKey = "PreScore" + Name
 
-	// When zone information is present, give 2/3 of the weighting to zone spreading, 1/3 to node spreading
 	zoneWeighting float64 = 2.0 / 3.0
 )
 
-// Name returns name of the plugin. It is used in logs, etc.
 func (pl *SelectorSpread) Name() string {
 	return Name
 }
 
-// preScoreState computed at PreScore and used at Score.
 type preScoreState struct {
 	selector labels.Selector
 }
 
-// Clone implements the mandatory Clone interface. We don't really copy the data since
-// there is no need for that.
 func (s *preScoreState) Clone() framework.StateData {
 	return s
 }
 
-// skipSelectorSpread returns true if the pod's TopologySpreadConstraints are specified.
-// Note that this doesn't take into account default constraints defined for
-// the PodTopologySpread plugin.
 func skipSelectorSpread(pod *v1.Pod) bool {
 	return len(pod.Spec.TopologySpreadConstraints) != 0
 }
 
-// Score invoked at the Score extension point.
-// The "score" returned in this function is the matching number of pods on the `nodeName`,
-// it is normalized later.
 func (pl *SelectorSpread) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
 	if skipSelectorSpread(pod) {
 		return 0, nil
@@ -88,11 +66,6 @@ func (pl *SelectorSpread) Score(ctx context.Context, state *framework.CycleState
 	return int64(count), nil
 }
 
-// NormalizeScore invoked after scoring all nodes.
-// For this plugin, it calculates the score of each node
-// based on the number of existing matching pods on the node
-// where zone information is included on the nodes, it favors nodes
-// in zones with fewer existing matching pods.
 func (pl *SelectorSpread) NormalizeScore(ctx context.Context, state *framework.CycleState, pod *v1.Pod, scores framework.NodeScoreList) *framework.Status {
 	if skipSelectorSpread(pod) {
 		return nil
@@ -130,12 +103,10 @@ func (pl *SelectorSpread) NormalizeScore(ctx context.Context, state *framework.C
 	MaxNodeScoreFloat64 := float64(framework.MaxNodeScore)
 
 	for i := range scores {
-		// initializing to the default/max node score of maxPriority
 		fScore := MaxNodeScoreFloat64
 		if maxCountByNodeName > 0 {
 			fScore = MaxNodeScoreFloat64 * (float64(maxCountByNodeName-scores[i].Score) / maxCountByNodeNameFloat64)
 		}
-		// If there is zone information present, incorporate it
 		if haveZones {
 			nodeInfo, err := pl.sharedLister.NodeInfos().Get(scores[i].Name)
 			if err != nil {
@@ -156,12 +127,10 @@ func (pl *SelectorSpread) NormalizeScore(ctx context.Context, state *framework.C
 	return nil
 }
 
-// ScoreExtensions of the Score plugin.
 func (pl *SelectorSpread) ScoreExtensions() framework.ScoreExtensions {
 	return pl
 }
 
-// PreScore builds and writes cycle state used by Score and NormalizeScore.
 func (pl *SelectorSpread) PreScore(ctx context.Context, cycleState *framework.CycleState, pod *v1.Pod, nodes []*v1.Node) *framework.Status {
 	if skipSelectorSpread(pod) {
 		return nil
@@ -177,7 +146,6 @@ func (pl *SelectorSpread) PreScore(ctx context.Context, cycleState *framework.Cy
 	return nil
 }
 
-// New initializes a new plugin and returns it.
 func New(_ runtime.Object, handle framework.FrameworkHandle) (framework.Plugin, error) {
 	sharedLister := handle.SnapshotSharedLister()
 	if sharedLister == nil {
@@ -188,15 +156,12 @@ func New(_ runtime.Object, handle framework.FrameworkHandle) (framework.Plugin, 
 	}, nil
 }
 
-// countMatchingPods counts pods based on namespace and matching all selectors
 func countMatchingPods(namespace string, selector labels.Selector, nodeInfo *framework.NodeInfo) int {
 	if len(nodeInfo.Pods) == 0 || selector.Empty() {
 		return 0
 	}
 	count := 0
 	for _, p := range nodeInfo.Pods {
-		// Ignore pods being deleted for spreading purposes
-		// Similar to how it is done for SelectorSpreadPriority
 		if namespace == p.Pod.Namespace && p.Pod.DeletionTimestamp == nil {
 			if selector.Matches(labels.Set(p.Pod.Labels)) {
 				count++

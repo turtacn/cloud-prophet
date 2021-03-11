@@ -1,5 +1,3 @@
-//
-//
 package base
 
 import (
@@ -19,24 +17,13 @@ import (
 
 var generation int64
 
-// QueuedPodInfo is a Pod wrapper with additional information related to
-// the pod's status in the scheduling queue, such as the timestamp when
-// it's added to the queue.
 type QueuedPodInfo struct {
-	Pod *v1.Pod
-	// The time pod added to the scheduling queue.
-	Timestamp time.Time
-	// Number of schedule attempts before successfully scheduled.
-	// It's used to record the # attempts metric.
-	Attempts int
-	// The time when the pod is added to the queue for the first time. The pod may be added
-	// back to the queue multiple times before it's successfully scheduled.
-	// It shouldn't be updated once initialized. It's used to record the e2e scheduling
-	// latency for a pod.
+	Pod                     *v1.Pod
+	Timestamp               time.Time
+	Attempts                int
 	InitialAttemptTimestamp time.Time
 }
 
-// DeepCopy returns a deep copy of the QueuedPodInfo object.
 func (pqi *QueuedPodInfo) DeepCopy() *QueuedPodInfo {
 	return &QueuedPodInfo{
 		Pod:                     pqi.Pod.DeepCopy(),
@@ -46,9 +33,6 @@ func (pqi *QueuedPodInfo) DeepCopy() *QueuedPodInfo {
 	}
 }
 
-// PodInfo is a wrapper to a Pod with additional pre-computed information to
-// accelerate processing. This information is typically immutable (e.g., pre-processed
-// inter-pod affinity selectors).
 type PodInfo struct {
 	Pod                        *v1.Pod
 	RequiredAffinityTerms      []AffinityTerm
@@ -58,14 +42,12 @@ type PodInfo struct {
 	ParseError                 error
 }
 
-// AffinityTerm is a processed version of v1.PodAffinityTerm.
 type AffinityTerm struct {
 	Namespaces  sets.String
 	Selector    labels.Selector
 	TopologyKey string
 }
 
-// WeightedAffinityTerm is a "processed" representation of v1.WeightedAffinityTerm.
 type WeightedAffinityTerm struct {
 	AffinityTerm
 	Weight int32
@@ -80,8 +62,6 @@ func newAffinityTerm(pod *v1.Pod, term *v1.PodAffinityTerm) (*AffinityTerm, erro
 	return &AffinityTerm{Namespaces: namespaces, Selector: selector, TopologyKey: term.TopologyKey}, nil
 }
 
-// getAffinityTerms receives a Pod and affinity terms and returns the namespaces and
-// selectors of the terms.
 func getAffinityTerms(pod *v1.Pod, v1Terms []v1.PodAffinityTerm) ([]AffinityTerm, error) {
 	if v1Terms == nil {
 		return nil, nil
@@ -91,7 +71,6 @@ func getAffinityTerms(pod *v1.Pod, v1Terms []v1.PodAffinityTerm) ([]AffinityTerm
 	for _, term := range v1Terms {
 		t, err := newAffinityTerm(pod, &term)
 		if err != nil {
-			// We get here if the label selector failed to process
 			return nil, err
 		}
 		terms = append(terms, *t)
@@ -99,7 +78,6 @@ func getAffinityTerms(pod *v1.Pod, v1Terms []v1.PodAffinityTerm) ([]AffinityTerm
 	return terms, nil
 }
 
-// getWeightedAffinityTerms returns the list of processed affinity terms.
 func getWeightedAffinityTerms(pod *v1.Pod, v1Terms []v1.WeightedPodAffinityTerm) ([]WeightedAffinityTerm, error) {
 	if v1Terms == nil {
 		return nil, nil
@@ -109,7 +87,6 @@ func getWeightedAffinityTerms(pod *v1.Pod, v1Terms []v1.WeightedPodAffinityTerm)
 	for _, term := range v1Terms {
 		t, err := newAffinityTerm(pod, &term.PodAffinityTerm)
 		if err != nil {
-			// We get here if the label selector failed to process
 			return nil, err
 		}
 		terms = append(terms, WeightedAffinityTerm{AffinityTerm: *t, Weight: term.Weight})
@@ -117,7 +94,6 @@ func getWeightedAffinityTerms(pod *v1.Pod, v1Terms []v1.WeightedPodAffinityTerm)
 	return terms, nil
 }
 
-// NewPodInfo return a new PodInfo
 func NewPodInfo(pod *v1.Pod) *PodInfo {
 	var preferredAffinityTerms []v1.WeightedPodAffinityTerm
 	var preferredAntiAffinityTerms []v1.WeightedPodAffinityTerm
@@ -130,7 +106,6 @@ func NewPodInfo(pod *v1.Pod) *PodInfo {
 		}
 	}
 
-	// Attempt to parse the affinity terms
 	var parseErr error
 	requiredAffinityTerms, err := getAffinityTerms(pod, schedutil.GetPodAffinityTerms(pod.Spec.Affinity))
 	if err != nil {
@@ -159,78 +134,45 @@ func NewPodInfo(pod *v1.Pod) *PodInfo {
 	}
 }
 
-// ImageStateSummary provides summarized information about the state of an image.
 type ImageStateSummary struct {
-	// Size of the image
-	Size int64
-	// Used to track how many nodes have this image
+	Size     int64
 	NumNodes int
 }
 
-// NodeInfo is node level aggregated information.
 type NodeInfo struct {
-	// Overall node information.
 	node *v1.Node
 
-	// Pods running on the node.
 	Pods []*PodInfo
 
-	// The subset of pods with affinity.
 	PodsWithAffinity []*PodInfo
 
-	// Ports allocated on the node.
-	// Total requested resources of all pods on this node. This includes assumed
-	// pods, which scheduler has sent for binding, but may not be scheduled yet.
-	Requested *Resource
-	// Total requested resources of all pods on this node with a minimum value
-	// applied to each container's CPU and memory requests. This does not reflect
-	// the actual resource requests for this node, but is used to avoid scheduling
-	// many zero-request pods onto one node.
+	Requested        *Resource
 	NonZeroRequested *Resource
-	// We store allocatedResources (which is Node.Status.Allocatable.*) explicitly
-	// as int64, to avoid conversions and accessing map.
-	Allocatable *Resource
+	Allocatable      *Resource
 
-	// ImageStates holds the entry of an image if and only if this image is on the node. The entry can be used for
-	// checking an image's existence and advanced usage (e.g., image locality scheduling policy) based on the image
-	// state information.
 	ImageStates map[string]*ImageStateSummary
 
-	// 其他资源维度的调度扩展，(local, cloud) volume; gpu; vf;
-
-	// Whenever NodeInfo changes, generation is bumped.
-	// This is used to avoid cloning it if the object didn't change.
 	Generation int64
 }
 
-// nextGeneration: Let's make sure history never forgets the name...
-// Increments the generation number monotonically ensuring that generation numbers never collide.
-// Collision of the generation numbers would be particularly problematic if a node was deleted and
-// added back with the same name. See issue#63262.
 func nextGeneration() int64 {
 	return atomic.AddInt64(&generation, 1)
 }
 
-// Resource is a collection of compute resource.
 type Resource struct {
 	MilliCPU         int64
 	Memory           int64
 	EphemeralStorage int64
-	// We store allowedPodNumber (which is Node.Status.Allocatable.Pods().Value())
-	// explicitly as int, to avoid conversions and improve performance.
 	AllowedPodNumber int
-	// ScalarResources
-	ScalarResources map[v1.ResourceName]int64
+	ScalarResources  map[v1.ResourceName]int64
 }
 
-// NewResource creates a Resource from ResourceList
 func NewResource(rl v1.ResourceList) *Resource {
 	r := &Resource{}
 	r.Add(rl)
 	return r
 }
 
-// Add adds ResourceList into Resource.
 func (r *Resource) Add(rl v1.ResourceList) {
 	if r == nil {
 		return
@@ -252,7 +194,6 @@ func (r *Resource) Add(rl v1.ResourceList) {
 	}
 }
 
-// ResourceList returns a resource list of this resource.
 func (r *Resource) ResourceList() v1.ResourceList {
 	result := v1.ResourceList{
 		v1.ResourceCPU:              *resource.NewMilliQuantity(r.MilliCPU, resource.DecimalSI),
@@ -266,7 +207,6 @@ func (r *Resource) ResourceList() v1.ResourceList {
 	return result
 }
 
-// Clone returns a copy of this resource.
 func (r *Resource) Clone() *Resource {
 	res := &Resource{
 		MilliCPU:         r.MilliCPU,
@@ -283,21 +223,17 @@ func (r *Resource) Clone() *Resource {
 	return res
 }
 
-// AddScalar adds a resource by a scalar value of this resource.
 func (r *Resource) AddScalar(name v1.ResourceName, quantity int64) {
 	r.SetScalar(name, r.ScalarResources[name]+quantity)
 }
 
-// SetScalar sets a resource by a scalar value of this resource.
 func (r *Resource) SetScalar(name v1.ResourceName, quantity int64) {
-	// Lazily allocate scalar resource map.
 	if r.ScalarResources == nil {
 		r.ScalarResources = map[v1.ResourceName]int64{}
 	}
 	r.ScalarResources[name] = quantity
 }
 
-// SetMaxResource compares with ResourceList and takes max value for each Resource.
 func (r *Resource) SetMaxResource(rl v1.ResourceList) {
 	if r == nil {
 		return
@@ -326,9 +262,6 @@ func (r *Resource) SetMaxResource(rl v1.ResourceList) {
 	}
 }
 
-// NewNodeInfo returns a ready to use empty NodeInfo object.
-// If any pods are given in arguments, their information will be aggregated in
-// the returned object.
 func NewNodeInfo(pods ...*v1.Pod) *NodeInfo {
 	ni := &NodeInfo{
 		Requested:        &Resource{},
@@ -343,7 +276,6 @@ func NewNodeInfo(pods ...*v1.Pod) *NodeInfo {
 	return ni
 }
 
-// Node returns overall information about this node.
 func (n *NodeInfo) Node() *v1.Node {
 	if n == nil {
 		return nil
@@ -351,7 +283,6 @@ func (n *NodeInfo) Node() *v1.Node {
 	return n.node
 }
 
-// Clone returns a copy of this node.
 func (n *NodeInfo) Clone() *NodeInfo {
 	clone := &NodeInfo{
 		node:             n.node,
@@ -370,7 +301,6 @@ func (n *NodeInfo) Clone() *NodeInfo {
 	return clone
 }
 
-// String returns representation of human readable format of this NodeInfo.
 func (n *NodeInfo) String() string {
 	podKeys := make([]string, len(n.Pods))
 	for i, p := range n.Pods {
@@ -380,7 +310,6 @@ func (n *NodeInfo) String() string {
 		podKeys, n.Requested, n.NonZeroRequested, n.Allocatable)
 }
 
-// AddPod adds pod information to this NodeInfo.
 func (n *NodeInfo) AddPod(pod *v1.Pod) {
 	podInfo := NewPodInfo(pod)
 	res, non0CPU, non0Mem := calculateResource(pod)
@@ -401,12 +330,9 @@ func (n *NodeInfo) AddPod(pod *v1.Pod) {
 		n.PodsWithAffinity = append(n.PodsWithAffinity, podInfo)
 	}
 
-	// Consume ports when pods added. 计算节点上的共享资源
-
 	n.Generation = nextGeneration()
 }
 
-// RemovePod subtracts pod information from this NodeInfo.
 func (n *NodeInfo) RemovePod(pod *v1.Pod) error {
 	k1, err := GetPodKey(pod)
 	if err != nil {
@@ -420,7 +346,6 @@ func (n *NodeInfo) RemovePod(pod *v1.Pod) error {
 			continue
 		}
 		if k1 == k2 {
-			// delete the element
 			n.PodsWithAffinity[i] = n.PodsWithAffinity[len(n.PodsWithAffinity)-1]
 			n.PodsWithAffinity = n.PodsWithAffinity[:len(n.PodsWithAffinity)-1]
 			break
@@ -433,10 +358,8 @@ func (n *NodeInfo) RemovePod(pod *v1.Pod) error {
 			continue
 		}
 		if k1 == k2 {
-			// delete the element
 			n.Pods[i] = n.Pods[len(n.Pods)-1]
 			n.Pods = n.Pods[:len(n.Pods)-1]
-			// reduce the resource data
 			res, non0CPU, non0Mem := calculateResource(pod)
 
 			n.Requested.MilliCPU -= res.MilliCPU
@@ -451,8 +374,6 @@ func (n *NodeInfo) RemovePod(pod *v1.Pod) error {
 			n.NonZeroRequested.MilliCPU -= non0CPU
 			n.NonZeroRequested.Memory -= non0Mem
 
-			// Release ports when remove Pods. 计算节点上的共享资源
-
 			n.Generation = nextGeneration()
 			n.resetSlicesIfEmpty()
 			return nil
@@ -461,7 +382,6 @@ func (n *NodeInfo) RemovePod(pod *v1.Pod) error {
 	return fmt.Errorf("no corresponding pod %s in pods of node %s", pod.Name, n.node.Name)
 }
 
-// resets the slices to nil so that we can do DeepEqual in unit tests.
 func (n *NodeInfo) resetSlicesIfEmpty() {
 	if len(n.PodsWithAffinity) == 0 {
 		n.PodsWithAffinity = nil
@@ -471,7 +391,6 @@ func (n *NodeInfo) resetSlicesIfEmpty() {
 	}
 }
 
-// resourceRequest = max(sum(podSpec.Containers), podSpec.InitContainers) + overHead
 func calculateResource(pod *v1.Pod) (res Resource, non0CPU int64, non0Mem int64) {
 	resPtr := &res
 	for _, c := range pod.Spec.Containers {
@@ -479,12 +398,8 @@ func calculateResource(pod *v1.Pod) (res Resource, non0CPU int64, non0Mem int64)
 		non0CPUReq, non0MemReq := schedutil.GetNonzeroRequests(&c.Resources.Requests)
 		non0CPU += non0CPUReq
 		non0Mem += non0MemReq
-		// No non-zero resources for GPUs or opaque resources.
 	}
 
-	// 去掉非通用的 InitContainers 的最大资源 SetMaxResource
-
-	// If Overhead is being utilized, add to the total requests for the pod
 	if pod.Spec.Overhead != nil {
 		resPtr.Add(pod.Spec.Overhead)
 		if _, found := pod.Spec.Overhead[v1.ResourceCPU]; found {
@@ -499,11 +414,9 @@ func calculateResource(pod *v1.Pod) (res Resource, non0CPU int64, non0Mem int64)
 	return
 }
 
-// updateUsedPorts updates the UsedPorts of NodeInfo.
 func (n *NodeInfo) updateUsedPorts(pod *v1.Pod, add bool) {
 }
 
-// SetNode sets the overall node information.
 func (n *NodeInfo) SetNode(node *v1.Node) error {
 	n.node = node
 	n.Allocatable = NewResource(node.Status.Allocatable)
@@ -511,19 +424,11 @@ func (n *NodeInfo) SetNode(node *v1.Node) error {
 	return nil
 }
 
-// RemoveNode removes the node object, leaving all other tracking information.
 func (n *NodeInfo) RemoveNode() {
 	n.node = nil
 	n.Generation = nextGeneration()
 }
 
-// FilterOutPods receives a list of pods and filters out those whose node names
-// are equal to the node of this NodeInfo, but are not found in the pods of this NodeInfo.
-//
-// Preemption logic simulates removal of pods on a node by removing them from the
-// corresponding NodeInfo. In order for the simulation to work, we call this method
-// on the pods returned from SchedulerCache, so that predicate functions see
-// only the pods that are not removed from the NodeInfo.
 func (n *NodeInfo) FilterOutPods(pods []*v1.Pod) []*v1.Pod {
 	node := n.Node()
 	if node == nil {
@@ -535,7 +440,6 @@ func (n *NodeInfo) FilterOutPods(pods []*v1.Pod) []*v1.Pod {
 			filtered = append(filtered, p)
 			continue
 		}
-		// If pod is on the given node, add it to 'filtered' only if it is present in nodeInfo.
 		podKey, err := GetPodKey(p)
 		if err != nil {
 			continue
@@ -551,7 +455,6 @@ func (n *NodeInfo) FilterOutPods(pods []*v1.Pod) []*v1.Pod {
 	return filtered
 }
 
-// GetPodKey returns the string key of a pod.
 func GetPodKey(pod *v1.Pod) (string, error) {
 	uid := string(pod.UID)
 	if len(uid) == 0 {
@@ -560,10 +463,8 @@ func GetPodKey(pod *v1.Pod) (string, error) {
 	return uid, nil
 }
 
-// DefaultBindAllHostIP defines the default ip address used to bind to all host.
 const DefaultBindAllHostIP = "0.0.0.0"
 
-// ProtocolPort represents a protocol port pair, e.g. tcp:80.
 type ProtocolPort struct {
 	Protocol string
 	Port     int32

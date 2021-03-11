@@ -1,5 +1,3 @@
-//
-//
 package podtopologyspread
 
 import (
@@ -15,18 +13,12 @@ type topologyPair struct {
 	value string
 }
 
-// topologySpreadConstraint is an internal version for v1.TopologySpreadConstraint
-// and where the selector is parsed.
-// Fields are exported for comparison during testing.
 type topologySpreadConstraint struct {
 	MaxSkew     int32
 	TopologyKey string
 	Selector    labels.Selector
 }
 
-// defaultConstraints builds the constraints for a pod using
-// .DefaultConstraints and the selectors from the services, replication
-// controllers, replica sets and stateful sets that match the pod.
 func (pl *PodTopologySpread) defaultConstraints(p *v1.Pod, action v1.UnsatisfiableConstraintAction) ([]topologySpreadConstraint, error) {
 	constraints, err := filterTopologySpreadConstraints(pl.args.DefaultConstraints, action)
 	if err != nil || len(constraints) == 0 {
@@ -42,7 +34,6 @@ func (pl *PodTopologySpread) defaultConstraints(p *v1.Pod, action v1.Unsatisfiab
 	return constraints, nil
 }
 
-// nodeLabelsMatchSpreadConstraints checks if ALL topology keys in spread Constraints are present in node labels.
 func nodeLabelsMatchSpreadConstraints(nodeLabels map[string]string, constraints []topologySpreadConstraint) bool {
 	for _, c := range constraints {
 		if _, ok := nodeLabels[c.TopologyKey]; !ok {
@@ -73,7 +64,6 @@ func filterTopologySpreadConstraints(constraints []v1.TopologySpreadConstraint, 
 func countPodsMatchSelector(podInfos []*framework.PodInfo, selector labels.Selector, ns string) int {
 	count := 0
 	for _, p := range podInfos {
-		// Bypass terminating Pod (see #87621).
 		if p.Pod.DeletionTimestamp != nil || p.Pod.Namespace != ns {
 			continue
 		}

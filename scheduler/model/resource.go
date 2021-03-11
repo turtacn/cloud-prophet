@@ -1,17 +1,13 @@
-//
-//
 package model
 
 import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-// Returns string version of ResourceName.
 func (self ResourceName) String() string {
 	return string(self)
 }
 
-// Returns the CPU limit if specified.
 func (self *ResourceList) Cpu() *resource.Quantity {
 	if val, ok := (*self)[ResourceCPU]; ok {
 		return &val
@@ -35,7 +31,6 @@ func (self *ResourceList) MemSub(q *resource.Quantity) {
 	}
 }
 
-// Returns the Memory limit if specified.
 func (self *ResourceList) Memory() *resource.Quantity {
 	if val, ok := (*self)[ResourceMemory]; ok {
 		return &val
@@ -43,7 +38,6 @@ func (self *ResourceList) Memory() *resource.Quantity {
 	return &resource.Quantity{Format: resource.BinarySI}
 }
 
-// Returns the Storage limit if specified.
 func (self *ResourceList) Storage() *resource.Quantity {
 	if val, ok := (*self)[ResourceStorage]; ok {
 		return &val

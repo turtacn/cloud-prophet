@@ -1,5 +1,3 @@
-//
-//
 package util
 
 import (
@@ -8,9 +6,6 @@ import (
 	v1 "github.com/turtacn/cloud-prophet/scheduler/model"
 )
 
-// GetNamespacesFromPodAffinityTerm returns a set of names
-// according to the namespaces indicated in podAffinityTerm.
-// If namespaces is empty it considers the given pod's namespace.
 func GetNamespacesFromPodAffinityTerm(pod *v1.Pod, podAffinityTerm *v1.PodAffinityTerm) sets.String {
 	names := sets.String{}
 	if len(podAffinityTerm.Namespaces) == 0 {
@@ -21,8 +16,6 @@ func GetNamespacesFromPodAffinityTerm(pod *v1.Pod, podAffinityTerm *v1.PodAffini
 	return names
 }
 
-// PodMatchesTermsNamespaceAndSelector returns true if the given <pod>
-// matches the namespace and selector defined by <affinityPod>`s <term>.
 func PodMatchesTermsNamespaceAndSelector(pod *v1.Pod, namespaces sets.String, selector labels.Selector) bool {
 	if !namespaces.Has(pod.Namespace) {
 		return false
@@ -34,8 +27,6 @@ func PodMatchesTermsNamespaceAndSelector(pod *v1.Pod, namespaces sets.String, se
 	return true
 }
 
-// NodesHaveSameTopologyKey checks if nodeA and nodeB have same label value with given topologyKey as label key.
-// Returns false if topologyKey is empty.
 func NodesHaveSameTopologyKey(nodeA, nodeB *v1.Node, topologyKey string) bool {
 	if len(topologyKey) == 0 {
 		return false
@@ -48,7 +39,6 @@ func NodesHaveSameTopologyKey(nodeA, nodeB *v1.Node, topologyKey string) bool {
 	nodeALabel, okA := nodeA.Labels[topologyKey]
 	nodeBLabel, okB := nodeB.Labels[topologyKey]
 
-	// If found label in both nodes, check the label
 	if okB && okA {
 		return nodeALabel == nodeBLabel
 	}
@@ -56,12 +46,10 @@ func NodesHaveSameTopologyKey(nodeA, nodeB *v1.Node, topologyKey string) bool {
 	return false
 }
 
-// Topologies contains topologies information of nodes.
 type Topologies struct {
 	DefaultKeys []string
 }
 
-// NodesHaveSameTopologyKey checks if nodeA and nodeB have same label value with given topologyKey as label key.
 func (tps *Topologies) NodesHaveSameTopologyKey(nodeA, nodeB *v1.Node, topologyKey string) bool {
 	return NodesHaveSameTopologyKey(nodeA, nodeB, topologyKey)
 }

@@ -1,4 +1,3 @@
-//
 package label
 
 import (
@@ -12,39 +11,24 @@ import (
 	"strings"
 )
 
-// Requirements is AND of all requirements.
 type Requirements []Requirement
 
-// Selector represents a label selector.
 type Selector interface {
-	// Matches returns true if this selector matches the given set of labels.
 	Matches(Labels) bool
 
-	// Empty returns true if this selector does not restrict the selection space.
 	Empty() bool
 
-	// String returns a human readable string that represents this selector.
 	String() string
 
-	// Add adds requirements to the Selector
 	Add(r ...Requirement) Selector
 
-	// Requirements converts this interface into Requirements to expose
-	// more detailed selection information.
-	// If there are querying parameters, it will return converted requirements and selectable=true.
-	// If this selector doesn't want to select anything, it will return selectable=false.
 	Requirements() (requirements Requirements, selectable bool)
 
-	// Make a deep copy of the selector.
 	DeepCopySelector() Selector
 
-	// RequiresExactMatch allows a caller to introspect whether a given selector
-	// requires a single specific label to be set, and if so returns the value it
-	// requires.
 	RequiresExactMatch(label string) (value string, found bool)
 }
 
-// Everything returns a selector that matches all labels.
 func Everything() Selector {
 	return internalSelector{}
 }
@@ -61,12 +45,10 @@ func (n nothingSelector) RequiresExactMatch(label string) (value string, found b
 	return "", false
 }
 
-// Nothing returns a selector that matches no labels
 func Nothing() Selector {
 	return nothingSelector{}
 }
 
-// NewSelector returns a nil selector
 func NewSelector() Selector {
 	return internalSelector(nil)
 }
@@ -88,7 +70,6 @@ func (s internalSelector) DeepCopySelector() Selector {
 	return s.DeepCopy()
 }
 
-// ByKey sorts requirements by key to obtain deterministic parser
 type ByKey []Requirement
 
 func (a ByKey) Len() int { return len(a) }
@@ -97,31 +78,12 @@ func (a ByKey) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 func (a ByKey) Less(i, j int) bool { return a[i].key < a[j].key }
 
-// Requirement contains values, a key, and an operator that relates the key and values.
-// The zero value of Requirement is invalid.
-// Requirement implements both set based match and exact match
-// Requirement should be initialized via NewRequirement constructor for creating a valid Requirement.
-// +k8s:deepcopy-gen=true
 type Requirement struct {
-	key      string
-	operator Operator
-	// In huge majority of cases we have at most one value here.
-	// It is generally faster to operate on a single-element slice
-	// than on a single-element map, so we have a slice here.
+	key       string
+	operator  Operator
 	strValues []string
 }
 
-// NewRequirement is the constructor for a Requirement.
-// If any of these rules is violated, an error is returned:
-// (1) The operator can only be In, NotIn, Equals, DoubleEquals, NotEquals, Exists, or DoesNotExist.
-// (2) If the operator is In or NotIn, the values set must be non-empty.
-// (3) If the operator is Equals, DoubleEquals, or NotEquals, the values set must contain one value.
-// (4) If the operator is Exists or DoesNotExist, the value set must be empty.
-// (5) If the operator is Gt or Lt, the values set must contain only one value, which will be interpreted as an integer.
-// (6) The key is invalid due to its length, or sequence
-//     of characters. See validateLabelKey for more details.
-//
-// The empty string is a valid value in the input values set.
 func NewRequirement(key string, op Operator, vals []string) (*Requirement, error) {
 	if err := validateLabelKey(key); err != nil {
 		return nil, err
@@ -169,17 +131,6 @@ func (r *Requirement) hasValue(value string) bool {
 	return false
 }
 
-// Matches returns true if the Requirement matches the input Labels.
-// There is a match in the following cases:
-// (1) The operator is Exists and Labels has the Requirement's key.
-// (2) The operator is In, Labels has the Requirement's key and Labels'
-//     value for that key is in Requirement's value set.
-// (3) The operator is NotIn, Labels has the Requirement's key and
-//     Labels' value for that key is not in Requirement's value set.
-// (4) The operator is DoesNotExist or NotIn and Labels does not have the
-//     Requirement's key.
-// (5) The operator is GreaterThanOperator or LessThanOperator, and Labels has
-//     the Requirement's key and the corresponding value satisfies mathematical inequality.
 func (r *Requirement) Matches(ls Labels) bool {
 	switch r.operator {
 	case In, Equals, DoubleEquals:
@@ -206,7 +157,6 @@ func (r *Requirement) Matches(ls Labels) bool {
 			return false
 		}
 
-		// There should be only one strValue in r.strValues, and can be converted to an integer.
 		if len(r.strValues) != 1 {
 			klog.V(10).Infof("Invalid values count %+v of requirement %#v, for 'Gt', 'Lt' operators, exactly one value is required", len(r.strValues), r)
 			return false
@@ -226,17 +176,14 @@ func (r *Requirement) Matches(ls Labels) bool {
 	}
 }
 
-// Key returns requirement key
 func (r *Requirement) Key() string {
 	return r.key
 }
 
-// Operator returns requirement operator
 func (r *Requirement) Operator() Operator {
 	return r.operator
 }
 
-// Values returns requirement values
 func (r *Requirement) Values() sets.String {
 	ret := sets.String{}
 	for i := range r.strValues {
@@ -245,7 +192,6 @@ func (r *Requirement) Values() sets.String {
 	return ret
 }
 
-// Empty returns true if the internalSelector doesn't restrict selection space
 func (lsel internalSelector) Empty() bool {
 	if lsel == nil {
 		return true
@@ -253,7 +199,6 @@ func (lsel internalSelector) Empty() bool {
 	return len(lsel) == 0
 }
 
-// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
 func (in *Requirement) DeepCopyInto(out *Requirement) {
 	*out = *in
 	if in.strValues != nil {
@@ -264,7 +209,6 @@ func (in *Requirement) DeepCopyInto(out *Requirement) {
 	return
 }
 
-// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new Requirement.
 func (in *Requirement) DeepCopy() *Requirement {
 	if in == nil {
 		return nil
@@ -274,9 +218,6 @@ func (in *Requirement) DeepCopy() *Requirement {
 	return out
 }
 
-// String returns a human-readable string that represents this
-// Requirement. If called on an invalid Requirement, an error is
-// returned. See NewRequirement for creating a valid Requirement.
 func (r *Requirement) String() string {
 	var buffer bytes.Buffer
 	if r.operator == DoesNotExist {
@@ -310,8 +251,6 @@ func (r *Requirement) String() string {
 	if len(r.strValues) == 1 {
 		buffer.WriteString(r.strValues[0])
 	} else { // only > 1 since == 0 prohibited by NewRequirement
-		// normalizes value order on output, without mutating the in-memory selector representation
-		// also avoids normalization when it is not required, and ensures we do not mutate shared data
 		buffer.WriteString(strings.Join(safeSort(r.strValues), ","))
 	}
 
@@ -322,7 +261,6 @@ func (r *Requirement) String() string {
 	return buffer.String()
 }
 
-// safeSort sort input strings without modification
 func safeSort(in []string) []string {
 	if sort.StringsAreSorted(in) {
 		return in
@@ -333,7 +271,6 @@ func safeSort(in []string) []string {
 	return out
 }
 
-// Add adds requirements to the selector. It copies the current selector returning a new one
 func (lsel internalSelector) Add(reqs ...Requirement) Selector {
 	var sel internalSelector
 	for ix := range lsel {
@@ -346,9 +283,6 @@ func (lsel internalSelector) Add(reqs ...Requirement) Selector {
 	return sel
 }
 
-// Matches for a internalSelector returns true if all
-// its Requirements match the input Labels. If any
-// Requirement does not match, false is returned.
 func (lsel internalSelector) Matches(l Labels) bool {
 	for ix := range lsel {
 		if matches := lsel[ix].Matches(l); !matches {
@@ -360,8 +294,6 @@ func (lsel internalSelector) Matches(l Labels) bool {
 
 func (lsel internalSelector) Requirements() (Requirements, bool) { return Requirements(lsel), true }
 
-// String returns a comma-separated string of all
-// the internalSelector Requirements' human-readable strings.
 func (lsel internalSelector) String() string {
 	var reqs []string
 	for ix := range lsel {
@@ -370,8 +302,6 @@ func (lsel internalSelector) String() string {
 	return strings.Join(reqs, ",")
 }
 
-// RequiresExactMatch introspect whether a given selector requires a single specific field
-// to be set, and if so returns the value it requires.
 func (lsel internalSelector) RequiresExactMatch(label string) (value string, found bool) {
 	for ix := range lsel {
 		if lsel[ix].key == label {
@@ -387,42 +317,25 @@ func (lsel internalSelector) RequiresExactMatch(label string) (value string, fou
 	return "", false
 }
 
-// Token represents constant definition for lexer token
 type Token int
 
 const (
-	// ErrorToken represents scan error
 	ErrorToken Token = iota
-	// EndOfStringToken represents end of string
 	EndOfStringToken
-	// ClosedParToken represents close parenthesis
 	ClosedParToken
-	// CommaToken represents the comma
 	CommaToken
-	// DoesNotExistToken represents logic not
 	DoesNotExistToken
-	// DoubleEqualsToken represents double equals
 	DoubleEqualsToken
-	// EqualsToken represents equal
 	EqualsToken
-	// GreaterThanToken represents greater than
 	GreaterThanToken
-	// IdentifierToken represents identifier, e.g. keys and values
 	IdentifierToken
-	// InToken represents in
 	InToken
-	// LessThanToken represents less than
 	LessThanToken
-	// NotEqualsToken represents not equal
 	NotEqualsToken
-	// NotInToken represents not in
 	NotInToken
-	// OpenParToken represents open parenthesis
 	OpenParToken
 )
 
-// string2token contains the mapping between lexer Token and token literal
-// (except IdentifierToken, EndOfStringToken and ErrorToken since it makes no sense)
 var string2token = map[string]Token{
 	")":     ClosedParToken,
 	",":     CommaToken,
@@ -437,18 +350,15 @@ var string2token = map[string]Token{
 	"(":     OpenParToken,
 }
 
-// ScannedItem contains the Token and the literal produced by the lexer.
 type ScannedItem struct {
 	tok     Token
 	literal string
 }
 
-// isWhitespace returns true if the rune is a space, tab, or newline.
 func isWhitespace(ch byte) bool {
 	return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n'
 }
 
-// isSpecialSymbol detect if the character ch can be an operator
 func isSpecialSymbol(ch byte) bool {
 	switch ch {
 	case '=', '!', '(', ')', ',', '>', '<':
@@ -457,17 +367,11 @@ func isSpecialSymbol(ch byte) bool {
 	return false
 }
 
-// Lexer represents the Lexer struct for label selector.
-// It contains necessary informationt to tokenize the input string
 type Lexer struct {
-	// s stores the string to be tokenized
-	s string
-	// pos is the position currently tokenized
+	s   string
 	pos int
 }
 
-// read return the character currently lexed
-// increment the position and check the buffer overflow
 func (l *Lexer) read() (b byte) {
 	b = 0
 	if l.pos < len(l.s) {
@@ -477,12 +381,10 @@ func (l *Lexer) read() (b byte) {
 	return b
 }
 
-// unread 'undoes' the last read character
 func (l *Lexer) unread() {
 	l.pos--
 }
 
-// scanIDOrKeyword scans string to recognize literal token (for example 'in') or an identifier.
 func (l *Lexer) scanIDOrKeyword() (tok Token, lit string) {
 	var buffer []byte
 IdentifierLoop:
@@ -504,8 +406,6 @@ IdentifierLoop:
 	return IdentifierToken, s // otherwise is an identifier
 }
 
-// scanSpecialSymbol scans string starting with special symbol.
-// special symbol identify non literal operators. "!=", "==", "="
 func (l *Lexer) scanSpecialSymbol() (Token, string) {
 	lastScannedItem := ScannedItem{}
 	var buffer []byte
@@ -533,8 +433,6 @@ SpecialSymbolLoop:
 	return lastScannedItem.tok, lastScannedItem.literal
 }
 
-// skipWhiteSpaces consumes all blank characters
-// returning the first non blank character
 func (l *Lexer) skipWhiteSpaces(ch byte) byte {
 	for {
 		if !isWhitespace(ch) {
@@ -544,8 +442,6 @@ func (l *Lexer) skipWhiteSpaces(ch byte) byte {
 	}
 }
 
-// Lex returns a pair of Token and the literal
-// literal is meaningfull only for IdentifierToken token
 func (l *Lexer) Lex() (tok Token, lit string) {
 	switch ch := l.skipWhiteSpaces(l.read()); {
 	case ch == 0:
@@ -559,27 +455,19 @@ func (l *Lexer) Lex() (tok Token, lit string) {
 	}
 }
 
-// Parser data structure contains the label selector parser data structure
 type Parser struct {
 	l            *Lexer
 	scannedItems []ScannedItem
 	position     int
 }
 
-// ParserContext represents context during parsing:
-// some literal for example 'in' and 'notin' can be
-// recognized as operator for example 'x in (a)' but
-// it can be recognized as value for example 'value in (in)'
 type ParserContext int
 
 const (
-	// KeyAndOperator represents key and operator
 	KeyAndOperator ParserContext = iota
-	// Values represents values
 	Values
 )
 
-// lookahead func returns the current token and string. No increment of current position
 func (p *Parser) lookahead(context ParserContext) (Token, string) {
 	tok, lit := p.scannedItems[p.position].tok, p.scannedItems[p.position].literal
 	if context == Values {
@@ -591,7 +479,6 @@ func (p *Parser) lookahead(context ParserContext) (Token, string) {
 	return tok, lit
 }
 
-// consume returns current token and string. Increments the position
 func (p *Parser) consume(context ParserContext) (Token, string) {
 	p.position++
 	tok, lit := p.scannedItems[p.position-1].tok, p.scannedItems[p.position-1].literal
@@ -604,8 +491,6 @@ func (p *Parser) consume(context ParserContext) (Token, string) {
 	return tok, lit
 }
 
-// scan runs through the input string and stores the ScannedItem in an array
-// Parser can now lookahead and consume the tokens
 func (p *Parser) scan() {
 	for {
 		token, literal := p.l.Lex()
@@ -616,8 +501,6 @@ func (p *Parser) scan() {
 	}
 }
 
-// parse runs the left recursive descending algorithm
-// on input string. It returns a list of Requirement objects.
 func (p *Parser) parse() (internalSelector, error) {
 	p.scan() // init scannedItems
 
@@ -677,9 +560,6 @@ func (p *Parser) parseRequirement() (*Requirement, error) {
 
 }
 
-// parseKeyAndInferOperator parse literals.
-// in case of no operator '!, in, notin, ==, =, !=' are found
-// the 'exists' operator is inferred
 func (p *Parser) parseKeyAndInferOperator() (string, Operator, error) {
 	var operator Operator
 	tok, literal := p.consume(Values)
@@ -702,12 +582,9 @@ func (p *Parser) parseKeyAndInferOperator() (string, Operator, error) {
 	return literal, operator, nil
 }
 
-// parseOperator return operator and eventually matchType
-// matchType can be exact
 func (p *Parser) parseOperator() (op Operator, err error) {
 	tok, lit := p.consume(KeyAndOperator)
 	switch tok {
-	// DoesNotExistToken shouldn't be here because it's a unary operator, not a binary operator
 	case InToken:
 		op = In
 	case EqualsToken:
@@ -728,7 +605,6 @@ func (p *Parser) parseOperator() (op Operator, err error) {
 	return op, nil
 }
 
-// parseValues parses the values for set based matching (x,y,z)
 func (p *Parser) parseValues() (sets.String, error) {
 	tok, lit := p.consume(Values)
 	if tok != OpenParToken {
@@ -753,8 +629,6 @@ func (p *Parser) parseValues() (sets.String, error) {
 	}
 }
 
-// parseIdentifiersList parses a (possibly empty) list of
-// of comma separated (possibly empty) identifiers
 func (p *Parser) parseIdentifiersList() (sets.String, error) {
 	s := sets.NewString()
 	for {
@@ -790,7 +664,6 @@ func (p *Parser) parseIdentifiersList() (sets.String, error) {
 	}
 }
 
-// parseExactValue parses the only value for exact match style
 func (p *Parser) parseExactValue() (sets.String, error) {
 	s := sets.NewString()
 	tok, lit := p.lookahead(Values)
@@ -806,37 +679,6 @@ func (p *Parser) parseExactValue() (sets.String, error) {
 	return nil, fmt.Errorf("found '%s', expected: identifier", lit)
 }
 
-// Parse takes a string representing a selector and returns a selector
-// object, or an error. This parsing function differs from ParseSelector
-// as they parse different selectors with different syntaxes.
-// The input will cause an error if it does not follow this form:
-//
-//  <selector-syntax>         ::= <requirement> | <requirement> "," <selector-syntax>
-//  <requirement>             ::= [!] KEY [ <set-based-restriction> | <exact-match-restriction> ]
-//  <set-based-restriction>   ::= "" | <inclusion-exclusion> <value-set>
-//  <inclusion-exclusion>     ::= <inclusion> | <exclusion>
-//  <exclusion>               ::= "notin"
-//  <inclusion>               ::= "in"
-//  <value-set>               ::= "(" <values> ")"
-//  <values>                  ::= VALUE | VALUE "," <values>
-//  <exact-match-restriction> ::= ["="|"=="|"!="] VALUE
-//
-// KEY is a sequence of one or more characters following [ DNS_SUBDOMAIN "/" ] DNS_LABEL. Max length is 63 characters.
-// VALUE is a sequence of zero or more characters "([A-Za-z0-9_-\.])". Max length is 63 characters.
-// Delimiter is white space: (' ', '\t')
-// Example of valid syntax:
-//  "x in (foo,,baz),y,z notin ()"
-//
-// Note:
-//  (1) Inclusion - " in " - denotes that the KEY exists and is equal to any of the
-//      VALUEs in its requirement
-//  (2) Exclusion - " notin " - denotes that the KEY is not equal to any
-//      of the VALUEs in its requirement or does not exist
-//  (3) The empty string is a valid VALUE
-//  (4) A requirement with just a KEY - as in "y" above - denotes that
-//      the KEY exists and can be any VALUE.
-//  (5) A requirement with just !KEY requires that the KEY not exist.
-//
 func Parse(selector string) (Selector, error) {
 	parsedSelector, err := parse(selector)
 	if err == nil {
@@ -845,10 +687,6 @@ func Parse(selector string) (Selector, error) {
 	return nil, err
 }
 
-// parse parses the string representation of the selector and returns the internalSelector struct.
-// The callers of this method can then decide how to return the internalSelector struct to their
-// callers. This function has two callers now, one returns a Selector interface and the other
-// returns a list of requirements.
 func parse(selector string) (internalSelector, error) {
 	p := &Parser{l: &Lexer{s: selector, pos: 0}}
 	items, err := p.parse()
@@ -873,17 +711,10 @@ func validateLabelValue(k, v string) error {
 	return nil
 }
 
-// SelectorFromSet returns a Selector which will match exactly the given Set. A
-// nil and empty Sets are considered equivalent to Everything().
-// It does not perform any validation, which means the server will reject
-// the request if the Set contains invalid values.
 func SelectorFromSet(ls Set) Selector {
 	return SelectorFromValidatedSet(ls)
 }
 
-// ValidatedSelectorFromSet returns a Selector which will match exactly the given Set. A
-// nil and empty Sets are considered equivalent to Everything().
-// The Set is validated client-side, which allows to catch errors early.
 func ValidatedSelectorFromSet(ls Set) (Selector, error) {
 	if ls == nil || len(ls) == 0 {
 		return internalSelector{}, nil
@@ -896,14 +727,10 @@ func ValidatedSelectorFromSet(ls Set) (Selector, error) {
 		}
 		requirements = append(requirements, *r)
 	}
-	// sort to have deterministic string representation
 	sort.Sort(ByKey(requirements))
 	return internalSelector(requirements), nil
 }
 
-// SelectorFromValidatedSet returns a Selector which will match exactly the given Set.
-// A nil and empty Sets are considered equivalent to Everything().
-// It assumes that Set is already validated and doesn't do any validation.
 func SelectorFromValidatedSet(ls Set) Selector {
 	if ls == nil || len(ls) == 0 {
 		return internalSelector{}
@@ -912,16 +739,10 @@ func SelectorFromValidatedSet(ls Set) Selector {
 	for label, value := range ls {
 		requirements = append(requirements, Requirement{key: label, operator: Equals, strValues: []string{value}})
 	}
-	// sort to have deterministic string representation
 	sort.Sort(ByKey(requirements))
 	return internalSelector(requirements)
 }
 
-// ParseToRequirements takes a string representing a selector and returns a list of
-// requirements. This function is suitable for those callers that perform additional
-// processing on selector requirements.
-// See the documentation for Parse() function for more details.
-// TODO: Consider exporting the internalSelector type instead.
 func ParseToRequirements(selector string) ([]Requirement, error) {
 	return parse(selector)
 }

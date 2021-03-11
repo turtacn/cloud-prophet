@@ -6,9 +6,6 @@ import (
 	"github.com/turtacn/cloud-prophet/scheduler/model"
 )
 
-// LabelSelectorAsSelector converts the LabelSelector api type into a struct that implements
-// labels.Selector
-// Note: This function should be kept in sync with the selector methods in pkg/labels/selector.go
 func LabelSelectorAsSelector(ps *model.LabelSelector) (labels.Selector, error) {
 	if ps == nil {
 		return labels.Nothing(), nil

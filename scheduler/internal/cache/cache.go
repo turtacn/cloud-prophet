@@ -571,11 +571,11 @@ func (cache *schedulerCache) cleanupAssumedPods(now time.Time) {
 				ps.pod.Namespace, ps.pod.Name)
 			continue
 		}
-		klog.Warningf("Pod %s/%s expired", ps.pod.Namespace, ps.pod.Name)
-		if err := cache.expirePod(key, ps); err != nil {
-			klog.Errorf("ExpirePod failed for %s: %v", key, err)
-		}
 		if now.IsZero() {
+			klog.Warningf("Pod %s/%s expired", ps.pod.Namespace, ps.pod.Name)
+			if err := cache.expirePod(key, ps); err != nil {
+				klog.Errorf("ExpirePod failed for %s: %v", key, err)
+			}
 		}
 	}
 }

@@ -21,6 +21,8 @@ type Cache interface {
 
 	RemovePod(pod *v1.Pod) error
 
+	RemoveAssumePod(key string, pod *v1.Pod) error
+
 	GetPod(pod *v1.Pod) (*v1.Pod, error)
 
 	IsAssumedPod(pod *v1.Pod) (bool, error)

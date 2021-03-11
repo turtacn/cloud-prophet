@@ -404,6 +404,7 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 			newNode.Status.Allocatable.MemSub(schedRequest.Memory())
 			pc, _ := sched.SchedulerCache.PodCount()
 			newNodeInfo.AddPod(assumedPod)
+			//assumedPod.Spec.NodeName = newNode.Name
 			sched.updateNodeInCache(targetNode.Node(), newNode)
 			klog.Infof("Node %s; has pods %d/%d", newNode.Name, len(newNodeInfo.Pods), pc)
 

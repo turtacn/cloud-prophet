@@ -18,7 +18,7 @@ var (
 	hostInfoFile           = flag.String("host-info", "hosts-info.csv", `节点元信息csv文件（包含起始状态）`)
 	hostUtilityFile        = flag.String("host-util", "utility.csv", `节点CPU利用率csv文件，带时间戳`)
 	scheduleTraceFile      = flag.String("schedule-trace", "schedule.csv", `调度trace文件`)
-	scheduleIntervalSecond = flag.Int("pod-interval", 100, "pod资源请求间隔")
+	scheduleIntervalSecond = flag.Int("pod-interval", 100, "资源请求间隔")
 	printableHostFlag      = flag.Bool("print-host", false, "是否打印出候选节点的调度详情（默认false）")
 )
 
@@ -44,17 +44,23 @@ func main() {
 	}
 
 	// Load host info csv file
-	for i, h := range test.LoadHostInfo(*hostInfoFile) {
-		if i == 0 {
-			continue
+	for round := 0; round < 2; round++ {
+		for i, h := range test.LoadHostInfo(*hostInfoFile) {
+			if i == 0 {
+				continue
+			}
+			klog.Infof("Node %s cpu %f memory %f", h.HostIp, h.AvailableCpu(), h.AvailableMemory())
+			scheduler.AddNode(makeNode(fmt.Sprintf("%s-%d", h.HostIp, round), int64(h.AvailableCpu()), int64(h.AvailableMemory())))
 		}
-		klog.Infof("Node %s cpu %f memory %f", h.HostIp, h.AvailableCpu(), h.AvailableMemory())
-		scheduler.AddNode(makeNode(h.HostIp, int64(h.AvailableCpu()), int64(h.AvailableMemory())))
 	}
 	// 生成Trace
 	// test.FillTrace("trace.csv","instance.csv","schedule.csv")
 	go func() {
-		for i, jvirt := range test.LoadIntanceOpsTrace(*scheduleTraceFile) {
+		Traces := test.LoadIntanceOpsTrace(*scheduleTraceFile)
+		for i, jvirt := range Traces {
+			if i == 0 {
+				continue
+			}
 			pod := &v1.Pod{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Pod",
@@ -63,12 +69,12 @@ func main() {
 				ObjectMeta: v1.ObjectMeta{
 					Name:      jvirt.InstanceId,
 					Namespace: "jvirt/bj02/general",
-					UID:       fmt.Sprintf("jvirt/bj02/general/%s", fmt.Sprintf("pod-%d", i)),
+					UID:       fmt.Sprintf("jvirt/bj02/general/%s", jvirt.InstanceId),
 				},
 				Spec: v1.PodSpec{
 					SchedulerName: v1.DefaultSchedulerName,
 					Containers: append([]v1.Container{}, v1.Container{
-						Name: fmt.Sprint("resource-%d", i),
+						Name: fmt.Sprint("%s-%d", jvirt.InstanceId, i),
 						Resources: v1.ResourceRequirements{
 							Limits: v1.ResourceList{
 								v1.ResourceCPU:    *resource.NewMilliQuantity(int64(jvirt.RequestCpu()), resource.DecimalSI),
@@ -82,13 +88,25 @@ func main() {
 					}),
 				},
 			}
-			scheduler.AddPod(pod)
+			switch jvirt.OpAction {
+			case "alloc":
+				scheduler.AddPod(pod)
+
+			case "free":
+				p, err := scheduler.SchedulerCache.GetPod(pod)
+				if err == nil {
+					scheduler.DeletePod(p)
+				} else {
+					klog.Errorf("=====>delete pod failed %v", err)
+				}
+			}
 			sleepInterval := *scheduleIntervalSecond
 			if sleepInterval != 0 {
 				time.Sleep(time.Duration(sleepInterval) * time.Millisecond)
 			}
+			klog.Infof("Process %d/%d", i, len(Traces))
 		}
-
+		klog.Infof("===================================================\nTrace Replay was finished!!!")
 	}()
 	klog.Infof("begin to run scheduler")
 	scheduler.Run(ctx)

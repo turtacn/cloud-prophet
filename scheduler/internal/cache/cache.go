@@ -34,7 +34,7 @@ type schedulerCache struct {
 	ttl    time.Duration
 	period time.Duration
 
-	mu          sync.RWMutex
+	mu          sync.RWMutex //  ???
 	assumedPods map[string]bool
 	podStates   map[string]*podState
 	nodes       map[string]*nodeInfoListItem
@@ -582,6 +582,15 @@ func (cache *schedulerCache) cleanupAssumedPods(now time.Time) {
 
 func (cache *schedulerCache) expirePod(key string, ps *podState) error {
 	if err := cache.removePod(ps.pod); err != nil {
+		return err
+	}
+	delete(cache.assumedPods, key)
+	delete(cache.podStates, key)
+	return nil
+}
+
+func (cache *schedulerCache) RemoveAssumePod(key string, pod *v1.Pod) error {
+	if err := cache.removePod(pod); err != nil {
 		return err
 	}
 	delete(cache.assumedPods, key)

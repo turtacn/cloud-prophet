@@ -95,6 +95,18 @@ func (sched *Scheduler) updatePodInSchedulingQueue(oldObj, newObj interface{}) {
 	}
 }
 
+func (sched *Scheduler) deleteAssumedPod(obj interface{}) {
+	var pod *v1.Pod
+	switch obj.(type) {
+	case *v1.Pod:
+		pod = obj.(*v1.Pod)
+	default:
+		utilruntime.HandleError(fmt.Errorf("unable to handle object in %T: %T", sched, obj))
+		return
+	}
+	sched.SchedulerCache.RemoveAssumePod(pod.UID, pod)
+}
+
 func (sched *Scheduler) deletePodFromSchedulingQueue(obj interface{}) {
 	var pod *v1.Pod
 	switch obj.(type) {

@@ -18,7 +18,13 @@ func (s *Scheduler) AddPod(pod *model.Pod) {
 	s.addPodToScheduling(pod)
 }
 func (s *Scheduler) DeletePod(pod *model.Pod) {
-	s.deletePodFromCache(pod)
+	if s.skipPodUpdate(pod) {
+		s.deleteAssumedPod(pod)
+	} else {
+		s.deletePodFromCache(pod)
+		s.deletePodFromSchedulingQueue(pod)
+	}
+
 }
 func (s *Scheduler) UpdatePod(old, new *model.Pod) {
 	s.updatePodInCache(old, new)

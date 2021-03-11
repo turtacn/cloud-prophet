@@ -44,7 +44,7 @@ func main() {
 	}
 
 	// Load host info csv file
-	for round := 0; round < 3; round++ {
+	for round := 0; round < 5; round++ {
 		for i, h := range test.LoadHostInfo(*hostInfoFile) {
 			if i == 0 {
 				continue

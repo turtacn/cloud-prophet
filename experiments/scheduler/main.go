@@ -44,13 +44,13 @@ func main() {
 	}
 
 	// Load host info csv file
-	for round := 0; round < 10; round++ {
+	for round := 0; round < 2; round++ {
 		for i, h := range test.LoadHostInfo(*hostInfoFile) {
 			if i == 0 {
 				continue
 			}
 			klog.Infof("Node %s cpu %f memory %f", h.HostIp, h.AvailableCpu(), h.AvailableMemory())
-			scheduler.AddNode(makeNode(fmt.Sprintf("%s-%d", h.HostIp, round), int64(h.AvailableCpu()), int64(h.AvailableMemory())))
+			scheduler.AddNode(makeNode(fmt.Sprintf("%s-%d-%d", h.HostIp, round, i), int64(h.AvailableCpu()), int64(h.AvailableMemory())))
 		}
 	}
 	// 生成Trace

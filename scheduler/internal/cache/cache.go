@@ -554,7 +554,7 @@ func (cache *schedulerCache) run() {
 }
 
 func (cache *schedulerCache) cleanupExpiredAssumedPods() {
-	//cache.cleanupAssumedPods(time.Now())
+	cache.cleanupAssumedPods(time.Now())
 }
 
 func (cache *schedulerCache) cleanupAssumedPods(now time.Time) {
@@ -571,7 +571,7 @@ func (cache *schedulerCache) cleanupAssumedPods(now time.Time) {
 				ps.pod.Namespace, ps.pod.Name)
 			continue
 		}
-		if now.IsZero() {
+		if now.After(*ps.deadline) {
 			klog.Warningf("Pod %s/%s expired", ps.pod.Namespace, ps.pod.Name)
 			if err := cache.expirePod(key, ps); err != nil {
 				klog.Errorf("ExpirePod failed for %s: %v", key, err)
@@ -590,6 +590,8 @@ func (cache *schedulerCache) expirePod(key string, ps *podState) error {
 }
 
 func (cache *schedulerCache) RemoveAssumePod(key string, pod *v1.Pod) error {
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
 	if err := cache.removePod(pod); err != nil {
 		return err
 	}

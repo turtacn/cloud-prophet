@@ -87,18 +87,7 @@ type JvirtInstance struct {
 
 func LoadHostInfo(file string) []JvirtHost {
 	var hosts []JvirtHost
-	csvFile, err := os.Open(file)
-	if err != nil {
-		klog.Fatal(err)
-	}
-	reader := csv.NewReader(bufio.NewReader(csvFile))
-	for {
-		line, err := reader.Read()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			klog.Errorf("Read csv file line data error %v", err)
-		}
+	for _, line := range readLines(file) {
 		hosts = append(hosts, JvirtHost{
 			Aid:                line[0+1],
 			Id:                 line[1+1],
@@ -178,18 +167,7 @@ func (h JvirtHost) AvailableMemory() float64 {
 
 func LoadIntanceOpsTrace(file string) []JvirtInstanceTrace {
 	var opsTraces []JvirtInstanceTrace
-	csvFile, err := os.Open(file)
-	if err != nil {
-		klog.Fatal(err)
-	}
-	reader := csv.NewReader(bufio.NewReader(csvFile))
-	for {
-		line, err := reader.Read()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			klog.Errorf("Read csv file line data error %v", err)
-		}
+	for _, line := range readLines(file) {
 		opsTraces = append(opsTraces, JvirtInstanceTrace{
 			OpTime:       line[0],
 			OpAction:     line[1],

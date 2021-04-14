@@ -1,5 +1,7 @@
 # 问题
 
+![架构](./arch.png)
+
 ## 数据集
 
 BackBlaze开放数据
@@ -39,5 +41,10 @@ BackBlaze开放数据
 ![knn结果](./knn.png)
 
 ![auc分析](./auc.png)
+
+## 参考
+
+- https://github.com/KarthikNA/Prediction-of-Hard-Drive-Failure
+- https://github.com/SidiLu001/disk_failure_prediction
 
 
